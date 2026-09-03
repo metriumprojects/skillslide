@@ -1,0 +1,25 @@
+Replace the `lessonCalenderByUser` function in src/controllers/lessonCalenderController.js with the following code:
+
+export const lessonCalenderByUser = async (req, res) => {
+  try {
+    const data = await LessonCalender.find({ user: req.user.id });
+
+    if (!data || data.length === 0) {
+      return res.json({
+        status: true,
+        data: []
+      });
+    }
+
+    res.json({
+      status: true,
+      data
+    });
+
+  } catch (error) {
+    console.error("getAvailability error:", error);
+    res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+Or if your codebase uses `req.user._id`, use that in place of `req.user.id` (both are acceptable depending on the auth middleware).

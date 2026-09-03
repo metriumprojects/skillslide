@@ -1,0 +1,62 @@
+// unit
+[
+  {
+    "title": "Frontend Development",
+    "description": "Learn HTML, CSS, and JavaScript from scratch.",
+    "position": 1,
+    "price":45,
+    "isIndependent": true
+  
+  }
+  
+]
+
+// unit and lesson
+[
+  {
+    "title": "Frontend Development",
+    "description": "Learn HTML, CSS, and JavaScript from scratch.",
+    "position": 1,
+    "isIndependent": false,
+    "lessons": [
+      {
+        "title": "HTML Basics",
+        "description": "Learn about HTML structure and tags.",
+        "duration": "45 mins",
+        "category": "Web Development",
+        "isIndependent":true,
+        "price":12,
+        "position": 1
+      },
+      {
+        "title": "CSS Introduction",
+        "description": "Understand styling and layouts.",
+        "duration": "40 mins",
+        "category": "Web Design",
+        "position": 2
+      }
+    ]
+  },
+  {
+    "title": "Backend Development",
+    "description": "Master Node.js, Express, and MongoDB.",
+    "position": 2,
+    "isIndependent": false,
+    "lessons": [
+      {
+        "title": "Node.js Basics",
+        "description": "Introduction to Node.js runtime.",
+        "duration": "60 mins",
+        "category": "Backend",
+        "position": 1
+      },
+      {
+        "title": "Working with MongoDB",
+        "description": "Learn to store and query data efficiently.",
+        "duration": "50 mins",
+        "category": "Database",
+        "position": 2
+      }
+    ]
+  }
+]

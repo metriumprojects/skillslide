@@ -1,0 +1,9 @@
+suppress_xcode_output(true)
+clean(true)
+disable_xcpretty(true)
+
+workspace("App/App.xcworkspace")
+scheme("App")
+
+output_directory("./build")
+output_name("App")

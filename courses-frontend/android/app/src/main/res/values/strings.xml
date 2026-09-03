@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Courses App</string>
+    <string name="title_activity_main">Courses App</string>
+    <string name="package_name">com.courses.app</string>
+    <string name="custom_url_scheme">com.courses.app</string>
+    <string name="server_client_id">929293980937-0s24tl207nlsfmvj5b1e19eq6gq8fle8.apps.googleusercontent.com</string>
+</resources>

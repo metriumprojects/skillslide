@@ -1,0 +1,35 @@
+ [
+    {
+      "title": "Advanced JavaScript",
+      "description": "Learn advanced JavaScript concepts",
+      "message": "Welcome to this lesson",
+      "duration": "60 min",
+      "category": "Programming",
+      "position": 1,
+      "price": 1500,
+      "usecapacity": 10,
+      "discount": 10,
+      
+      "isOnline": true,
+      "isIndependent": true,
+      "isGroupAvailable": true,
+      "calender": true,
+      "status": "Active",
+      
+      "location": "Delhi",
+      "address": "123 Main Street, Delhi",
+     
+      "coverImage": {
+        "url": "https://res.cloudinary.com/your-cloud/image/upload/v1234/lessons/cover_abc123.jpg"
+      },
+      
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/your-cloud/image/upload/v1234/lessons/img_abc123.jpg"
+        },
+        {
+          "url": "https://res.cloudinary.com/your-cloud/image/upload/v1234/lessons/img_def456.jpg"
+        }
+      ]
+    }
+  ]

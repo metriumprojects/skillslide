@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+
+@theme {
+    --color-primary: #FA4602;
+    --font-sans: 'Inter', sans-serif;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+@theme {
+  --breakpoint-3xl: 100rem;
+  --breakpoint-4xl: 120rem;
+}
+
+.fAlnEc .gNJDp a:not(.TrZEUc):not(.WpHeLc), .fAlnEc .gNJDp button:not(.TrZEUc) {
+    font-weight: 500;
+    font-weight: var(--c-stfwt, 500);
+    display: none !important;
+}
