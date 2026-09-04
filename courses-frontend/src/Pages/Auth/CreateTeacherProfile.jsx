@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { Calendar, User } from "lucide-react";
 import MainLayout from "../../components/MainLayout";
+import LogoIcon from "../../components/LogoIcon";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
 import { becomeTeacher, getUser } from "../../redux/reducers/AuthReducer";
 import { isSellerProfileComplete } from "../../utils/sellerProfile";
@@ -120,12 +121,8 @@ export default function CreateTeacherProfile() {
         {/* Top: Logo with 20px top gap + Teacher account with 20px gap below logo */}
         <div className="w-full max-w-xl mx-auto px-2 mt-[20px] shrink-0">
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
-            {/* S Orange Icon Badge */}
-            <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-              <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
-                S
-              </span>
-            </div>
+            {/* S Orange Icon Badge - Official SVG */}
+            <LogoIcon className="h-[46px] w-[46px]" />
 
             {/* Skill (italic) + Slide (simple) */}
             <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4602] leading-none">

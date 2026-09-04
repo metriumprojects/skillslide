@@ -59,7 +59,7 @@ const handleDelete = (id) => {
 
   return (
     <div className="w-full pb-10 space-y-6">
-      <div className="flex items-center justify-end mb-5 mt-7.5">
+      <div className="flex items-center justify-start mt-[20px] mb-[20px]">
         <button 
           type="button"
           onClick={() => setShowCreateRequest(true)}

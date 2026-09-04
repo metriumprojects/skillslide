@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import MainLayout from "../../components/MainLayout";
+import LogoIcon from "../../components/LogoIcon";
 import { useDispatch } from "react-redux";
 import { getUser, GoogleloginUser, loginUser } from "../../redux/reducers/AuthReducer";
 import { toast } from "react-toastify";
@@ -228,12 +229,8 @@ export default function Login() {
         {!isSellerSetup && (
           <div className="w-full max-w-xl mx-auto px-2 mt-[20px]">
             <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
-              {/* S Orange Icon Badge */}
-              <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-                <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
-                  S
-                </span>
-              </div>
+              {/* S Orange Icon Badge - Official SVG */}
+              <LogoIcon className="h-[46px] w-[46px]" />
 
               {/* Skill (italic) + Slide (simple) */}
               <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4602] leading-none">

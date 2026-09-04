@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Check } from "lucide-react";
 import MainLayout from "../../components/MainLayout";
+import LogoIcon from "../../components/LogoIcon";
 import { becomeTeacher, getUser } from "../../redux/reducers/AuthReducer";
 
 export default function TeacherCreated() {
@@ -22,12 +23,8 @@ export default function TeacherCreated() {
         {/* Top: Logo with exact 20px margin from top */}
         <div className="w-full max-w-3xl mx-auto px-2 mt-[20px]">
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
-            {/* S Orange Icon Badge */}
-            <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-              <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
-                S
-              </span>
-            </div>
+            {/* S Orange Icon Badge - Official SVG */}
+            <LogoIcon className="h-[46px] w-[46px]" />
 
             {/* Skill (italic) + Slide (simple) */}
             <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4602] leading-none">

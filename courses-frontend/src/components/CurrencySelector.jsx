@@ -41,7 +41,7 @@ export default function CurrencySelector({ className = "w-[88px]", hideIcon = fa
         aria-expanded={open}
         disabled={saving || rateMeta.loading}
         onClick={() => setOpen((current) => !current)}
-        className={`flex h-10 w-full items-center rounded-full border border-black bg-white px-3 text-sm font-semibold text-black disabled:opacity-60 ${
+        className={`flex h-11.5 w-full items-center rounded-full border border-black bg-white px-3 text-sm font-semibold text-black disabled:opacity-60 ${
           hideIcon ? "justify-center text-center" : "justify-between gap-1"
         }`}
       >

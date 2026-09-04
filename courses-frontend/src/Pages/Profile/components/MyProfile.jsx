@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { Star, Edit3, Loader, Edit, Smile, Frown } from "lucide-react";
+import { Star, Loader, Edit, Smile, Frown } from "lucide-react";
 import { FaInstagram, FaStar, FaYoutube } from "react-icons/fa";
 import { SlSocialYoutube } from "react-icons/sl";
 import { updateProfileImage } from '../../../redux/reducers/AuthReducer';
 import { useNavigate } from 'react-router-dom';
+import editProfileIcon from "../../../assets/icons/editprofileicon.svg";
 
 const MyProfile = () => {
     const dispatch = useDispatch();
@@ -43,12 +44,14 @@ const MyProfile = () => {
     <div className="w-full">
       {/* Profile Section */}
       <div className="w-full">
-        <div className="flex items-center justify-end mb-5 mt-7.5">
+        <div className="flex items-center justify-start mt-[20px] mb-[20px]">
           <button
+            type="button"
             onClick={() => navigate("/edit-profile")}
-            className="text-base flex items-center gap-1 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"
           >
-            Edit profile <Edit3 size={14} />
+            <img src={editProfileIcon} alt="" className="w-4 h-4 shrink-0" />
+            Edit profile
           </button>
         </div>
 

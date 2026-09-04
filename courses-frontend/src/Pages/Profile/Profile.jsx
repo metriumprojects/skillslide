@@ -151,7 +151,7 @@ export default function Profile() {
 
   return (
     <MainLayout className="mx-auto" width="100%">
-      <div className="min-h-screen w-full flex flex-col items-center py-10">
+      <div className="min-h-screen w-full flex flex-col items-center pt-[20px] pb-10">
         {/* Bottom Tabs Section */}
         <div className="w-full">
           {/* Desktop Tabs */}

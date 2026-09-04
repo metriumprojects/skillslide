@@ -207,7 +207,7 @@ export default function StudentDashboard() {
   return (
     <div className="w-full">
       {/* ✅ Tab Navigation */}
-      <div className="flex items-center gap-3 mb-6 mt-6">
+      <div className="flex items-center gap-3 mt-[20px] mb-[20px]">
         <button 
           type="button"
           onClick={() => setActiveTab('upcoming')}
@@ -235,8 +235,8 @@ export default function StudentDashboard() {
       {/* ✅ Upcoming Lessons Tab */}
       {activeTab === 'upcoming' && (
         <>
-          <div className="flex justify-end items-center mb-5">
-            {upcomingTotalPages > 1 && (
+          {upcomingTotalPages > 1 && (
+            <div className="flex justify-end items-center mb-5">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setUpcomingPage(prev => Math.max(1, prev - 1))}
@@ -256,8 +256,8 @@ export default function StudentDashboard() {
                   <FaChevronRight />
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           <div className="overflow-x-auto rounded-2xl mb-10">
             <table className="w-full rounded-2xl overflow-hidden">
@@ -327,8 +327,8 @@ export default function StudentDashboard() {
       {/* ✅ Past Lessons Tab */}
       {activeTab === 'past' && (
         <>
-          <div className="flex justify-end items-center mb-5">
-            {pastTotalPages > 1 && (
+          {pastTotalPages > 1 && (
+            <div className="flex justify-end items-center mb-5">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPastPage(prev => Math.max(1, prev - 1))}
@@ -348,8 +348,8 @@ export default function StudentDashboard() {
                   <FaChevronRight />
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           <div className="overflow-x-auto rounded-2xl mb-10">
             <table className="w-full rounded-2xl overflow-hidden">

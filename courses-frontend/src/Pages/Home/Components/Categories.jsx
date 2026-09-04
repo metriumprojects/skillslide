@@ -6,6 +6,7 @@ import { getCategories } from "../../../redux/reducers/CategoryReducer";
 import { IoIosArrowDown } from "react-icons/io";
 import { motion } from "framer-motion";
 import CurrencySelector from "../../../components/CurrencySelector";
+import LogoIcon from "../../../components/LogoIcon";
 
 export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
   const navigate = useNavigate();
@@ -89,7 +90,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
 
   const iconButtonClass = (path) => {
     const isActive = location.pathname === path;
-    return `relative cursor-pointer border p-2 font-medium rounded-full text-sm flex items-center justify-center h-10 w-10 transition-colors ${
+    return `relative cursor-pointer border p-2 font-medium rounded-full text-sm flex items-center justify-center h-11.5 w-11.5 transition-colors ${
       isActive ? "border-white bg-primary text-white" : "border-black bg-white text-black"
     }`;
   };
@@ -106,12 +107,8 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
       <div className="flex w-full items-center justify-between gap-8">
         <div className="flex min-w-0 items-center gap-8">
           <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
-            {/* S Orange Icon Badge - Perfectly balanced 46x46 */}
-            <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-              <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
-                S
-              </span>
-            </div>
+            {/* S Orange Icon Badge - Official SVG */}
+            <LogoIcon className="h-[46px] w-[46px]" />
 
             {/* Skill (italic) + Slide (simple) + Learn anything (italic, slightly smaller) */}
             <div className="flex items-baseline gap-[14px] font-['Roboto'] font-black tracking-tight leading-none">
@@ -146,7 +143,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                 aria-label="Open profile menu"
                 type="button"
               >
-                <img loading="lazy" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-10 w-10 rounded-full" alt="profile" />
+                <img loading="lazy" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-11.5 w-11.5 rounded-full" alt="profile" />
               </button>
               {showProfileMenu && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
@@ -202,13 +199,13 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
             <CurrencySelector hideIcon />
             <Link
               to="/login"
-              className="flex h-10 items-center rounded-full border border-black bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
+              className="flex h-11.5 items-center rounded-full border border-black bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
             >
               Log in
             </Link>
             <Link
               to={`/register`}
-              className="flex h-10 items-center rounded-full bg-primary px-7 text-sm font-semibold text-white transition-colors hover:bg-black"
+              className="flex h-11.5 items-center rounded-full bg-primary px-7 text-sm font-semibold text-white transition-colors hover:bg-black"
             >
               Create an account
             </Link>

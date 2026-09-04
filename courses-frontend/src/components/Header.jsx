@@ -26,6 +26,7 @@ import { getTeacherLessons } from "../redux/reducers/LessonReducer";
 import CategoriesBar from "../Pages/Home/Components/Categories";
 import CurrencySelector from "./CurrencySelector";
 import HeaderSearchOverlay from "./HeaderSearchOverlay";
+import LogoIcon from "./LogoIcon";
 
 const Header = ({ 
   categories = [], 
@@ -156,11 +157,7 @@ useEffect(() => {
         className="flex lg:hidden shrink-0 items-center gap-2 select-none"
         aria-label="SkillSlide home"
       >
-        <div className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[9px] bg-[#FA4602]">
-          <span className="font-['Roboto'] text-[24px] font-bold italic text-white leading-none">
-            S
-          </span>
-        </div>
+        <LogoIcon className="h-[40px] w-[40px]" />
         <span className="font-['Roboto'] text-xl font-black tracking-tight text-[#FA4602] leading-none">
           <span className="italic">Skill</span>
           <span className="not-italic">Slide</span>
