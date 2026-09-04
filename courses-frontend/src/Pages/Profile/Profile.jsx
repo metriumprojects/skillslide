@@ -41,7 +41,7 @@ export default function Profile() {
 
   const requestedTab = searchParams.get("tab");
   const normalizedTab =
-    requestedTab === "Student Dashboard"
+    requestedTab === "Student Dashboard" || requestedTab === "Dashboard"
       ? "My Schedule"
       : requestedTab;
   const tab =
@@ -52,7 +52,7 @@ export default function Profile() {
   useEffect(() => {
     if (userInfo) {
       // Set initial tab from query param or default based on role
-      if (!searchParams.get("tab") || searchParams.get("tab") === "Student Dashboard") {
+      if (!searchParams.get("tab") || searchParams.get("tab") === "Student Dashboard" || searchParams.get("tab") === "Dashboard") {
         setSearchParams({
           tab: userInfo.role === "user" ? "My Schedule" : "Revenue",
         });

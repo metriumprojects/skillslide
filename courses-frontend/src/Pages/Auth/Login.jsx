@@ -8,12 +8,10 @@ import { toast } from "react-toastify";
 import { Eye, EyeOff, Calendar, Mail, User } from "lucide-react";
 import GoogleLoginButton from "./GoogleLoginButton";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
+import CustomDatePicker from "../../components/CustomDatePicker";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dinwxxnzm/image/upload/v1784044801/Logo_1_jldcf8.png";
-
-const inputClass =
-  "h-[52px] w-full rounded-[10px] border border-zinc-300 bg-white px-4 text-sm text-zinc-900 placeholder:text-zinc-400 font-normal focus:outline-none focus:border-zinc-600 autofill:shadow-[0_0_0_1000px_white_inset]";
 
 const SELLER_SETUP_STEPS = ["name", "dateOfBirth", "country"];
 
@@ -365,41 +363,22 @@ export default function Login() {
           )}
 
           {isSellerSetup && sellerSetupStep === "dateOfBirth" && (
-            <div
-              onClick={() => {
-                try {
-                  dateInputRef.current?.showPicker?.();
-                } catch (_) {
-                  dateInputRef.current?.focus();
-                }
-              }}
-              className="flex items-center justify-between gap-4 rounded-[20px] bg-[#F4F4F4] px-5 py-[16px] h-[68px] w-full cursor-pointer select-none"
-            >
-              <div className="flex flex-col justify-center gap-[4px] text-left flex-1 min-w-0">
-                <span className="text-[14px] font-normal text-black select-none">
-                  Date of birth
-                </span>
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  aria-label="Date of birth"
-                  autoFocus
-                  className="w-full text-[14px] font-normal text-zinc-900 bg-transparent outline-none focus:outline-none focus:ring-0 p-0 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
-                />
-              </div>
-              <Calendar className="h-5 w-5 text-black shrink-0" />
-            </div>
+            <CustomDatePicker
+              value={dateOfBirth}
+              onChange={setDateOfBirth}
+              label="Date of birth"
+              variant="pill"
+            />
           )}
 
           {isSellerSetup && sellerSetupStep === "country" && (
             <CountryAutocomplete
               value={country}
               onChange={setCountry}
-              placeholder="Country"
+              placeholder="Select or type country"
+              label="Country"
+              variant="pill"
               className="w-full"
-              inputClassName={inputClass}
             />
           )}
 

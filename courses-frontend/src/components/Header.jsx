@@ -51,10 +51,15 @@ const Header = ({
     return location.pathname === path;
   };
 
-  const mobileMenuLinkClass = (path) =>
-    `px-4 py-2 rounded-full transition-colors ${
-      isActiveLink(path) ? "border border-white bg-[#008CFF] text-white" : "hover:text-[#1dbf73]"
+  const mobileMenuLinkClass = (path, searchTab = "") => {
+    const currentTab = new URLSearchParams(location.search).get("tab");
+    const isActive = searchTab
+      ? (location.pathname === path && currentTab === searchTab)
+      : (location.pathname === path && !currentTab);
+    return `px-4 py-2 rounded-full transition-colors ${
+      isActive ? "border border-white bg-[#008CFF] text-white" : "hover:text-[#1dbf73]"
     }`;
+  };
 
   useEffect(() => {
     dispatch(getUser());
@@ -175,6 +180,7 @@ useEffect(() => {
           handleSearchClick={handleSearchClick}
           handleProfileClick={handleProfileClick}
           showProfileMenu={showProfileMenu}
+          setShowProfileMenu={setShowProfileMenu}
           menuRef={menuRef}
           handleLogout={handleLogout}
           Teacherlessons={Teacherlessons}
@@ -217,11 +223,11 @@ useEffect(() => {
           {userInfo ? (
             <>
               <Link
-                to="/profile"
-                className={mobileMenuLinkClass("/profile")}
+                to="/profile?tab=My Profile"
+                className={mobileMenuLinkClass("/profile", "My Profile")}
                 onClick={() => setShowMobileMenu(false)}
               >
-                View Profile
+                My Profile
               </Link>
               {userInfo?.role === "user" && (
                 <button
@@ -254,11 +260,11 @@ useEffect(() => {
                 {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
               </Link>
               <Link
-                to="/profile"
-                className={mobileMenuLinkClass("/profile")}
+                to="/profile?tab=My Schedule"
+                className={mobileMenuLinkClass("/profile", "My Schedule")}
                 onClick={() => setShowMobileMenu(false)}
               >
-                Dashboard
+                My Schedule
               </Link>
               <button
                 onClick={() => { handleLogout(); setShowMobileMenu(false); }}

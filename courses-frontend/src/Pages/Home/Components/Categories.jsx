@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import CurrencySelector from "../../../components/CurrencySelector";
 import LogoIcon from "../../../components/LogoIcon";
 
-export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
+export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, setShowProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -95,8 +95,11 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     }`;
   };
 
-  const menuLinkClass = (path) => {
-    const isActive = location.pathname === path;
+  const menuLinkClass = (path, searchTab = "") => {
+    const currentTab = new URLSearchParams(location.search).get("tab");
+    const isActive = searchTab
+      ? (location.pathname === path && currentTab === searchTab)
+      : (location.pathname === path && !currentTab);
     return `w-full px-4 py-2 text-left flex items-center gap-2 text-sm transition-colors ${
       isActive ? "border border-white bg-primary text-white" : "hover:bg-gray-50"
     }`;
@@ -151,41 +154,45 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                             exit={{ opacity: 0, y: -40, scale: 0.95 }}
                             transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden">
                   <Link
-                    to={`/profile`}
-                    className={menuLinkClass("/profile")}
+                    to="/profile?tab=My Profile"
+                    className={menuLinkClass("/profile", "My Profile")}
+                    onClick={() => setShowProfileMenu?.(false)}
                   >
-                    View Profile
+                    My Profile
                   </Link>
                   {userInfo?.role === "user" && (
-                    <button onClick={() => handleTeacher("teacher")} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    <button onClick={() => { handleTeacher("teacher"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
                       {Teacherlessons.length > 0 ? "Teacher profile" : "Become a Teacher"}
                     </button>
                   )}
                   {userInfo?.role === "teacher" && (
-                    <button onClick={() => handleTeacher("user")} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    <button onClick={() => { handleTeacher("user"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
                       Student profile
                     </button>
                   )}
                   <Link
-                    to={`/`}
+                    to="/"
                     className={menuLinkClass("/")}
+                    onClick={() => setShowProfileMenu?.(false)}
                   >
                     Discover
                   </Link>
                   <Link
-                    to={`/teach`}
+                    to="/teach"
                     className={menuLinkClass("/teach")}
+                    onClick={() => setShowProfileMenu?.(false)}
                   >
-                  {userInfo?.role === "teacher" ?  "Student Requests" : "Requests"}
+                  {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
                   </Link>
                   <Link
-                    to={`/profile`}
-                    className={menuLinkClass("/profile")}
+                    to="/profile?tab=My Schedule"
+                    className={menuLinkClass("/profile", "My Schedule")}
+                    onClick={() => setShowProfileMenu?.(false)}
                   >
-                    Dashboard
+                    My Schedule
                   </Link>
                   <button
-                    onClick={handleLogout}
+                    onClick={() => { handleLogout(); setShowProfileMenu?.(false); }}
                     className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 text-sm"
                   >
                     Logout

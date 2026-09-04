@@ -8,6 +8,7 @@ import { deleteUser } from "../../redux/reducers/DashboardReducer";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
+import CustomDatePicker from "../../components/CustomDatePicker";
 
 const toDateInput = (value) => {
   if (!value) return "";
@@ -176,12 +177,15 @@ export default function EditProfile() {
 
           <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
             <label className="block mb-2 text-sm font-semibold text-gray-900">Date of birth</label>
-            <input
-              type="date"
-              name="dateOfBirth"
+            <CustomDatePicker
               value={formData.dateOfBirth}
-              onChange={handleChange}
-              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:ring-gray-900/20"
+              onChange={(val) => {
+                setFormData((prev) => ({ ...prev, dateOfBirth: val }));
+                setErrorMessage("");
+                setSuccessMessage("");
+              }}
+              variant="input"
+              placeholder="Select date of birth"
             />
           </div>
 
