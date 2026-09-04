@@ -117,9 +117,9 @@ export default function NewPassword() {
 
           <div className="h-px w-full bg-gray-200" />
 
-          <p className="text-[16px]">
+          <p className="text-[16px] font-normal">
             Back to{" "}
-            <Link to="/login" className="font-medium underline underline-offset-2">
+            <Link to="/login" className="font-normal underline underline-offset-2">
               Log in
             </Link>
           </p>

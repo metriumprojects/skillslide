@@ -449,27 +449,27 @@ export default function Login() {
           <div className="h-px w-full bg-gray-200" />
 
           {step !== "sellerSetup" && (
-            <Link to="/forget" className="block text-[16px] underline underline-offset-2">
+            <Link to="/forget" className="block text-[16px] font-normal underline underline-offset-2">
               Forgot password
             </Link>
           )}
 
           {isSellerSetup ? (
-            <p className="text-[16px]">
+            <p className="text-[16px] font-normal">
               <button
                 type="button"
                 onClick={cancelSellerSetup}
-                className="font-medium text-black underline underline-offset-2"
+                className="font-normal text-black underline underline-offset-2"
               >
                 Go back to your student profile
               </button>
             </p>
           ) : (
-            <p className="text-[16px]">
+            <p className="text-[16px] font-normal">
               New to Skillslide?{" "}
               <Link
                 to={`/register${loginAs === "seller" ? "?role=teacher" : ""}`}
-                className="font-medium underline underline-offset-2"
+                className="font-normal underline underline-offset-2"
               >
                 Create an account
               </Link>

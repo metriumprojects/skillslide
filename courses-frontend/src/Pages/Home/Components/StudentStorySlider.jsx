@@ -111,7 +111,7 @@ export default function StudentStorySlider() {
                   </div>
 
                   {/* Slide Numbering Pill */}
-                  <div className="flex h-10 min-w-[56px] items-center justify-center rounded-full border-2 border-black bg-white px-3.5 text-sm font-bold text-black select-none">
+                  <div className="flex h-10 min-w-[56px] items-center justify-center rounded-full border border-black bg-white px-3.5 text-sm font-bold text-black select-none">
                     <span>{currentIndex + 1}</span>
                     <span className="ml-[1px]">/</span>
                     <span>{stories.length}</span>

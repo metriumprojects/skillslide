@@ -405,9 +405,9 @@ export default function Register() {
             </p>
           )}
 
-          <p className="text-[16px]">
+          <p className="text-[16px] font-normal">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium underline underline-offset-2">
+            <Link to="/login" className="font-normal underline underline-offset-2">
               Log in
             </Link>
           </p>
