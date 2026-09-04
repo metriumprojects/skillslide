@@ -146,7 +146,7 @@ export default function Upcoming() {
   };
 
   return (
-    <div className="w-full mt-6">
+    <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl mt-10">
       {userUpcomingdata?.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {userUpcomingdata?.map((course, index) => {

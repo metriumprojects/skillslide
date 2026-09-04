@@ -3,11 +3,11 @@
 
 @theme {
     --color-primary: #FA4602;
-    --font-sans: 'Inter', sans-serif;
+    --font-sans: 'Roboto', sans-serif;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
 @theme {

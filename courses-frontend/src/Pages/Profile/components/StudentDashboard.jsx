@@ -206,10 +206,8 @@ export default function StudentDashboard() {
 
   return (
     <div className="w-full">
-      <h2 className="text-[28px] font-medium mb-5 mt-7.5">My Schedule</h2>
-
       {/* ✅ Tab Navigation */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-6 mt-6">
         <button 
           onClick={() => setActiveTab('upcoming')}
           className={`px-3 py-2 font-medium transition-colors ${

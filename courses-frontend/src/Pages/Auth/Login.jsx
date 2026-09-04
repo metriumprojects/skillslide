@@ -230,13 +230,13 @@ export default function Login() {
             <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
               {/* S Orange Icon Badge */}
               <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-                <span className="font-['Inter'] text-[28px] font-bold italic text-white leading-none">
+                <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
                   S
                 </span>
               </div>
 
               {/* Skill (italic) + Slide (simple) */}
-              <span className="font-['Inter'] text-[28px] font-black tracking-tight text-[#FA4602] leading-none">
+              <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4602] leading-none">
                 <span className="italic">Skill</span>
                 <span className="not-italic">Slide</span>
               </span>

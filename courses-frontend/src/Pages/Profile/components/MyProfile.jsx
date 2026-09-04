@@ -43,8 +43,7 @@ const MyProfile = () => {
     <div className="w-full">
       {/* Profile Section */}
       <div className="w-full">
-        <div className="flex items-center justify-between mb-5 mt-7.5">
-          <h2 className="text-[28px] font-medium">My profile</h2>
+        <div className="flex items-center justify-end mb-5 mt-7.5">
           <button
             onClick={() => navigate("/edit-profile")}
             className="text-base flex items-center gap-1 cursor-pointer"

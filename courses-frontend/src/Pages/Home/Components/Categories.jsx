@@ -108,13 +108,13 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
           <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
             {/* S Orange Icon Badge - Perfectly balanced 46x46 */}
             <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-              <span className="font-['Inter'] text-[28px] font-bold italic text-white leading-none">
+              <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
                 S
               </span>
             </div>
 
             {/* Skill (italic) + Slide (simple) + Learn anything (italic, slightly smaller) */}
-            <div className="flex items-baseline gap-[14px] font-['Inter'] font-black tracking-tight leading-none">
+            <div className="flex items-baseline gap-[14px] font-['Roboto'] font-black tracking-tight leading-none">
               <span className="text-2xl sm:text-[28px] text-[#FA4602]">
                 <span className="italic">Skill</span>
                 <span className="not-italic">Slide</span>

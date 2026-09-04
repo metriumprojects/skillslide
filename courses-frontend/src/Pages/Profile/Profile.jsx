@@ -40,17 +40,21 @@ export default function Profile() {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const requestedTab = searchParams.get("tab");
+  const normalizedTab =
+    requestedTab === "Student Dashboard"
+      ? "My Schedule"
+      : requestedTab;
   const tab =
-    requestedTab === "Bookmarks"
+    normalizedTab === "Bookmarks"
       ? "My Bookmarks"
-      : requestedTab || (userInfo?.role === "user" ? "Student Dashboard" : "Revenue");
+      : normalizedTab || (userInfo?.role === "user" ? "My Schedule" : "Revenue");
 
   useEffect(() => {
     if (userInfo) {
       // Set initial tab from query param or default based on role
-      if (!searchParams.get("tab")) {
+      if (!searchParams.get("tab") || searchParams.get("tab") === "Student Dashboard") {
         setSearchParams({
-          tab: userInfo.role === "user" ? "Student Dashboard" : "Revenue",
+          tab: userInfo.role === "user" ? "My Schedule" : "Revenue",
         });
       }
       // Set initial profile image
@@ -104,7 +108,7 @@ export default function Profile() {
         dispatch(getUser());
 
         if (role === "user") {
-          setSearchParams({ tab: "Student Dashboard" });
+          setSearchParams({ tab: "My Schedule" });
         } else if (role === "teacher") {
           setSearchParams({ tab: "Dashboard" });
         }
@@ -116,9 +120,9 @@ export default function Profile() {
     });
   };
 
-  // Student tabs - Updated to include "StudentDashboard"
+  // Student tabs - Updated to include "My Schedule"
   const studentStates = [
-    "Student Dashboard",
+    "My Schedule",
     "My Bookmarks",
     "My Profile",
     "My Requests",
@@ -225,9 +229,13 @@ export default function Profile() {
           {tab === "Unscheduled" && <UnShaduled />}
           {tab === "Canceled" && <Canceled />}
           {tab === "My Bookmarks" && <BookMark />}
-          {tab === "My Schedule" && <TeacherDashboard />}
-          {tab === "Student Dashboard" && <StudentDashboard />}{" "}
-          {/* Add this line for StudentDashboard */}
+          {tab === "My Schedule" &&
+            (userInfo?.role === "teacher" ? (
+              <TeacherDashboard />
+            ) : (
+              <StudentDashboard />
+            ))}
+          {tab === "Student Dashboard" && <StudentDashboard />}
           {tab === "My Lessons" && <Lessons />}
           {tab === "My Curriculum" && <Curriculum />}
           {tab === "My Availability Calendar" && <Calender />}

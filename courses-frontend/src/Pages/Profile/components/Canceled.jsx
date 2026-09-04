@@ -209,9 +209,7 @@ export default function Canceled() {
           })}
         </div>
       ) : (
-        <div className="text-center py-10">
-          <p className="text-gray-500 text-lg">No Canceled Bookings yet</p>
-        </div>
+        <p>No Canceled Bookings yet</p>
       )}
 
       {/* Lessons Popup for Curriculum - Same design as Unscheduled page */}

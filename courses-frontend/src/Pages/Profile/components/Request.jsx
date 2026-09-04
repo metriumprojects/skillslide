@@ -1,4 +1,4 @@
-import { Heart, Edit, Trash } from "lucide-react";
+import { Heart, Edit, Trash, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { deletePropose, getProposeByUser } from "../../../redux/reducers/ProposeReducer";
@@ -59,15 +59,16 @@ const handleDelete = (id) => {
 
   return (
     <div className="w-full pb-10 space-y-6">
-           <div className="flex items-center justify-between mb-5 mt-7.5">
-          <h2 className="text-[28px] font-medium">My Requests</h2>
-          <span 
-            onClick={() => setShowCreateRequest(true)}
-            className="text-black cursor-pointer transition-colors"
-          >
-            Post a request
-          </span>
-        </div>
+      <div className="flex items-center justify-end mb-5 mt-7.5">
+        <button 
+          type="button"
+          onClick={() => setShowCreateRequest(true)}
+          className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+          Post a request
+        </button>
+      </div>
       {userProposes && userProposes.length > 0 ? (
         userProposes.map((req) => (
           <ProfileRequestCard
@@ -78,7 +79,9 @@ const handleDelete = (id) => {
           />
         ))
       ) : (
-        <p className="text-center text-gray-500 py-10">No requests found</p>
+        <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl">
+          <p>No requests found</p>
+        </div>
       )}
 
       {edit && (

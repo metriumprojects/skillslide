@@ -602,7 +602,7 @@ export const updateProfile = async (req, res) => {
 
 export const becomeTeacher = async (req, res) => {
   try {
-    const { role, sellerName, dateOfBirth, country } = req.body;
+    const { role, sellerName, dateOfBirth, country, resetSellerInfo } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -626,15 +626,34 @@ export const becomeTeacher = async (req, res) => {
       user.reverseRole = true;
       user.publicType = true;
       user.name = resolveDisplayName(user, "teacher");
+      await user.save();
     } else {
       user.role = "user";
-      if (user.sellerName) user.reverseRole = true;
-      else user.reverseRole = false;
       user.publicType = false;
-      user.name = resolveDisplayName(user, "user");
-    }
 
-    await user.save();
+      if (resetSellerInfo) {
+        await User.findByIdAndUpdate(req.user.id, {
+          $unset: { sellerName: 1, dateOfBirth: 1, country: 1 },
+          $set: {
+            role: "user",
+            reverseRole: false,
+            publicType: false,
+            name: resolveDisplayName({ buyerName: user.buyerName, name: user.name }, "user"),
+          },
+        });
+        const updated = await User.findById(req.user.id);
+        return res.json({
+          status: true,
+          message: "Switched to student successfully",
+          role: updated.role,
+        });
+      } else {
+        if (user.sellerName) user.reverseRole = true;
+        else user.reverseRole = false;
+        user.name = resolveDisplayName(user, "user");
+        await user.save();
+      }
+    }
 
     res.json({
       status: true,

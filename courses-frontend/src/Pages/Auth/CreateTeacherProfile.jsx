@@ -117,24 +117,33 @@ export default function CreateTeacherProfile() {
   return (
     <MainLayout hideHeader hideFooter hideMobileMenu contentClassName="!min-h-screen">
       <div className="flex min-h-[calc(100vh-32px)] flex-col pt-0 pb-0">
-        {/* Top: Logo with exact 20px margin from top */}
-        <div className="w-full max-w-xl mx-auto px-2 mt-[20px]">
+        {/* Top: Logo with 20px top gap + Teacher account with 20px gap below logo */}
+        <div className="w-full max-w-xl mx-auto px-2 mt-[20px] shrink-0">
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
             {/* S Orange Icon Badge */}
             <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[#FA4602]">
-              <span className="font-['Inter'] text-[28px] font-bold italic text-white leading-none">
+              <span className="font-['Roboto'] text-[28px] font-bold italic text-white leading-none">
                 S
               </span>
             </div>
 
-            <span className="font-['Inter'] text-[24px] sm:text-[28px] font-bold italic tracking-tight text-[#FA4602] leading-none">
-              Create your teacher account
+            {/* Skill (italic) + Slide (simple) */}
+            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4602] leading-none">
+              <span className="italic">Skill</span>
+              <span className="not-italic">Slide</span>
             </span>
           </Link>
+
+          {/* Create your teacher account 20px below logo, aligned with the logo icon */}
+          <div className="mt-[20px]">
+            <span className="font-['Roboto'] text-[20px] sm:text-[24px] font-normal text-black tracking-tight leading-none">
+              Create your teacher account
+            </span>
+          </div>
         </div>
 
-        {/* Center: Centered exactly between Logo and Bottom of page */}
-        <div className="flex w-full flex-1 flex-col items-center justify-center py-4">
+        {/* Center: Centered between Teacher account bottom and page bottom */}
+        <div className="my-auto flex w-full flex-1 flex-col items-center justify-center py-2">
           <form
             onSubmit={handleNext}
             className="flex w-full max-w-xl flex-col gap-6 px-2 text-left text-sm text-[#000000]"
