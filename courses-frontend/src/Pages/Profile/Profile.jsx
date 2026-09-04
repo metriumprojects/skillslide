@@ -29,6 +29,7 @@ import Request from "./components/Request";
 import StudentDashboard from "./components/StudentDashboard";
 import Revenu from "./TeacherComponents/Revenu";
 import MyProfile from "./components/MyProfile";
+import PayoutHistory from "./TeacherComponents/PayoutHistory";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -135,12 +136,13 @@ export default function Profile() {
   const teacherStates = [
     "Revenue",
     "My Bookmarks",
-    "My Lessons",
+    "Lessons",
     "My Profile",
-    "My Availability Calendar",
+    "Calendar",
     "My Requests",
-    "My Curriculum",
-    "My Schedule",
+    "Curriculum",
+    "Schedule",
+    "Payout History",
     // "Booked",
     // "Upcoming",
     // "Unscheduled",
@@ -155,33 +157,54 @@ export default function Profile() {
         {/* Bottom Tabs Section */}
         <div className="w-full">
           {/* Desktop Tabs */}
-          <div className="hidden w-fit max-w-full rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black md:block">
-            <Swiper
-              modules={[FreeMode]}
-              freeMode={{ enabled: true, momentum: true }}
-              slidesPerView="auto"
-              spaceBetween={4}
-              grabCursor
-              className="w-full"
-            >
-              {tabsToShow.map((s, index) => (
-                <SwiperSlide key={index} className="!w-auto">
-                  <button
-                    onClick={() => setSearchParams({ tab: s })}
-                    className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm transition-colors duration-200 ${
-                      tab === s
-                        ? "bg-primary text-white shadow-sm"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+          <div className="hidden md:flex items-center gap-3 w-full max-w-full">
+            <div className="w-fit max-w-full rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black">
+              <Swiper
+                modules={[FreeMode]}
+                freeMode={{ enabled: true, momentum: true }}
+                slidesPerView="auto"
+                spaceBetween={4}
+                grabCursor
+                className="w-full"
+              >
+                {tabsToShow.map((s, index) => (
+                  <SwiperSlide key={index} className="!w-auto">
+                    <button
+                      onClick={() => setSearchParams({ tab: s })}
+                      className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm transition-colors duration-200 ${
+                        tab === s
+                          ? "bg-primary text-white shadow-sm"
+                          : "text-black hover:bg-gray-100"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+
+            {userInfo?.role === "teacher" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate("/withdraw-request")}
+                  className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                >
+                  Complete payments setup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/create-lesson")}
+                  className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                >
+                  Create lesson
+                </button>
+              </>
+            )}
           </div>
           {/* Mobile Dropdown Tabs */}
-          <div className="relative mb-4 md:hidden">
+          <div className="relative mb-4 md:hidden flex items-center justify-between gap-2">
             <button
               className="flex w-fit items-center justify-between rounded-full bg-primary px-5 py-2.5 font-medium text-white "
               onClick={() => setShowDropdown((prev) => !prev)}
@@ -202,6 +225,24 @@ export default function Profile() {
                 />
               </svg>
             </button>
+            {userInfo?.role === "teacher" && (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => navigate("/withdraw-request")}
+                  className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                >
+                  Complete payments setup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/create-lesson")}
+                  className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                >
+                  Create lesson
+                </button>
+              </div>
+            )}
             {showDropdown && (
               <div className="absolute left-0 right-0 z-10 mt-2 space-y-1 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
                 {tabsToShow.map((s, index) => (
@@ -214,7 +255,7 @@ export default function Profile() {
                     className={`w-full rounded-xl px-5 py-2.5 text-left transition-colors ${
                       tab === s
                         ? "bg-primary font-semibold text-white"
-                        : "text-gray-700 hover:bg-gray-100"
+                        : "text-black hover:bg-gray-100"
                     }`}
                   >
                     {s}
@@ -229,18 +270,19 @@ export default function Profile() {
           {tab === "Unscheduled" && <UnShaduled />}
           {tab === "Canceled" && <Canceled />}
           {tab === "My Bookmarks" && <BookMark />}
-          {tab === "My Schedule" &&
+          {(tab === "My Schedule" || tab === "Schedule") &&
             (userInfo?.role === "teacher" ? (
               <TeacherDashboard />
             ) : (
               <StudentDashboard />
             ))}
           {tab === "Student Dashboard" && <StudentDashboard />}
-          {tab === "My Lessons" && <Lessons />}
-          {tab === "My Curriculum" && <Curriculum />}
-          {tab === "My Availability Calendar" && <Calender />}
+          {(tab === "My Lessons" || tab === "Lessons") && <Lessons />}
+          {(tab === "My Curriculum" || tab === "Curriculum") && <Curriculum />}
+          {(tab === "My Availability Calendar" || tab === "Calendar") && <Calender />}
           {tab === "My Requests" && <Request />}
           {tab === "My Profile" && <MyProfile />}
+          {tab === "Payout History" && <PayoutHistory />}
         </div>
       </div>
     </MainLayout>

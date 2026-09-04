@@ -90,7 +90,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
 
   const iconButtonClass = (path) => {
     const isActive = location.pathname === path;
-    return `relative cursor-pointer border p-2 font-medium rounded-full text-sm flex items-center justify-center h-11.5 w-11.5 transition-colors ${
+    return `relative cursor-pointer border p-2 font-medium rounded-full text-sm flex items-center justify-center h-9 w-9 transition-colors ${
       isActive ? "border-white bg-primary text-white" : "border-black bg-white text-black"
     }`;
   };
@@ -146,7 +146,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                 aria-label="Open profile menu"
                 type="button"
               >
-                <img loading="lazy" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-11.5 w-11.5 rounded-full" alt="profile" />
+                <img loading="lazy" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-9 w-9 rounded-full object-cover" alt="profile" />
               </button>
               {showProfileMenu && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
@@ -206,13 +206,13 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
             <CurrencySelector hideIcon />
             <Link
               to="/login"
-              className="flex h-11.5 items-center rounded-full border border-black bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
+              className="flex h-9 items-center rounded-full border border-black bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
             >
               Log in
             </Link>
             <Link
               to={`/register`}
-              className="flex h-11.5 items-center rounded-full bg-primary px-7 text-sm font-semibold text-white transition-colors hover:bg-black"
+              className="flex h-9 items-center rounded-full bg-primary px-7 text-sm font-semibold text-white transition-colors hover:bg-black"
             >
               Create an account
             </Link>

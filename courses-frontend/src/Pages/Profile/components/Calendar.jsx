@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, X } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -394,12 +394,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      <h2 className="text-[28px] font-medium mb-5 mt-7.5">Calendar</h2>
-      <div className="max-w-[1800px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="max-w-[1800px] mx-auto mt-[20px]">
+        <div className="text-sm text-gray-500 mb-[20px]">Time Zone: {timeZone}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           {/* LEFT: WEEKLY HOURS */}
-          <div className="space-y-6">
+          <div className="space-y-5">
 
             {/* Calendar selector */}
             <div className="bg-[#F7F7F7] rounded-2xl p-4">
@@ -544,7 +544,7 @@ export default function Home() {
           </div>
 
           {/* RIGHT: DATE-SPECIFIC HOURS */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-gray-900">Custom day availability</h2>
               <button
@@ -630,8 +630,6 @@ export default function Home() {
               </div>
             )}
           </div>
-
-          <div className="text-sm text-gray-500">Time Zone: {timeZone}</div>
         </div>
 
         <button

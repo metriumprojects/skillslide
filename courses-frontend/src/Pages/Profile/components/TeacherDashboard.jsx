@@ -244,10 +244,8 @@ export default function LessonsDashboard() {
 
   return (
     <div className="w-full">
-      <h2 className="text-[28px] font-medium mb-5 mt-7.5">My Schedule</h2>
-
       {/* ✅ Tab Navigation */}
-      <div className=" w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black">
+      <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black mt-[20px] mb-[20px]">
         <Swiper
           modules={[FreeMode]}
           freeMode={{ enabled: true, momentum: true }}
@@ -268,7 +266,7 @@ export default function LessonsDashboard() {
                 className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-200 ${
                   activeTab === item.value
                     ? "bg-primary text-white shadow-sm"
-                    : "text-gray-700 hover:bg-gray-100"
+                    : "text-black hover:bg-gray-100"
                 }`}
               >
                 {item.label}
@@ -282,8 +280,8 @@ export default function LessonsDashboard() {
       {/* ✅ Upcoming Lessons Tab */}
       {activeTab === 'upcoming' && (
         <>
-          <div className="flex justify-end items-center mb-5">
-            {upcomingTotalPages > 1 && (
+          {upcomingTotalPages > 1 && (
+            <div className="flex justify-end items-center mb-5">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setUpcomingPage(prev => Math.max(1, prev - 1))}
@@ -303,8 +301,8 @@ export default function LessonsDashboard() {
                   <FaChevronRight />
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           <div className="overflow-x-auto rounded-2xl mb-10">
             <table className="w-full rounded-2xl overflow-hidden">
@@ -372,8 +370,8 @@ export default function LessonsDashboard() {
       {/* ✅ Past Lessons Tab */}
       {activeTab === 'past' && (
         <>
-          <div className="flex justify-end items-center mb-5">
-            {pastTotalPages > 1 && (
+          {pastTotalPages > 1 && (
+            <div className="flex justify-end items-center mb-5">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPastPage(prev => Math.max(1, prev - 1))}
@@ -393,8 +391,8 @@ export default function LessonsDashboard() {
                   <FaChevronRight />
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           <div className="overflow-x-auto rounded-2xl mb-10">
             <table className="w-full rounded-2xl overflow-hidden">
@@ -484,8 +482,8 @@ export default function LessonsDashboard() {
       {/* ✅ Canceled Lessons Tab */}
       {activeTab === 'canceled' && (
         <>
-          <div className="flex justify-end items-center mb-5">
-            {canceledTotalPages > 1 && (
+          {canceledTotalPages > 1 && (
+            <div className="flex justify-end items-center mb-5">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCanceledPage(prev => Math.max(1, prev - 1))}
@@ -505,8 +503,8 @@ export default function LessonsDashboard() {
                   <FaChevronRight />
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           <div className="overflow-x-auto rounded-2xl mb-10">
             <table className="w-full rounded-2xl overflow-hidden">

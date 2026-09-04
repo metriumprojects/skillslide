@@ -71,7 +71,6 @@ export default function NewPassword() {
           <div className="relative w-full">
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="New password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               aria-label="New password"
@@ -91,7 +90,6 @@ export default function NewPassword() {
           <div className="relative w-full">
             <input
               type={showConfirm ? "text" : "password"}
-              placeholder="Confirm new password"
               value={cpassword}
               onChange={(e) => setCpassword(e.target.value)}
               aria-label="Confirm new password"

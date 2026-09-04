@@ -163,9 +163,9 @@ export default function Register() {
 
   return (
     <MainLayout hideHeader hideFooter hideMobileMenu contentClassName="!min-h-screen">
-      <div className="flex min-h-[calc(100vh-32px)] flex-col justify-between pt-0 pb-5">
-        {/* Top: Logo with exact 20px margin from top */}
-        <div className="w-full max-w-xl mx-auto px-2 mt-[20px]">
+      <div className="flex min-h-[calc(100vh-32px)] flex-col pt-0 pb-0">
+        {/* Top: Logo with 20px top gap + heading with 20px gap below logo */}
+        <div className="w-full max-w-xl mx-auto px-2 mt-[20px] shrink-0">
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
             {/* S Orange Icon Badge - Official SVG */}
             <LogoIcon className="h-[46px] w-[46px]" />
@@ -176,10 +176,38 @@ export default function Register() {
               <span className="not-italic">Slide</span>
             </span>
           </Link>
+
+          {/* Heading 20px below logo */}
+          <div className="mt-[20px] flex items-center gap-3">
+            <svg
+              width="26"
+              height="24"
+              viewBox="0 0 26 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 7L25 12L20 17M25 12L11 12"
+                stroke="#212135"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M16.7023 19C17.3687 19 17.8657 19.6305 17.6195 20.2498C16.4497 23.1923 14.0189 24 9.29413 24C1.64062 23.9999 0.000185013 21.8819 0.000185013 12C0.000185013 2.11813 1.64062 5.52014e-05 9.29413 0C14.0189 0 16.4497 0.807678 17.6195 3.75017C17.8657 4.36951 17.3687 5 16.7023 5C16.2503 5 15.8626 4.69946 15.6787 4.28662C15.539 3.97283 15.3883 3.72215 15.2307 3.51855C14.5043 2.5808 13.1176 2 9.29413 2C5.47114 2.00003 4.08501 2.58094 3.35858 3.51855C2.95317 4.04202 2.59113 4.87607 2.34687 6.29492C2.10269 7.71347 2.00019 9.56405 2.00019 12C2.00019 14.436 2.10269 16.2865 2.34687 17.7051C2.59113 19.1239 2.95317 19.958 3.35858 20.4814C4.08501 21.4191 5.47115 22 9.29413 22C13.1176 22 14.5043 21.4192 15.2307 20.4814C15.3883 20.2779 15.539 20.0272 15.6787 19.7134C15.8626 19.3005 16.2503 19 16.7023 19Z"
+                fill="#212135"
+              />
+            </svg>
+            <span className="font-['Roboto'] text-[20px] sm:text-[24px] font-normal text-black tracking-tight leading-none">
+              Create your account
+            </span>
+          </div>
         </div>
 
-        {/* Center: Rest of the area centered */}
-        <div className="my-auto flex w-full flex-1 items-center justify-center py-6">
+        {/* Center: Centered between heading bottom and page bottom */}
+        <div className="my-auto flex w-full flex-1 flex-col items-center justify-center py-2">
           <form
             onSubmit={handleContinue}
             className="flex w-full max-w-xl flex-col gap-6 px-2 text-left text-sm text-[#000000]"
@@ -304,10 +332,9 @@ export default function Register() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
                     aria-label="Password"
                     autoFocus
-                    className="w-full text-[14px] font-normal text-zinc-900 bg-transparent outline-none focus:outline-none focus:ring-0 p-0 placeholder:text-zinc-500"
+                    className="w-full text-[14px] font-normal text-zinc-900 bg-transparent outline-none focus:outline-none focus:ring-0 p-0"
                   />
                 </div>
                 <button
@@ -328,9 +355,8 @@ export default function Register() {
                     type={showConfirm ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm password"
                     aria-label="Confirm password"
-                    className="w-full text-[14px] font-normal text-zinc-900 bg-transparent outline-none focus:outline-none focus:ring-0 p-0 placeholder:text-zinc-500"
+                    className="w-full text-[14px] font-normal text-zinc-900 bg-transparent outline-none focus:outline-none focus:ring-0 p-0"
                   />
                 </div>
                 <button
@@ -345,7 +371,14 @@ export default function Register() {
             </>
           )}
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col items-start gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="block w-fit rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+            >
+              {loading ? "Creating..." : "Continue"}
+            </button>
             {!isFirstStep && (
               <button
                 type="button"
@@ -356,19 +389,12 @@ export default function Register() {
                 Go back
               </button>
             )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="block w-fit rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
-            >
-              {loading ? "Creating..." : "Continue"}
-            </button>
           </div>
 
           <div className="h-px w-full bg-gray-200" />
 
           {isFirstStep && (
-            <p className="text-[16px] text-gray-600">
+            <p className="text-[16px] text-black">
               By entering and clicking Continue, you agree to the{" "}
               <Link to="/terms-of-service" className="text-black underline underline-offset-2">
                 Terms

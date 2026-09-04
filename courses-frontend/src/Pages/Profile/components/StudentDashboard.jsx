@@ -214,7 +214,7 @@ export default function StudentDashboard() {
           className={`h-10 px-5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center justify-center ${
             activeTab === 'upcoming' 
               ? "border border-black text-black bg-white"
-              : "border border-transparent text-gray-700 hover:bg-gray-100"
+              : "border border-transparent text-black hover:bg-gray-100"
           }`}
         >
           Upcoming Lessons
@@ -225,7 +225,7 @@ export default function StudentDashboard() {
           className={`h-10 px-5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center justify-center ${
             activeTab === 'past' 
               ? "border border-black text-black bg-white"
-              : "border border-transparent text-gray-700 hover:bg-gray-100"
+              : "border border-transparent text-black hover:bg-gray-100"
           }`}
         >
           Past Lessons

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Plus } from "lucide-react";
 import { getTeacherLessons } from "../../../redux/reducers/LessonReducer";
 import { getUserFavorites } from "../../../redux/reducers/FavoriteReducer";
 import Card from "../../Home/Components/Card";
@@ -18,14 +19,17 @@ export default function Lessons() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-5 mt-7.5">
-        <h2 className="text-[28px] font-medium">My Lessons</h2>
-        <Link to="/create-lesson" className="text-base flex items-center gap-1 cursor-pointer">
-          Create lesson +
+      <div className="flex items-center justify-start mt-[20px] mb-[20px]">
+        <Link
+          to="/create-lesson"
+          className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+          Create lesson
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
         {Teacherlessons.map((lesson) => (
           <Card
             key={lesson._id}

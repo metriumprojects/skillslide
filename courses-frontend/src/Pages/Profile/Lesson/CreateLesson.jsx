@@ -28,12 +28,6 @@ const CreateLesson = () => {
   }, [payoutCurrencies, lessonCurrency]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  useEffect(() => {
-    if (!payoutCurrenciesLoading && !stripePayoutReady) {
-      toast.info("Set up and verify your Stripe payout account before creating a lesson.");
-      navigate("/withdraw-request", { replace: true });
-    }
-  }, [navigate, payoutCurrenciesLoading, stripePayoutReady]);
   const { categories,  } = useSelector(
     (state) => state.category
   );

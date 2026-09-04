@@ -26,13 +26,6 @@ const CreateLessonPopup = ({
   const navigate = useNavigate();
   const [lessonCurrency, setLessonCurrency] = useState(currency);
   useEffect(() => {
-    if (open && !payoutCurrenciesLoading && !stripePayoutReady) {
-      toast.info("Set up and verify your Stripe payout account before creating a lesson.");
-      onClose();
-      navigate("/withdraw-request");
-    }
-  }, [navigate, onClose, open, payoutCurrenciesLoading, stripePayoutReady]);
-  useEffect(() => {
     if (payoutCurrencies.length && !payoutCurrencies.includes(lessonCurrency)) setLessonCurrency(payoutCurrencies[0]);
   }, [payoutCurrencies, lessonCurrency]);
   const dispatch = useDispatch();

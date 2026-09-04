@@ -66,7 +66,7 @@ const handleDelete = (id) => {
           className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"
         >
           <Plus size={16} strokeWidth={2.5} />
-          Post a request
+          Place a request
         </button>
       </div>
       {userProposes && userProposes.length > 0 ? (
