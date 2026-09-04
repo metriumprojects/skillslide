@@ -207,23 +207,25 @@ export default function StudentDashboard() {
   return (
     <div className="w-full">
       {/* ✅ Tab Navigation */}
-      <div className="flex gap-4 mb-6 mt-6">
+      <div className="flex items-center gap-3 mb-6 mt-6">
         <button 
+          type="button"
           onClick={() => setActiveTab('upcoming')}
-          className={`px-3 py-2 font-medium transition-colors ${
+          className={`h-10 px-5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center justify-center ${
             activeTab === 'upcoming' 
-              ? " rounded-full text-black border border-black"
-                    : ""
+              ? "border border-black text-black bg-white"
+              : "border border-transparent text-gray-700 hover:bg-gray-100"
           }`}
         >
           Upcoming Lessons
         </button>
         <button 
+          type="button"
           onClick={() => setActiveTab('past')}
-          className={`px-3 py-2 font-medium transition-colors ${
+          className={`h-10 px-5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center justify-center ${
             activeTab === 'past' 
-       ? " rounded-full text-black border border-black"
-                    : ""
+              ? "border border-black text-black bg-white"
+              : "border border-transparent text-gray-700 hover:bg-gray-100"
           }`}
         >
           Past Lessons

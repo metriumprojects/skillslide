@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { ChevronDown, ChevronUp, ArrowLeft, ArrowRight, Loader, Info, Trash2, Menu, X } from "lucide-react"
 import { GrUpload } from "react-icons/gr"
 import MainLayout from "../../../components/MainLayout"
@@ -670,7 +670,7 @@ export default function EditCurriculum() {
   }
 
   return (
-    <MainLayout className="mx-auto" width="1800px">
+    <MainLayout className="mx-auto" width="100%">
       <div className="min-h-screen bg-white py-10">
         <div className="w-full mx-auto px-4">
 

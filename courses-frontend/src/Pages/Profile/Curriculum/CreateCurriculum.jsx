@@ -913,7 +913,7 @@ export default function CurriculumPage() {
 
   // RENDER LOGIC
   return (
-    <MainLayout className="mx-auto" width="1800px">
+    <MainLayout className="mx-auto" width="100%">
       <div className="min-h-screen bg-white py-10">
         <div className="w-full mx-auto px-4">
           {/* STEP 1: CURRICULUM DETAILS & CALENDAR */}

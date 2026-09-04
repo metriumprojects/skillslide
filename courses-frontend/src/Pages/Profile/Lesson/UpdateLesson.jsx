@@ -526,7 +526,7 @@ const UpdateLesson = () => {
   };
 
   return (
-    <MainLayout className="mx-auto" width="1800px">
+    <MainLayout className="mx-auto" width="100%">
       {/* Cover Image Crop Modal */}
       {showCoverImageCropModal && tempCoverImagePreview && (
         <motion.div

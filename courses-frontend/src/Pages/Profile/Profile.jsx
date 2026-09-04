@@ -150,7 +150,7 @@ export default function Profile() {
   const tabsToShow = userInfo?.role === "user" ? studentStates : teacherStates;
 
   return (
-    <MainLayout className="mx-auto" width="1800px">
+    <MainLayout className="mx-auto" width="100%">
       <div className="min-h-screen w-full flex flex-col items-center py-10">
         {/* Bottom Tabs Section */}
         <div className="w-full">

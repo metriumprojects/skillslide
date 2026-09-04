@@ -265,7 +265,7 @@ export default function LessonsDashboard() {
               <button
                 type="button"
                 onClick={() => setActiveTab(item.value)}
-                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-200 md:text-base ${
+                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-200 ${
                   activeTab === item.value
                     ? "bg-primary text-white shadow-sm"
                     : "text-gray-700 hover:bg-gray-100"
