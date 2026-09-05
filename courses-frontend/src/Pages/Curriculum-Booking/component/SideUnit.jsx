@@ -73,7 +73,7 @@ export default function Curriculum({Data}) {
             className="w-full flex justify-between items-center text-left font-semibold text-black"
           >
             <span>
-           Unit {index + 1} {u.title !== "unit-null" ? <span className="text-black">: {u.title}</span> : ""}
+           Unit {index + 1} {u.title && !u.title.startsWith("unit-") ? <span className="text-black">: {u.title}</span> : ""}
            </span>
             <ChevronDown
               className={`transition-transform duration-200 ${

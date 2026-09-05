@@ -112,7 +112,7 @@ export default function CurriculumBooking() {
   },[])
 
   return (
-    <MainLayout width={"1440px"} contentClassName="lg:overflow-x-visible">
+    <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
       {/* {loading || !singleCurriculum ? (
         <ProfessionalLoader message="Loading curriculum..." />
       ) : ( */}
@@ -156,7 +156,7 @@ export default function CurriculumBooking() {
             </div>
           </div>
           
-              <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 max-w-7xl mx-auto pt-8">
+              <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full pt-8">
                 <nav className=" text-sm md:text-sm flex item-center gap-2">
               <Link to="/" className="flex items-center gap-2">Home  <ChevronRight  size={20}/></Link> <Link to={`/?category=${singleCurriculum?.category}`} className="flex items-center gap-2"> {singleCurriculum?.category}</Link>
             </nav>
@@ -191,7 +191,7 @@ export default function CurriculumBooking() {
             </div>
           </div>
 
-                      <div className="w-full lg:max-w-7xl mx-auto">
+          <div className="w-full">
 
           
 
@@ -228,109 +228,107 @@ export default function CurriculumBooking() {
             </div>
           </div>
 
-          {/* Swiper Slider */}
-          <div className="grid grid-cols-1 lg:grid-cols-6 3xl:grid-cols-6 md:gap-[30px] mt-3 md:mt-7.5 h-fit">
+          {/* 3-Column Layout: Column 1 (Media & Details), Column 2 (What's Included), Column 3 (Calendar) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-6 lg:gap-8 mt-3 md:mt-7.5 h-fit w-full">
             
-            <div className="col-span-1 lg:col-span-4">
+            {/* COLUMN 1: Image Gallery & Lesson/Curriculum Details */}
+            <div className="col-span-1 lg:col-span-7 xl:col-span-5 flex flex-col">
+              <ImageGallery images={singleCurriculum?.images || []} />
 
-      
-                      <ImageGallery images={singleCurriculum?.images || []} />
-     
-            
+              <div className="mt-5 w-full space-y-8">
+                {/* Description Section */}
+                <div className="rounded-3xl h-fit">
+                  <h2 className="text-lg md:text-xl font-semibold mb-4">
+                    Description
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed text-sm">
+                    {singleCurriculum?.description
+                      ? singleCurriculum.description
+                          .split(/\r?\n/)
+                          .map((line, idx) => (
+                            <React.Fragment key={idx}>
+                              {line}
+                              <br />
+                            </React.Fragment>
+                          ))
+                      : "No description available."}
+                  </p>
+                </div>
 
-          {/* Content Section */}
-          <div className="mt-5 max-w-[720px]">
-            {/* Description Section */}
-            <div className=" rounded-3xl h-fit mt-8">
-              <h2 className="text-lg md:text-xl font-semibold mb-4">
-                Description
-              </h2>
-              <p className="text-gray-700 leading-relaxed text-sm md:text-sm">
-                {singleCurriculum?.description
-                  ? singleCurriculum.description
-                      .split(/\r?\n/)
-                      .map((line, idx) => (
-                        <React.Fragment key={idx}>
-                          {line}
-                          <br />
-                        </React.Fragment>
-                      ))
-                  : "No description available."}
-              </p>
-            </div>
-                          <div className="lg:col-span-6 rounded-3xl  h-fit mt-8">
+                {/* How it works */}
+                <div className="rounded-3xl h-fit">
                   <h2 className="text-lg md:text-xl font-semibold mb-4">
                     How it works
                   </h2>
-                  <div className="text-black leading-relaxed text-sm md:text-sm space-y-4">
-                              <p className="flex items-center gap-2 ">
-                                <span><FaCircleCheck className="text-primary" /></span>
-                                Book your lesson and you’ll be instantly connected with
-                                your teacher.{" "}
-                              </p>
-                                <p className="flex items-center gap-2 ">
-                                <span><FaCircleCheck className="text-primary" /></span>
-                                Your teacher will let you know where the lesson will take place and share a meeting link with you.
-                              </p>
-                                <p className="flex items-center gap-2 ">
-                                <span><FaCircleCheck className="text-primary" /></span>
-                                You can message them anytime, ask questions, and get
-                                support. Your learning journey starts the moment you
-                                book.
-                              </p>
-                            </div>
+                  <div className="text-black leading-relaxed text-sm space-y-4">
+                    <p className="flex items-center gap-2">
+                      <span><FaCircleCheck className="text-primary shrink-0" /></span>
+                      Book your lesson and you’ll be instantly connected with your teacher.
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span><FaCircleCheck className="text-primary shrink-0" /></span>
+                      Your teacher will let you know where the lesson will take place and share a meeting link with you.
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span><FaCircleCheck className="text-primary shrink-0" /></span>
+                      You can message them anytime, ask questions, and get support. Your learning journey starts the moment you book.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Meet your teacher */}
+                <TeacherCard 
+                  teacher={singleCurriculum?.createdBy || userbyid}
+                  name={singleCurriculum?.createdBy?.name || userbyid?.name}
+                  averageRating={singleCurriculum?.createdBy?.averageRating || userbyid?.averageRating}
+                  hideLesson={singleCurriculum?.createdBy?.hideLesson || userbyid?.hideLesson}
+                  classHosted={singleCurriculum?.createdBy?.classHosted || userbyid?.classHosted}
+                  classesAttended={singleCurriculum?.createdBy?.classesAttended || userbyid?.classesAttended}
+                  classesHosted={singleCurriculum?.createdBy?.classesHosted || userbyid?.classesHosted}
+                  bio={singleCurriculum?.createdBy?.bio || userbyid?.bio}
+                  image={singleCurriculum?.createdBy?.image || userbyid?.image}
+                />
               </div>
-
-              
-            <div className="hidden lg:block relative w-full mt-8">
-              <span className="absolute right-1 top-4">
-                <img  onClick={() => setShowUnit(true)} src="/expand.svg" className="h-4 w-4" alt="" />
-              </span>{" "}
-              <SideUnit Data={singleCurriculum} />
-            </div>
-              
-             <TeacherCard 
-               teacher={singleCurriculum?.createdBy || userbyid}
-               name={singleCurriculum?.createdBy?.name || userbyid?.name}
-               averageRating={singleCurriculum?.createdBy?.averageRating || userbyid?.averageRating}
-               hideLesson={singleCurriculum?.createdBy?.hideLesson || userbyid?.hideLesson}
-               classHosted={singleCurriculum?.createdBy?.classHosted || userbyid?.classHosted}
-               classesAttended={singleCurriculum?.createdBy?.classesAttended || userbyid?.classesAttended}
-               classesHosted={singleCurriculum?.createdBy?.classesHosted || userbyid?.classesHosted}
-               bio={singleCurriculum?.createdBy?.bio || userbyid?.bio}
-               image={singleCurriculum?.createdBy?.image || userbyid?.image}
-             />
-          </div>
             </div>
 
-            {/* Calendar Section */}
-            <div className="col-span-1 lg:col-span-2 3xl:col-span-2 mt-4 md:mt-0 lg:sticky lg:top-6 lg:self-start lg:h-fit">
+            {/* COLUMN 2: What's Included (Units & Lessons) */}
+            <div className="col-span-1 lg:col-span-7 xl:col-span-4 mt-6 xl:mt-0">
+              <div className="relative w-full">
+                <span className="absolute right-1 top-1 z-10 cursor-pointer p-1 hover:bg-gray-100 rounded-md transition-colors" title="Expand view">
+                  <img onClick={() => setShowUnit(true)} src="/expand.svg" className="h-4 w-4" alt="Expand" />
+                </span>
+                <SideUnit Data={singleCurriculum} />
+              </div>
+            </div>
+
+            {/* COLUMN 3: Calendar Section */}
+            <div className="col-span-1 lg:col-span-5 xl:col-span-3 mt-6 lg:mt-0 lg:sticky lg:top-6 lg:self-start lg:h-fit">
               {singleCurriculum?.lessonPosition && singleCurriculum?.lessonPosition.length > 0 && singleCurriculum?.lessonPosition[0]?.lId ? (
-    <Calendar
-               id={id}
-               myid={singleCurriculum?.lessonPosition[0]?.lId?._id}
-               selectedDate={date}
-               onSelect={setDate}
-               selectedTime={time}
-               onSelectTime={setTime}
-               weeklyAvailability={lessonWeeklyAvailability || weeklyAvailability}
-               dateAvailability={lessonDateAvailability || dateAvailability}
-               teacherTimezone={timeZone} // Make sure timeZone is coming from your API
-               type="curri"
-               dateUnAvailability={dateUnAvailability}
-               teacherData={singleCurriculum?.createdBy}
-               location={
-                 singleCurriculum?.isOnline && singleCurriculum?.supportsInPerson
-                   ? "Online and in person"
-                   : singleCurriculum?.isOnline
-                   ? "Online"
-                   : singleCurriculum?.supportsInPerson
-                   ? (singleCurriculum?.location || "In Person")
-                   : (singleCurriculum?.location || "Online")
-               }
-                duration={singleCurriculum?.lessonPosition?.[0]?.lId?.duration}
-                price={singleCurriculum?.price}
-             />
+                <Calendar
+                  id={id}
+                  myid={singleCurriculum?.lessonPosition[0]?.lId?._id}
+                  selectedDate={date}
+                  onSelect={setDate}
+                  selectedTime={time}
+                  onSelectTime={setTime}
+                  weeklyAvailability={lessonWeeklyAvailability || weeklyAvailability}
+                  dateAvailability={lessonDateAvailability || dateAvailability}
+                  teacherTimezone={timeZone}
+                  type="curri"
+                  dateUnAvailability={dateUnAvailability}
+                  teacherData={singleCurriculum?.createdBy}
+                  location={
+                    singleCurriculum?.isOnline && singleCurriculum?.supportsInPerson
+                      ? "Online and in person"
+                      : singleCurriculum?.isOnline
+                      ? "Online"
+                      : singleCurriculum?.supportsInPerson
+                      ? (singleCurriculum?.location || "In Person")
+                      : (singleCurriculum?.location || "Online")
+                  }
+                  duration={singleCurriculum?.lessonPosition?.[0]?.lId?.duration}
+                  price={singleCurriculum?.price}
+                />
               ) : (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="text-center">
@@ -343,12 +341,10 @@ export default function CurriculumBooking() {
                   </div>
                 </div>
               )}
-             
             </div>
           </div>
         </div>
-        <div className="w-full lg:w-[90%] mx-auto">
-          {/* <UnitsSection Data={singleCurriculum} /> */}
+        <div className="w-full mt-10">
           {curriReviews && curriReviews.length > 0 && (
             <Reviews lessonReviews={curriReviews} />
           )}

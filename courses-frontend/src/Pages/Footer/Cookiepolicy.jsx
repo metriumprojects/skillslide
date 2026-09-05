@@ -71,7 +71,7 @@ export default function Cookiepolicy() {
               <h2 className="text-2xl font-semibold mb-2">3. Third-Party Cookies</h2>
               <p>We may allow third-party services to set cookies, including:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Payment processors (e.g., Stripe)</li>
+                <li>Payment processors</li>
                 <li>Analytics providers (e.g., Google Analytics)</li>
                 <li>Hosting and infrastructure providers</li>
               </ul>

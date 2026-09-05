@@ -5,6 +5,7 @@ export default function useTeacherPayoutCurrencies() {
   const [payoutCurrencies, setPayoutCurrencies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stripePayoutReady, setStripePayoutReady] = useState(false);
+  const [hasPaymentSetup, setHasPaymentSetup] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -14,17 +15,27 @@ export default function useTeacherPayoutCurrencies() {
         const account = data.account;
         const currencies = account?.payoutCurrencies || [];
         setPayoutCurrencies(currencies);
-        setStripePayoutReady(Boolean(account?.payoutsEnabled && account?.transfersEnabled && currencies.length));
+        const isReady = Boolean(account?.payoutsEnabled && account?.transfersEnabled && currencies.length);
+        setStripePayoutReady(isReady);
+        const isFilled = Boolean(
+          account &&
+          (account.detailsSubmitted ||
+            account.externalAccounts?.length > 0 ||
+            account.payoutsEnabled ||
+            isReady)
+        );
+        setHasPaymentSetup(isFilled);
       })
       .catch(() => {
         if (active) {
           setPayoutCurrencies([]);
           setStripePayoutReady(false);
+          setHasPaymentSetup(false);
         }
       })
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, []);
 
-  return { payoutCurrencies, payoutCurrenciesLoading: loading, stripePayoutReady };
+  return { payoutCurrencies, payoutCurrenciesLoading: loading, stripePayoutReady, hasPaymentSetup };
 }

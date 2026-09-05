@@ -72,7 +72,7 @@ export default function Termsofservice() {
 
             <section>
               <h2 className="text-2xl font-semibold mb-2">6. Booking and Payments</h2>
-              <p>Bookings are made through the Platform. Payments are processed via third-party payment providers (e.g., Stripe). We may charge service fees or commissions as disclosed on the Platform. All prices are shown inclusive or exclusive of applicable taxes as indicated.</p>
+              <p>Bookings are made through the Platform. Payments are processed via secure third-party payment providers. We may charge service fees or commissions as disclosed on the Platform. All prices are shown inclusive or exclusive of applicable taxes as indicated.</p>
             </section>
 
             <section>

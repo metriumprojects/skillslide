@@ -221,7 +221,7 @@ export default function LessonPayment() {
                 </p>
               )}
               <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-                You will be charged in {currency}. Stripe Checkout will show this currency before you pay.
+                You will be charged in {currency}. Checkout will show this currency before you pay.
               </p>
             </div>
           </div>

@@ -7,6 +7,9 @@ import {
   getConnectBalance,
   getConnectCountries,
   getConnectStatus,
+  createOrUpdateCustomAccount,
+  addCustomBankAccount,
+  resetCustomAccount,
 } from "../controllers/stripeConnectController.js";
 
 const router = express.Router();
@@ -17,6 +20,9 @@ router.post("/onboarding-link", protect, createConnectOnboardingLink);
 router.post("/account-session", protect, createConnectAccountSession);
 router.post("/dashboard-link", protect, createConnectDashboardLink);
 router.get("/balance", protect, getConnectBalance);
+router.post("/custom-account", protect, createOrUpdateCustomAccount);
+router.post("/custom-bank-account", protect, addCustomBankAccount);
+router.post("/reset-account", protect, resetCustomAccount);
 
 export default router;
 

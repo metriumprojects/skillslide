@@ -30,12 +30,14 @@ import StudentDashboard from "./components/StudentDashboard";
 import Revenu from "./TeacherComponents/Revenu";
 import MyProfile from "./components/MyProfile";
 import PayoutHistory from "./TeacherComponents/PayoutHistory";
+import useTeacherPayoutCurrencies from "../../hooks/useTeacherPayoutCurrencies";
 
 export default function Profile() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const { userInfo, loading } = useSelector((state) => state.auth);
+  const { hasPaymentSetup } = useTeacherPayoutCurrencies();
   const [profileImage, setProfileImage] = useState(userInfo?.image?.url);
   const fileInputRef = React.useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -186,19 +188,28 @@ export default function Profile() {
 
             {userInfo?.role === "teacher" && (
               <>
-                <button
-                  type="button"
-                  onClick={() => navigate("/withdraw-request")}
-                  className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                >
-                  Complete payments setup
-                </button>
+                {!hasPaymentSetup && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/withdraw-request")}
+                    className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                  >
+                    Complete payments setup
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => navigate("/create-lesson")}
                   className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
                 >
                   Create lesson
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/create-curriculum")}
+                  className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                >
+                  Create curriculum
                 </button>
               </>
             )}
@@ -227,19 +238,28 @@ export default function Profile() {
             </button>
             {userInfo?.role === "teacher" && (
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => navigate("/withdraw-request")}
-                  className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                >
-                  Complete payments setup
-                </button>
+                {!hasPaymentSetup && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/withdraw-request")}
+                    className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                  >
+                    Complete payments setup
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => navigate("/create-lesson")}
                   className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
                 >
                   Create lesson
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/create-curriculum")}
+                  className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+                >
+                  Create curriculum
                 </button>
               </div>
             )}

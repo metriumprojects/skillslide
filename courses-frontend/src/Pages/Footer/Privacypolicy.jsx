@@ -89,7 +89,7 @@ export default function Privacypolicy() {
 
           <section>
             <h2 className="text-2xl font-semibold mb-2">5. Payments</h2>
-            <p>Payments are processed by third-party providers (e.g., Stripe). We do not store full card details. Payment providers process data according to their own privacy policies.</p>
+            <p>Payments are processed by secure third-party payment providers. We do not store full card details. Payment providers process data according to their own privacy policies.</p>
           </section>
 
           <section>

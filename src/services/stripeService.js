@@ -5,15 +5,20 @@ import User from "../models/User.js";
 dotenv.config();
 
 let stripeClient;
+let currentSecretKey;
 
 export const getStripe = () => {
-  if (!process.env.STRIPE_SECRET_KEY) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
     const error = new Error("STRIPE_SECRET_KEY is not configured");
     error.status = 503;
     throw error;
   }
 
-  if (!stripeClient) stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+  if (!stripeClient || currentSecretKey !== secretKey) {
+    stripeClient = new Stripe(secretKey);
+    currentSecretKey = secretKey;
+  }
   return stripeClient;
 };
 

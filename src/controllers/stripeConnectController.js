@@ -231,6 +231,274 @@ export const getConnectBalance = async (req, res) => {
   }
 };
 
+export const createOrUpdateCustomAccount = async (req, res) => {
+  try {
+    requireTeacher(req.user);
+    const {
+      country = "US",
+      accountToken,
+      firstName,
+      lastName,
+      email,
+      phone,
+      dob,
+      address,
+      ssnLast4,
+      idNumber,
+      bankAccount,
+      bankToken,
+      website,
+    } = req.body;
+
+    if (!accountToken && (!firstName || !lastName)) {
+      return res.status(400).json({ status: false, message: "Legal first name and last name are required" });
+    }
+
+    const countryCode = sanitizeCountry(country);
+    const stripe = getStripe();
+    const user = await User.findById(req.user._id);
+
+    // Prepare external bank account payload
+    let externalAccountPayload = null;
+    if (bankToken) {
+      externalAccountPayload = bankToken;
+    } else if (bankAccount?.accountNumber) {
+      externalAccountPayload = {
+        object: "bank_account",
+        country: countryCode,
+        currency: (bankAccount.currency || "USD").toLowerCase(),
+        account_holder_name: (bankAccount.accountHolderName || `${firstName} ${lastName}`).trim(),
+        account_holder_type: "individual",
+        account_number: String(bankAccount.accountNumber).trim(),
+      };
+      if (bankAccount.routingNumber) {
+        externalAccountPayload.routing_number = String(bankAccount.routingNumber).trim();
+      }
+    }
+
+    let account;
+
+    // Verify existing account type: If it is an old Express/Standard account, clear it so we create a fresh Custom account
+    if (user.stripeConnectAccountId) {
+      try {
+        const existingAcct = await stripe.accounts.retrieve(user.stripeConnectAccountId);
+        if (existingAcct?.type !== "custom") {
+          console.log(
+            `Existing Stripe account ${user.stripeConnectAccountId} is type '${existingAcct?.type}'. Clearing to create fresh Custom account.`
+          );
+          user.stripeConnectAccountId = null;
+          user.stripeConnect = null;
+          await user.save();
+        }
+      } catch (acctErr) {
+        console.warn(`Could not verify existing account ${user.stripeConnectAccountId}, resetting:`, acctErr.message);
+        user.stripeConnectAccountId = null;
+        user.stripeConnect = null;
+        await user.save();
+      }
+    }
+
+    if (!user.stripeConnectAccountId) {
+      if (accountToken) {
+        // Create Custom Account using token (required for platforms in France/EU)
+        const accountCreateParams = {
+          type: "custom",
+          country: countryCode,
+          account_token: accountToken,
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          business_profile: {
+            mcc: "8299",
+            url: website || "https://skillslide.com",
+            product_description: "Educational lessons, tutoring, and curriculum on SkillSlide marketplace",
+          },
+          metadata: { userId: String(user._id) },
+        };
+
+        if (externalAccountPayload) {
+          accountCreateParams.external_account = externalAccountPayload;
+        }
+
+        account = await stripe.accounts.create(accountCreateParams);
+        user.stripeConnectAccountId = account.id;
+        user.stripeConnect = { ...(user.stripeConnect || {}), country: countryCode };
+        await user.save();
+      } else {
+        // Direct creation fallback
+        const individualData = {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          email: (email || user.email).trim().toLowerCase(),
+        };
+
+        if (phone) individualData.phone = String(phone).trim();
+        if (dob?.day && dob?.month && dob?.year) {
+          individualData.dob = {
+            day: Number(dob.day),
+            month: Number(dob.month),
+            year: Number(dob.year),
+          };
+        }
+        if (address?.line1) {
+          individualData.address = {
+            line1: address.line1.trim(),
+            line2: address.line2?.trim() || undefined,
+            city: address.city?.trim() || "",
+            state: address.state?.trim() || "",
+            postal_code: address.postalCode?.trim() || "",
+            country: countryCode,
+          };
+        }
+        if (ssnLast4) individualData.ssn_last_4 = String(ssnLast4).trim();
+        if (idNumber) individualData.id_number = String(idNumber).trim();
+
+        const clientIp =
+          req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "127.0.0.1";
+        const tosAcceptance = {
+          date: Math.floor(Date.now() / 1000),
+          ip: clientIp === "::1" ? "127.0.0.1" : clientIp,
+          user_agent: req.headers["user-agent"] || "SkillSlide Platform",
+        };
+
+        const accountCreateParams = {
+          type: "custom",
+          country: countryCode,
+          email: (email || user.email).trim().toLowerCase(),
+          business_type: "individual",
+          business_profile: {
+            mcc: "8299",
+            url: website || "https://skillslide.com",
+            product_description: "Educational lessons, tutoring, and curriculum on SkillSlide marketplace",
+          },
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          tos_acceptance: tosAcceptance,
+          individual: individualData,
+          metadata: { userId: String(user._id) },
+        };
+
+        if (externalAccountPayload) {
+          accountCreateParams.external_account = externalAccountPayload;
+        }
+
+        account = await stripe.accounts.create(accountCreateParams);
+        user.stripeConnectAccountId = account.id;
+        user.stripeConnect = { ...(user.stripeConnect || {}), country: countryCode };
+        await user.save();
+      }
+    } else {
+      // Update existing Custom Account
+      if (accountToken) {
+        account = await stripe.accounts.update(user.stripeConnectAccountId, {
+          account_token: accountToken,
+          business_profile: {
+            url: website || "https://skillslide.com",
+          },
+        });
+      } else {
+        const individualData = {
+          first_name: firstName?.trim(),
+          last_name: lastName?.trim(),
+        };
+        const accountUpdateParams = {
+          individual: individualData,
+          business_profile: {
+            url: website || "https://skillslide.com",
+          },
+        };
+        account = await stripe.accounts.update(user.stripeConnectAccountId, accountUpdateParams);
+      }
+
+      // Attach new external bank account if provided
+      if (externalAccountPayload) {
+        try {
+          await stripe.accounts.createExternalAccount(user.stripeConnectAccountId, {
+            external_account: externalAccountPayload,
+            default_for_currency: true,
+          });
+        } catch (bankErr) {
+          console.warn("External account attach warning:", bankErr.message);
+        }
+      }
+    }
+
+    const summary = await syncAccount(user);
+    res.json({
+      status: true,
+      message: "Custom payout account configured successfully",
+      account: summary,
+    });
+  } catch (error) {
+    console.error("Custom account creation error:", error);
+    res.status(error.status || 500).json({ status: false, message: error.message });
+  }
+};
+
+export const addCustomBankAccount = async (req, res) => {
+  try {
+    requireTeacher(req.user);
+    const user = await User.findById(req.user._id);
+    if (!user.stripeConnectAccountId) {
+      return res.status(400).json({ status: false, message: "No connected account found. Please create one first." });
+    }
+
+    const { bankToken, bankAccount, country = "US" } = req.body;
+    const countryCode = sanitizeCountry(country);
+    const stripe = getStripe();
+
+    let externalAccountPayload;
+    if (bankToken) {
+      externalAccountPayload = bankToken;
+    } else if (bankAccount?.accountNumber) {
+      externalAccountPayload = {
+        object: "bank_account",
+        country: countryCode,
+        currency: (bankAccount.currency || "USD").toLowerCase(),
+        account_holder_name: (bankAccount.accountHolderName || user.name || "Account Holder").trim(),
+        account_holder_type: "individual",
+        account_number: String(bankAccount.accountNumber).trim(),
+      };
+      if (bankAccount.routingNumber) {
+        externalAccountPayload.routing_number = String(bankAccount.routingNumber).trim();
+      }
+    } else {
+      return res.status(400).json({ status: false, message: "Valid bank account details or bank token required" });
+    }
+
+    await stripe.accounts.createExternalAccount(user.stripeConnectAccountId, {
+      external_account: externalAccountPayload,
+      default_for_currency: true,
+    });
+
+    const summary = await syncAccount(user);
+    res.json({
+      status: true,
+      message: "Bank account attached successfully",
+      account: summary,
+    });
+  } catch (error) {
+    console.error("Add bank account error:", error);
+    res.status(error.status || 500).json({ status: false, message: error.message });
+  }
+};
+
+export const resetCustomAccount = async (req, res) => {
+  try {
+    requireTeacher(req.user);
+    const user = await User.findById(req.user._id);
+    user.stripeConnectAccountId = null;
+    user.stripeConnect = null;
+    await user.save();
+    res.json({ status: true, message: "Stripe account reset successfully" });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 export const handleConnectAccountUpdate = async (account) => {
   const userId = account.metadata?.userId;
   const user = userId

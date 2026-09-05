@@ -30,7 +30,7 @@ export default function CurriculumPage() {
   const navigate = useNavigate();
   useEffect(() => {
     if (!payoutCurrenciesLoading && !stripePayoutReady) {
-      toast.info("Set up and verify your Stripe payout account before creating a curriculum.");
+      toast.info("Set up and verify your payout account before creating a curriculum.");
       navigate("/withdraw-request", { replace: true });
     }
   }, [navigate, payoutCurrenciesLoading, stripePayoutReady]);

@@ -38,11 +38,11 @@ export default function StripeConnectEmbed({ mode = "onboarding", country, onExi
   }, [mode, country]);
 
   if (!publishableKey) {
-    return <p className="text-sm text-red-600">Stripe publishable key is not configured.</p>;
+    return <p className="text-sm text-red-600">Payment publishable key is not configured.</p>;
   }
 
   if (!connectInstance) {
-    return <p className="text-sm text-gray-600">Loading secure Stripe form…</p>;
+    return <p className="text-sm text-gray-600">Loading secure form…</p>;
   }
 
   return (
