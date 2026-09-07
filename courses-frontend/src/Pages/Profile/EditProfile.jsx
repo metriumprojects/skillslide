@@ -307,7 +307,7 @@ export default function EditProfile() {
             />
           </div>
 
-          <div className="flex justify-end w-full">
+          <div className="flex justify-start w-full">
             <button
               type="submit"
               disabled={loading}
