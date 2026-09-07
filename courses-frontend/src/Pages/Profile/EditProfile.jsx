@@ -130,9 +130,27 @@ export default function EditProfile() {
   };
 
   return (
-    <MainLayout width={"900px"} className="mx-auto">
-      <div className="my-10">
-        <h1 className="text-2xl font-semibold mb-6 text-gray-900">Edit Profile</h1>
+    <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
+      <div className="w-full min-h-screen py-6 md:py-8">
+        <div className="w-full max-w-[800px]">
+          <h1 className="text-[20px] sm:text-[24px] font-normal mb-6 text-gray-900 flex items-center gap-2.5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 18 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0 text-gray-800"
+            >
+              <path
+                d="M10.1231 3.90909L7.77394 1.44573C7.23416 0.879704 6.32721 0.848608 5.7482 1.37627L1.45595 5.28789C0.876942 5.81556 0.845133 6.70216 1.3849 7.26819L3.90909 9.91514M10.1231 3.90909L16.6151 10.7169C16.8849 10.9998 17.0231 11.3792 16.9968 11.7651L16.7302 15.6917C16.6801 16.4299 16.0515 17.0028 15.2946 17L11.269 16.985C10.8733 16.9836 10.4959 16.8223 10.226 16.5393L3.90909 9.91514M10.1231 3.90909L3.90909 9.91514"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>Edit Profile</span>
+          </h1>
 
         {successMessage && (
           <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
@@ -370,6 +388,7 @@ export default function EditProfile() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </MainLayout>
   );
