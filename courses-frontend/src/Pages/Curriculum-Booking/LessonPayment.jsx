@@ -87,7 +87,8 @@ export default function LessonPayment() {
         localStorage.setItem("bookingId", res?.payload?.bookingId);
 
       } else {
-        toast.error("Error starting booking");
+        const rawErr = typeof res.payload === "string" ? res.payload : res.payload?.message || res.payload?.data?.message || "Error starting booking";
+        toast.error(String(rawErr).replace(/stripe\s*/gi, "").trim());
       }
 
       setLoading(false);

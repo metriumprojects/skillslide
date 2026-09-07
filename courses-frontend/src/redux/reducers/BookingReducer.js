@@ -11,7 +11,7 @@ export const initiateBooking = createAsyncThunk(
       });
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response || "Error");
+      return rejectWithValue(err.response?.data?.message || err.message || "Error");
     }
   }
 );

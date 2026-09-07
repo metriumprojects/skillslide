@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserFavorites, toggleFavorite } from "../../../redux/reducers/FavoriteReducer";
 import Card from "../../Home/Components/Card";
@@ -10,6 +10,7 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
   const dispatch = useDispatch();
   const { favorites } = useSelector((state) => state.favorite);
   const [openPropose, setOpenPropose] = useState(null);
+  const [activeTab, setActiveTab] = useState("Curriculum");
 
   useEffect(() => {
     dispatch(getUserFavorites());
@@ -17,17 +18,17 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
 
   const handleSave = (itemId, itemType) => {
     dispatch(toggleFavorite({ id: itemId, type: itemType })).then((res) => {
-      if (res.payload.status) {
+      if (res.payload?.status) {
         toast.success(res.payload.message || "Removed from favorites");
         dispatch(getUserFavorites());
       } else {
-        toast.info(res.payload.message);
+        toast.info(res.payload?.message);
       }
     });
   };
 
   // Safe array check and conversion
-  const favoritesArray = React.useMemo(() => {
+  const favoritesArray = useMemo(() => {
     if (!favorites) return [];
     if (Array.isArray(favorites)) return favorites;
     
@@ -45,7 +46,7 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
     return [];
   }, [favorites]);
 
-  // Separate favorites by type for different sections
+  // Separate favorites by type
   const curriculumFavorites = favoritesArray.filter(fav => fav.type === "curriculum" && fav.curriculum);
   const lessonFavorites = favoritesArray.filter(fav => fav.type === "lesson" && fav.lesson);
   const proposeFavorites = favoritesArray.filter(fav => fav.type === "propose" && fav.propose);
@@ -55,64 +56,99 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
     lessonFavorites.length > 0 ||
     proposeFavorites.length > 0;
 
-  return (
-    <div className="w-full">
-      <div className="">
-        {!hasFavorites ? (
-          <div className="text-center mb-5 mt-7.5">
-            <p className="text-gray-500 text-lg">No favorites yet</p>
-          </div>
-        ) : (
-          <div className="">
-            {/* Propose Favorites Section */}
-            {proposeFavorites.length > 0 && (
-              <div>
-                <h2 className="text-[28px] font-medium text-gray-900 mb-5 mt-7.5">Proposals</h2>
-                <div className="space-y-6">
-                  {proposeFavorites.map((favorite) => (
-                    <RequestCard
-                      key={favorite._id}
-                      req={favorite.propose}
-                      isFavorite={true}
-                      onSave={() => handleSave(favorite.propose?._id, "propose")}
-                      onCreateLesson={null}
-                      onSendExistingLesson={onSendExistingLesson}
-                      openPropose={openPropose}
-                      setOpenPropose={setOpenPropose}
-                      userInfo={null}
-                      isLoading={false}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+  const tabs = [
+    "Curriculum",
+    "Lesson",
+    ...(proposeFavorites.length > 0 ? ["Proposals"] : []),
+  ];
 
-            {/* Curriculum Favorites Section */}
-            {curriculumFavorites.length > 0 && (
-              <div>
-                <h2 className="text-[28px] font-medium text-gray-900 mb-5 mt-7.5">Curriculums</h2>
-                <div className="max-w-[2800px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+  return (
+    <div className="w-full pt-4">
+      {!hasFavorites ? (
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-lg">No favorites yet</p>
+        </div>
+      ) : (
+        <div className="w-full">
+          {/* Tabs Navigation matching Public Profile design */}
+          <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mb-6">
+            {tabs.map((tab) => (
+              <button
+                type="button"
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-3 transition-colors cursor-pointer ${
+                  activeTab === tab
+                    ? "border-b-2 border-black text-black font-semibold"
+                    : "text-gray-500 hover:text-black"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Curriculum Tab Content */}
+          {activeTab === "Curriculum" && (
+            <div>
+              {curriculumFavorites.length > 0 ? (
+                <div className="max-w-[2800px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
                   {curriculumFavorites.map((favorite) => (
                     <CurriculumCard key={favorite._id} course={favorite.curriculum} />
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="py-12 text-center text-gray-500">
+                  <p>No bookmarked curriculums yet.</p>
+                </div>
+              )}
+            </div>
+          )}
 
-            {/* Lesson Favorites Section */}
-            {lessonFavorites.length > 0 && (
-              <div>
-                <h2 className="text-[28px] font-medium text-gray-900 mb-5 mt-7.5">Lessons</h2>
-                <div className="max-w-[2800px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {/* Lesson Tab Content */}
+          {activeTab === "Lesson" && (
+            <div>
+              {lessonFavorites.length > 0 ? (
+                <div className="max-w-[2800px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
                   {lessonFavorites.map((favorite) => (
                     <Card key={favorite._id} course={favorite.lesson} favorites={favorites} />
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              ) : (
+                <div className="py-12 text-center text-gray-500">
+                  <p>No bookmarked lessons yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Proposals Tab Content */}
+          {activeTab === "Proposals" && (
+            <div className="space-y-6">
+              {proposeFavorites.length > 0 ? (
+                proposeFavorites.map((favorite) => (
+                  <RequestCard
+                    key={favorite._id}
+                    req={favorite.propose}
+                    isFavorite={true}
+                    onSave={() => handleSave(favorite.propose?._id, "propose")}
+                    onCreateLesson={null}
+                    onSendExistingLesson={onSendExistingLesson}
+                    openPropose={openPropose}
+                    setOpenPropose={setOpenPropose}
+                    userInfo={null}
+                    isLoading={false}
+                  />
+                ))
+              ) : (
+                <div className="py-12 text-center text-gray-500">
+                  <p>No bookmarked proposals yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

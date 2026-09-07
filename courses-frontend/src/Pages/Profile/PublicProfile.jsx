@@ -41,7 +41,7 @@ export default function PublicProfile() {
   const { role: paramRole } = useParams();
   const query = new URLSearchParams(location.search);
   const role = paramRole || query.get('role');
-  const isTeacher = (role === 'teacher');
+  const isTeacher = (role === 'teacher' || userbyid?.role === 'teacher');
 
   // Set default tab based on role param or userbyid
   const [tab, setTab] = useState(isTeacher ? "Lesson" : "Upcoming");
@@ -126,88 +126,138 @@ export default function PublicProfile() {
   // If role is not teacher and account is private, don't show tabs
   if (!isTeacher && userbyid?.publicType === false) {
     return (
-      <MainLayout>
-        <div className="min-h-screen w-full flex flex-col items-center py-12">
-          {/* Profile Section */}
-          <div className="flex flex-col items-center text-center">
-            {/* Name */}
-            <h1 className="text-2xl mb-4">{userbyid?.name}</h1>
+      <MainLayout width="100%">
+        <div className="min-h-screen w-full py-6 sm:py-8">
+          {/* Profile Section - Left Aligned */}
+          <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 pb-6 sm:pb-8">
             {/* Image */}
-            <div className="w-48 h-48 rounded-2xl overflow-hidden mb-4 shadow-md">
-              <img
-                src={
-                  userbyid?.image?.url ||
-                  "https://i.ibb.co/tpV3m2GW/no-image.png"
-                }
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-3xl overflow-hidden shadow-sm bg-gray-100 border border-gray-200/60 shrink-0">
+              {userbyid?.image?.url && userbyid?.image?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
+                <img
+                  src={userbyid.image.url}
+                  alt={userbyid?.name || "Profile"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-3xl sm:text-4xl">
+                  {userbyid?.name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+              )}
             </div>
 
-            {/* Stats */}
-            <div className="flex flex-col md:flex-row items-center gap-3 text-gray-900 mb-4">
-              {userbyid?.averageRating > 0 && (
-                          <div className="flex items-center gap-1">
-                {userbyid?.averageRating > 60 ? (
-                  <Smile className="text-black" size={20} />
-                ) : (
-                  <Frown className="text-black" size={20} />
+            {/* Info Column (Centered with Image) */}
+            <div className="flex-1 min-w-0 flex flex-col items-start justify-center text-left">
+              {/* Name */}
+              <h1 className="text-[20px] sm:text-[24px] font-normal text-black tracking-tight leading-snug">
+                {userbyid?.name || "Unknown"}
+              </h1>
+
+              {/* Description / Bio */}
+              {userbyid?.bio && (
+                <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-2xl mt-1.5 whitespace-pre-line">
+                  {userbyid.bio}
+                </p>
+              )}
+
+              {/* Stats & Actions */}
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-4">
+                {/* Verified Teacher Pill */}
+                {isTeacher && (
+                  <span className="inline-flex items-center gap-2 bg-[#00a100] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                    <svg width="15" height="15" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 overflow-visible text-white">
+                      <path d="M12 23C14.4477 23 16.3465 22.8672 17.8271 22.5381C19.2964 22.2115 20.2925 21.7056 20.999 20.999C21.7056 20.2925 22.2115 19.2964 22.5381 17.8271C22.8672 16.3465 23 14.4477 23 12C23 9.55232 22.8672 7.65353 22.5381 6.17285C22.2115 4.70364 21.7056 3.70752 20.999 3.00098C20.2925 2.29443 19.2964 1.78846 17.8271 1.46191C16.3465 1.13284 14.4477 1 12 1C9.55232 1 7.65353 1.13284 6.17285 1.46191C4.70364 1.78846 3.70752 2.29443 3.00098 3.00098C2.29443 3.70752 1.78846 4.70364 1.46191 6.17285C1.13284 7.65353 1 9.55232 1 12C1 14.4477 1.13284 16.3465 1.46191 17.8271C1.78846 19.2964 2.29443 20.2925 3.00098 20.999C3.70752 21.7056 4.70364 22.2115 6.17285 22.5381C7.65353 22.8672 9.55232 23 12 23Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 9L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 12L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Verified teacher</span>
+                  </span>
                 )}
-                <span>{userbyid?.averageRating}%</span>
-              </div>
-              )}
-              {!userbyid?.hideLesson && (
-                <span>
-                  <span className="font-semibold">{userbyid?.classesAttended || 0}</span> Classes Attended
+
+                {/* Rating / Review Thing (Outline star) */}
+                <span className="inline-flex items-center gap-2 bg-[#fff6f0] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-black">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span>{userbyid?.averageRating ? `${userbyid.averageRating}% Rating` : "100% Rating"}</span>
                 </span>
-              )}
-              {!userbyid?.classHosted && (
-                <span>
-                  <span className="font-semibold">{userbyid?.classesHost || 0}</span> Classes Hosted
-                </span>
-              )}
-            </div>
 
-            {/* <div className="flex items-center justify-center gap-4 text-2xl text-gray-600 mb-4">
-              {userbyid?.instagram && (
-              <Link to={userbyid?.instagram} target="blank">
-                <FaInstagram />
-              </Link>
-              )}
-              {userbyid?.youtube && (
-              <Link to={userbyid?.youtube} target="blank">
-                <SlSocialYoutube />
-              </Link>
-              )}
-            </div> */}
+                {/* Classes Attended */}
+                {!userbyid?.hideLesson && (
+                  <span className="inline-flex items-center gap-2 bg-[#E9EAEE] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-black">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                      <path d="M6 6h10"/>
+                      <path d="M6 10h10"/>
+                    </svg>
+                    <span>{userbyid?.classesAttended || 0} Classes attended</span>
+                  </span>
+                )}
 
-            {/* Bio */}
-            <p className="text-gray-700 text-sm max-w-md mb-4">{userbyid?.bio}</p>
+                {/* Classes Hosted (Not bold) */}
+                {!userbyid?.classHosted && (
+                  <span className="inline-flex items-center gap-2 bg-[#006fed] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-white">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>{userbyid?.classesHosted ?? userbyid?.classesHost ?? 0} Classes hosted</span>
+                  </span>
+                )}
 
-            {/* Buttons */}
-            <div className="flex gap-4">
-              <button
-                className="px-4 py-2 rounded-md border border-gray-300 bg-[#F5F5F5] flex items-center gap-2 disabled:opacity-60"
-                onClick={handleStartChat}
-                disabled={startChatLoading}
-              >
-                {startChatLoading ? "Starting..." : "Send Me a Message"}{" "}
-                <BsSend className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Private Account Message */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-4">
-              <div className="flex items-center gap-3 mb-2">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <h3 className="text-lg font-semibold text-yellow-800">Private Account</h3>
+                {/* Send Message or Edit Profile Button */}
+                {userInfo?._id && userInfo?._id === userbyid?._id ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/edit-profile")}
+                    className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
+                  >
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="shrink-0 text-white"
+                    >
+                      <path
+                        d="M10.1231 3.90909L7.77394 1.44573C7.23416 0.879704 6.32721 0.848608 5.7482 1.37627L1.45595 5.28789C0.876942 5.81556 0.845133 6.70216 1.3849 7.26819L3.90909 9.91514M10.1231 3.90909L16.6151 10.7169C16.8849 10.9998 17.0231 11.3792 16.9968 11.7651L16.7302 15.6917C16.6801 16.4299 16.0515 17.0028 15.2946 17L11.269 16.985C10.8733 16.9836 10.4959 16.8223 10.226 16.5393L3.90909 9.91514M10.1231 3.90909L3.90909 9.91514"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span>Edit profile</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleStartChat}
+                    disabled={startChatLoading}
+                    className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer disabled:opacity-60 shrink-0"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>{startChatLoading ? "Starting..." : "Send message"}</span>
+                  </button>
+                )}
               </div>
-              <p className="text-yellow-700">
-                This account is private. The user's content and activities are not publicly visible.
-              </p>
             </div>
+          </div>
+
+          {/* Private Account Message */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mt-8 max-w-2xl">
+            <div className="flex items-center gap-3 mb-2">
+              <svg className="w-5 h-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h3 className="text-base font-semibold text-yellow-900">Private Account</h3>
+            </div>
+            <p className="text-sm text-yellow-800">
+              This account is private. The user's content and activities are not publicly visible.
+            </p>
           </div>
         </div>
       </MainLayout>
@@ -215,83 +265,139 @@ export default function PublicProfile() {
   }
 
   return (
-    <MainLayout>
-      <div className="min-h-screen w-full flex flex-col items-center py-12">
-        {/* Profile Section */}
-        <div className="flex flex-col items-center text-center">
-          {/* Name */}
-          <h1 className="text-2xl mb-4">{userbyid?.name || "Unknown"}</h1>
+    <MainLayout width="100%">
+      <div className="min-h-screen w-full py-6 sm:py-8">
+        {/* Profile Section - Left Aligned */}
+        <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
           {/* Image */}
-          <div className="w-48 h-48 rounded-2xl overflow-hidden mb-4 shadow-md">
-            <img
-              src={
-                userbyid?.image?.url ||
-                "https://i.ibb.co/tpV3m2GW/no-image.png"
-              }
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center gap-3 text-gray-900 mb-4">
-                         <div className="flex items-center gap-1">
-                {userbyid?.averageRating > 60 ? (
-                  <Smile className="text-black" size={20} />
-                ) : (
-                  <Frown className="text-black" size={20} />
-                )}
-                <span>{userbyid?.averageRating}%</span>
+          <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-3xl overflow-hidden shadow-sm bg-gray-100 border border-gray-200/60 shrink-0">
+            {userbyid?.image?.url && userbyid?.image?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
+              <img
+                src={userbyid.image.url}
+                alt={userbyid?.name || "Profile"}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-3xl sm:text-4xl">
+                {userbyid?.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
-            {!userbyid?.hideLesson && (
-              <span>
-                <span className="font-semibold">{userbyid?.classesAttended || 0}</span> Classes Attended
-              </span>
-            )}
-            {!userbyid?.classHosted && (
-              <span>
-                <span className="font-semibold">{userbyid?.classesHosted || 0}</span> Classes Hosted
-              </span>
             )}
           </div>
 
-          {/* <div className="flex items-center justify-center gap-4 text-2xl text-gray-600 mb-4">
-            <Link to={userbyid?.instagram} target="blank">
-              <FaInstagram />
-            </Link>
-            <Link to={userbyid?.youtube} target="blank">
-              <SlSocialYoutube />
-            </Link>
-          </div> */}
+          {/* Info Column (Centered with Image) */}
+          <div className="flex-1 min-w-0 flex flex-col items-start justify-center text-left">
+            {/* Name */}
+            <h1 className="text-[20px] sm:text-[24px] font-normal text-black tracking-tight leading-snug">
+              {userbyid?.name || "Unknown"}
+            </h1>
 
-          {/* Bio */}
-          <p className="text-gray-700 text-sm max-w-md mb-4">{userbyid?.bio}</p>
+            {/* Description / Bio */}
+            {userbyid?.bio && (
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-2xl mt-1.5 whitespace-pre-line">
+                {userbyid.bio}
+              </p>
+            )}
 
-          {/* Buttons */}
-          <div className="flex gap-4">
-            <button
-              className="px-4 py-2 rounded-md border border-gray-300 bg-[#F5F5F5] flex items-center gap-2 disabled:opacity-60"
-              onClick={handleStartChat}
-              disabled={startChatLoading}
-            >
-              {startChatLoading ? "Starting..." : "Send Me a Message"}{" "}
-              <BsSend className="h-4 w-4" />
-            </button>
+            {/* Stats & Actions */}
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-4">
+              {/* Verified Teacher Pill */}
+              {isTeacher && (
+                <span className="inline-flex items-center gap-2 bg-[#00a100] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 overflow-visible text-white">
+                    <path d="M12 23C14.4477 23 16.3465 22.8672 17.8271 22.5381C19.2964 22.2115 20.2925 21.7056 20.999 20.999C21.7056 20.2925 22.2115 19.2964 22.5381 17.8271C22.8672 16.3465 23 14.4477 23 12C23 9.55232 22.8672 7.65353 22.5381 6.17285C22.2115 4.70364 21.7056 3.70752 20.999 3.00098C20.2925 2.29443 19.2964 1.78846 17.8271 1.46191C16.3465 1.13284 14.4477 1 12 1C9.55232 1 7.65353 1.13284 6.17285 1.46191C4.70364 1.78846 3.70752 2.29443 3.00098 3.00098C2.29443 3.70752 1.78846 4.70364 1.46191 6.17285C1.13284 7.65353 1 9.55232 1 12C1 14.4477 1.13284 16.3465 1.46191 17.8271C1.78846 19.2964 2.29443 20.2925 3.00098 20.999C3.70752 21.7056 4.70364 22.2115 6.17285 22.5381C7.65353 22.8672 9.55232 23 12 23Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16 9L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9 12L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>Verified teacher</span>
+                </span>
+              )}
+
+              {/* Rating / Review Thing (Outline star) */}
+              <span className="inline-flex items-center gap-2 bg-[#fff6f0] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-black">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <span>{userbyid?.averageRating ? `${userbyid.averageRating}% Rating` : "100% Rating"}</span>
+              </span>
+
+              {/* Classes Attended */}
+              {!userbyid?.hideLesson && (
+                <span className="inline-flex items-center gap-2 bg-[#E9EAEE] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-black">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                    <path d="M6 6h10"/>
+                    <path d="M6 10h10"/>
+                  </svg>
+                  <span>{userbyid?.classesAttended || 0} Classes attended</span>
+                </span>
+              )}
+
+              {/* Classes Hosted (Not bold) */}
+              {!userbyid?.classHosted && (
+                <span className="inline-flex items-center gap-2 bg-[#006fed] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-white">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  <span>{userbyid?.classesHosted ?? userbyid?.classesHost ?? 0} Classes hosted</span>
+                </span>
+              )}
+
+              {/* Send Message or Edit Profile Button */}
+              {userInfo?._id && userInfo?._id === userbyid?._id ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/edit-profile")}
+                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="shrink-0 text-white"
+                  >
+                    <path
+                      d="M10.1231 3.90909L7.77394 1.44573C7.23416 0.879704 6.32721 0.848608 5.7482 1.37627L1.45595 5.28789C0.876942 5.81556 0.845133 6.70216 1.3849 7.26819L3.90909 9.91514M10.1231 3.90909L16.6151 10.7169C16.8849 10.9998 17.0231 11.3792 16.9968 11.7651L16.7302 15.6917C16.6801 16.4299 16.0515 17.0028 15.2946 17L11.269 16.985C10.8733 16.9836 10.4959 16.8223 10.226 16.5393L3.90909 9.91514M10.1231 3.90909L3.90909 9.91514"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>Edit profile</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStartChat}
+                  disabled={startChatLoading}
+                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer disabled:opacity-60 shrink-0"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <span>{startChatLoading ? "Starting..." : "Send message"}</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Bottom Tabs Section - Only show if account is public or is teacher */}
         {(userbyid?.publicType !== false || isTeacher) && (
-          <div className="w-full pt-6">
-            <div className="flex gap-6 justify-left text-gray-700 font-medium mb-4">
+          <div className="w-full pt-8">
+            <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mb-6">
               {states.map((s, index) => (
                 <button
                   onClick={() => handleTabChange(s)}
                   key={index}
-                  className={`pb-1 ${
+                  className={`pb-3 transition-colors cursor-pointer ${
                     tab === s
-                      ? "border-b-3 border-primary text-black"
-                      : "hover:border-b-2 hover:border-gray-300 text-gray-500"
+                      ? "border-b-2 border-black text-black font-semibold"
+                      : "text-gray-500 hover:text-black"
                   }`}
                 >
                   {s}

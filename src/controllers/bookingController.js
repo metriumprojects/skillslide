@@ -1,4 +1,4 @@
-﻿import Curriculum from "../models/Curriculum.js";
+import Curriculum from "../models/Curriculum.js";
 import Booking from "../models/Booking.js";
 import sendEmail from "../utils/sendEmail.js";
 import Message from "../models/Message.js";
@@ -444,20 +444,20 @@ export const initiateBooking = async (req, res) => {
       itemSnapshot: bookingSnapshot || undefined,
       meta: Object.keys(parsedMeta).length
         ? {
-            ...parsedMeta,
-            preferredCustomerCurrency: requestedCurrency,
-            listingCurrency: itemCurrency,
-            checkoutExchangeRate: display.rate,
-            checkoutExchangeStale: Boolean(display.stale),
-            stripeFxQuoteId: display.quoteId || undefined,
-          }
+          ...parsedMeta,
+          preferredCustomerCurrency: requestedCurrency,
+          listingCurrency: itemCurrency,
+          checkoutExchangeRate: display.rate,
+          checkoutExchangeStale: Boolean(display.stale),
+          stripeFxQuoteId: display.quoteId || undefined,
+        }
         : {
-            preferredCustomerCurrency: requestedCurrency,
-            listingCurrency: itemCurrency,
-            checkoutExchangeRate: display.rate,
-            checkoutExchangeStale: Boolean(display.stale),
-            stripeFxQuoteId: display.quoteId || undefined,
-          },
+          preferredCustomerCurrency: requestedCurrency,
+          listingCurrency: itemCurrency,
+          checkoutExchangeRate: display.rate,
+          checkoutExchangeStale: Boolean(display.stale),
+          stripeFxQuoteId: display.quoteId || undefined,
+        },
 
       paymentStatus: "pending",
     };
@@ -500,7 +500,7 @@ export const initiateBooking = async (req, res) => {
       await Booking.findByIdAndDelete(booking._id);
       return res.status(409).json({
         status: false,
-        message: "This teacher has not completed Stripe payout setup yet",
+        message: "This teacher has not completed payout setup yet",
       });
     }
 
@@ -513,7 +513,7 @@ export const initiateBooking = async (req, res) => {
       await Booking.findByIdAndDelete(booking._id);
       return res.status(409).json({
         status: false,
-        message: "This teacher's Stripe verification or payouts setup is incomplete",
+        message: "This teacher's payout setup or verification is incomplete",
       });
     }
 
@@ -557,9 +557,8 @@ export const initiateBooking = async (req, res) => {
           price_data: {
             currency: paymentCurrency.toLowerCase(),
             product_data: {
-              name: `TEACHER: ${teacherName} - ${
-                type === "lesson" ? "LESSON" : type === "listing" ? "LISTING" : "CURRICULUM"
-              }: ${itemName} `,
+              name: `TEACHER: ${teacherName} - ${type === "lesson" ? "LESSON" : type === "listing" ? "LISTING" : "CURRICULUM"
+                }: ${itemName} `,
 
               images: productImage ? [productImage] : [],
             },
@@ -569,9 +568,8 @@ export const initiateBooking = async (req, res) => {
         },
       ],
 
-      success_url: `${process.env.FRONTEND_URL}/after-payment-curri/${
-        booking?._id || 12323
-      }`,
+      success_url: `${process.env.FRONTEND_URL}/after-payment-curri/${booking?._id || 12323
+        }`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel/${booking._id}`,
     });
 
@@ -584,9 +582,8 @@ export const initiateBooking = async (req, res) => {
     // Return data
     return res.status(201).json({
       status: true,
-      message: `${
-        type === "lesson" ? "Lesson" : type === "listing" ? "Listing" : "Curriculum"
-      } booking initiated successfully`,
+      message: `${type === "lesson" ? "Lesson" : type === "listing" ? "Listing" : "Curriculum"
+        } booking initiated successfully`,
       bookingId: booking._id,
       clientSecret: session.client_secret, // used for Embedded Checkout
       amount: finalAmount,
@@ -753,10 +750,10 @@ export const confirmBooking = async (req, res) => {
       const item = isLesson ? booking.lesson : isListing ? booking.listing : booking.curriculum;
       const itemTitle = item?.title || "Purchased Content";
 
-      
-    console.log(group, usecapacity, "groupvalue");
 
-     
+      console.log(group, usecapacity, "groupvalue");
+
+
       // if(isLesson){
 
       // }else{
@@ -909,8 +906,8 @@ export const confirmBooking = async (req, res) => {
         const defaultWelcomeMessage = isLesson
           ? "thank you for booking a lesson with me!"
           : isListing
-          ? "thank you for booking my service!"
-          : "thank you for booking with me!";
+            ? "thank you for booking my service!"
+            : "thank you for booking with me!";
         const teacherWelcomeMessage =
           (isLesson ? booking.lesson?.message : isListing ? booking.listing?.message : booking.curriculum?.message)
             ?.trim() || defaultWelcomeMessage;
@@ -922,22 +919,20 @@ export const confirmBooking = async (req, res) => {
         });
       }
 
-//       thank you for booking a lesson with me!
-// I'm really looking forward to working with you.
-// If you'd like, feel free to share your experience level, goals, or anything specific you'd like to focus on, so I can tailor the session to you.
+      //       thank you for booking a lesson with me!
+      // I'm really looking forward to working with you.
+      // If you'd like, feel free to share your experience level, goals, or anything specific you'd like to focus on, so I can tailor the session to you.
 
-      chatRoom.lastMessage = `Chat started for ${
-        isLesson ? "lesson" : isListing ? "listing" : "course"
-      } "${itemTitle}"`;
+      chatRoom.lastMessage = `Chat started for ${isLesson ? "lesson" : isListing ? "listing" : "course"
+        } "${itemTitle}"`;
       await chatRoom.save();
 
       // âœ‰ï¸ Emails
       const teacherMail = {
         from: process.env.SMTP_USER,
         to: teacher.email,
-        subject: `ðŸŽ“ Your ${
-          isLesson ? "lesson" : isListing ? "listing" : "course"
-        } "${itemTitle}" was purchased!`,
+        subject: `ðŸŽ“ Your ${isLesson ? "lesson" : isListing ? "listing" : "course"
+          } "${itemTitle}" was purchased!`,
         html: `<p>Hello ${teacher.name},</p>
             <p>${booking.firstname} ${booking.lastname} purchased <b>${itemTitle}</b>.</p>
             <p><a href="${process.env.FRONTEND_URL}/chat/${chatRoom._id}">Open Chat</a></p>`,
@@ -1025,15 +1020,15 @@ const bookSlot = async (group, global, slotId, day, specific, calenderId) => {
   // 4ï¸âƒ£ Capacity Increment Logic
   const update = specific
     ? {
-        $inc: {
-          "dateSpecificHours.$[].slots.$[slot].usecapacity": 1,
-        },
-      }
+      $inc: {
+        "dateSpecificHours.$[].slots.$[slot].usecapacity": 1,
+      },
+    }
     : {
-        $inc: {
-          "weeklyHours.$[].slots.$[slot].usecapacity": 1,
-        },
-      };
+      $inc: {
+        "weeklyHours.$[].slots.$[slot].usecapacity": 1,
+      },
+    };
 
   const options = {
     new: true,
@@ -1054,8 +1049,8 @@ const buildListingOrderSnapshot = (booking) => {
   const selectedTimes = Array.isArray(snapshot.selectedTimes) && snapshot.selectedTimes.length
     ? snapshot.selectedTimes
     : Array.isArray(meta.selectedTimes)
-    ? meta.selectedTimes
-    : [];
+      ? meta.selectedTimes
+      : [];
 
   return {
     listingId: snapshot.itemId || booking.listing?._id || booking.listing,
@@ -1453,8 +1448,8 @@ export const rescheduleCLessonBooking = async (req, res) => {
     const mainLesson = booking.lesson || {};
     const lessonDuration = parseLessonDuration(
       booking.lessonPosition[lessonIndex].duration ||
-        mainLesson.duration ||
-        "60m"
+      mainLesson.duration ||
+      "60m"
     );
 
     const newEndUTC = moment(newStartUTC)
@@ -2308,7 +2303,7 @@ export const teacherMainUpcomingBookings = async (req, res) => {
             group: lp.group === true,
             name: b.user?.name || null,
             userId: b.user?._id || null,
-                   curriculumTitle: b.curriculum?.title || null,
+            curriculumTitle: b.curriculum?.title || null,
           });
         }
       }
@@ -2656,7 +2651,7 @@ export const userPastLessons = async (req, res) => {
         "title price"
       );
       let userInfo = await User.findById(item.user).select("name _id");
-    
+
       item.lId = item.flatLessons.lId;
       item.lessonTitle = lessonInfo?.title || null;
       item.amount = lessonInfo?.price || item.flatLessons.amount;

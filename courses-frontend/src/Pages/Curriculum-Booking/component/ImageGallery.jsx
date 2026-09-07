@@ -5,32 +5,32 @@ import "swiper/css";
 
 const getDesktopImageClass = (imageCount, index) => {
   if (imageCount === 1) {
-    return "col-span-2 aspect-[2/1] rounded-4xl";
+    return "col-span-2 aspect-[2/1] rounded-3xl";
   }
 
   if (imageCount === 2) {
     return index === 0
-      ? "aspect-square rounded-l-4xl"
-      : "aspect-square rounded-r-4xl";
+      ? "aspect-square rounded-l-3xl"
+      : "aspect-square rounded-r-3xl";
   }
 
   if (imageCount === 3) {
     return [
-      "col-span-2 aspect-[2/1] rounded-t-4xl",
-      "aspect-square rounded-bl-4xl",
-      "aspect-square rounded-br-4xl",
+      "row-span-2 h-full rounded-l-3xl",
+      "h-full rounded-tr-3xl",
+      "h-full rounded-br-3xl",
     ][index];
   }
 
   return `aspect-square ${[
-    "rounded-tl-4xl",
-    "rounded-tr-4xl",
-    "rounded-bl-4xl",
-    "rounded-br-4xl",
+    "rounded-tl-3xl",
+    "rounded-tr-3xl",
+    "rounded-bl-3xl",
+    "rounded-br-3xl",
   ][index]}`;
 };
 
-export default function ImageGallery({ images = [] }) {
+export default function ImageGallery({ images = [], layout = "grid" }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -113,41 +113,73 @@ export default function ImageGallery({ images = [] }) {
         </Swiper>
       </div>
 
-      {/* Desktop View - Grid Layout */}
+      {/* Desktop View */}
       <div className="hidden md:block">
-        <div className="relative">
-          {/* Dynamic Grid - Show up to 5 images */}
-          <div className={`grid gap-1 mb-4  ${
-            images.length === 2 ? 'grid-cols-2' :
-            images.length === 3 ? 'grid-cols-2' :
-            images.length === 4 ? 'grid-cols-2' :
-            'grid-cols-2'
-          }`}>
-            {images.slice(0, 4).map((img, index) => (
+        {layout === "stack" ? (
+          <div className="flex flex-col gap-3.5">
+            {images.map((img, index) => (
               <div
                 key={index}
                 onClick={() => openFullscreen(index)}
-                className={`cursor-pointer overflow-hidden rounded ${getDesktopImageClass(images.length, index)}`}
+                className="cursor-pointer overflow-hidden rounded-[20px] aspect-[4/3] w-full bg-gray-100 shadow-none transition-all shrink-0"
               >
                 <img
                   src={img.url || img}
                   alt={`Gallery ${index + 1}`}
-                  className="h-full w-full object-cover transition-transform duration-300"
+                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                 />
               </div>
             ))}
-          </div>
 
-          {/* View More Button - Only show if more than 5 images */}
-          {images.length > 1 && (
-              <button
-                onClick={() => openFullscreen(1)}
-                className="absolute right-4 bottom-4 w-11.5 h-11.5 rounded-full bg-black/55  text-white flex items-center justify-center transition-all text-lg font-semibold"
-              >
-                <GalleryHorizontalEnd />
-              </button>
-          )}
-        </div>
+            {/* Right-aligned layer icon with exact optical gap as images */}
+            {images.length > 0 && (
+              <div className="flex justify-end -mt-1">
+                <button
+                  type="button"
+                  onClick={() => openFullscreen(0)}
+                  className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-black/80 transition-all cursor-pointer shadow-sm"
+                  title="View all photos"
+                >
+                  <GalleryHorizontalEnd size={18} />
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Dynamic Grid - Show up to 4 images */}
+            <div className={`grid gap-1.5 mb-4 ${
+              images.length === 1 ? 'grid-cols-1 aspect-[2/1]' :
+              images.length === 2 ? 'grid-cols-2 aspect-[2/1]' :
+              images.length === 3 ? 'grid-cols-2 grid-rows-2 aspect-[4/3]' :
+              'grid-cols-2 aspect-square'
+            }`}>
+              {images.slice(0, 4).map((img, index) => (
+                <div
+                  key={index}
+                  onClick={() => openFullscreen(index)}
+                  className={`cursor-pointer overflow-hidden ${getDesktopImageClass(images.length, index)}`}
+                >
+                  <img
+                    src={img.url || img}
+                    alt={`Gallery ${index + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* View More Button - Only show if more than 5 images */}
+            {images.length > 1 && (
+                <button
+                  onClick={() => openFullscreen(1)}
+                  className="absolute right-4 bottom-4 w-11.5 h-11.5 rounded-full bg-black/55  text-white flex items-center justify-center transition-all text-lg font-semibold"
+                >
+                  <GalleryHorizontalEnd />
+                </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Fullscreen Image Gallery */}

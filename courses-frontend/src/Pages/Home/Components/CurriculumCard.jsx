@@ -55,9 +55,7 @@ const CurriculumCard = ({ course, linkTo }) => {
         <span className="absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-base leading-none text-white backdrop-blur-sm">
           {course?.averageRating === 0 ? 100 : course?.averageRating ?? 100}%
         </span>
-                <span className="absolute left-3 bottom-3 rounded-full bg-black/55 px-3 py-1 text-base leading-none text-white backdrop-blur-sm">
-          Learn
-        </span>
+        
             <button
               onClick={(e) => {
                 e.preventDefault();

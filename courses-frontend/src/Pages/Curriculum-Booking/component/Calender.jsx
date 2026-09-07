@@ -553,6 +553,13 @@ export function Calendar({
   };
 
   const handleConfirmSchedule = async() => {
+    // Check if user is logged in first
+    if (!userInfo?._id) {
+      toast.info('Please log in to book.');
+      navigate('/login');
+      return;
+    }
+
     // Validation first
     if (!internalSelectedDate || !selectedTime) {
       toast.error('Please select both date and time');
@@ -577,8 +584,8 @@ export function Calendar({
       if (response?.status) {
         toast.success(response?.message);
         
-        // Prepare booking data for Stripe
-        const stripeData = {
+        // Prepare booking data
+        const bookingPayload = {
           id: id,
           scheduledAt: parsedData?.newDate,
           firstname: userInfo?.name || "unknown",
@@ -589,13 +596,13 @@ export function Calendar({
           checkoutCurrency: currency,
         };
 
-        // Initiate booking and redirect to Stripe
-        const bookingResponse = await dispatch(initiateBooking(stripeData)).unwrap();
+        // Initiate booking and redirect to checkout
+        const bookingResponse = await dispatch(initiateBooking(bookingPayload)).unwrap();
         
         if (bookingResponse?.status && bookingResponse?.url) {
           // Save booking ID for later confirmation
           localStorage.setItem("bookingId", bookingResponse?.bookingId);
-          // Redirect directly to Stripe
+          // Redirect directly to checkout
           window.location.href = bookingResponse.url;
         } else {
           toast.error("Failed to initiate payment");
@@ -604,8 +611,17 @@ export function Calendar({
         toast.error(response?.message || 'Failed to confirm availability');
       }
     } catch (error) {
-      toast.error(error?.message || 'An error occurred while confirming availability');
-      console.error('Availability check error:', error);
+      const rawMsg =
+        typeof error === "string"
+          ? error
+          : error?.message ||
+            error?.data?.message ||
+            error?.response?.data?.message ||
+            "An error occurred while confirming booking";
+      // Remove the word 'Stripe' as requested by user
+      const cleanMsg = String(rawMsg).replace(/stripe\s*/gi, "").trim();
+      toast.error(cleanMsg || "An error occurred while confirming booking");
+      console.error('Booking error:', error);
     }
   };
 
