@@ -1,6 +1,8 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer, cssTransition } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { getUser } from "./redux/reducers/AuthReducer";
 import PrivateRoute from "./redux/PrivateRoute";
 
 const NoToastAnimation = cssTransition({
@@ -52,6 +54,12 @@ const Cookiepolicy = lazy(() => import("./Pages/Footer/Cookiepolicy"));
 const Legalnotice = lazy(() => import("./Pages/Footer/Legalnotice"));
 
 const App = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getUser());
+  }, [dispatch]);
+
   return (
     <>
       <Router>

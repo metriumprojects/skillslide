@@ -66,7 +66,7 @@ export default function Login() {
     if (res.payload?.status) {
       setGoogleIdToken("");
       dispatch(getUser());
-      navigate(location.state?.from || "/profile");
+      navigate(location.state?.from || "/");
       return;
     }
     toast.error(res.payload?.message || "Login failed");
@@ -187,7 +187,7 @@ export default function Login() {
         if (res.payload?.status && !res.payload?.needsSellerSetup) {
           setGoogleIdToken("");
           dispatch(getUser());
-          navigate("/profile");
+          navigate("/");
           return;
         }
         toast.error(res.payload?.message || "Unable to open student profile");
@@ -211,7 +211,7 @@ export default function Login() {
 
   const handleGoogleSuccess = useCallback(() => {
     dispatch(getUser());
-    navigate(location.state?.from || "/profile");
+    navigate(location.state?.from || "/");
   }, [dispatch, location.state, navigate]);
 
   const onSubmit = isSellerSetup
@@ -411,7 +411,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="block w-fit rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+              className="block w-fit rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
             >
               {loading
                 ? isSellerSetup
@@ -430,7 +430,7 @@ export default function Login() {
                   setPassword("");
                   setShowPassword(false);
                 }}
-                className="block w-fit rounded-full bg-black px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+                className="block w-fit rounded-full bg-black hover:bg-neutral-800 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
               >
                 Go back
               </button>
@@ -440,7 +440,7 @@ export default function Login() {
                 type="button"
                 disabled={loading}
                 onClick={() => setSellerSetupIndex((prev) => prev - 1)}
-                className="block w-fit rounded-full bg-black px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+                className="block w-fit rounded-full bg-black hover:bg-neutral-800 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
               >
                 Go back
               </button>

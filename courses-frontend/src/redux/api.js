@@ -5,6 +5,7 @@ const socketBaseUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000"
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+  withCredentials: true,
 });
 
 // Attach token to every request (for mobile app support)

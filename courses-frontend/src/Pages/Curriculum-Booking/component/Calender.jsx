@@ -801,7 +801,7 @@ export function Calendar({
           
           if (!price && !groupPrice) return "Book (Free)";
           if (isGroup && hasCapacity && groupPrice > 0) {
-            return `Book (${formatPrice(groupPrice)})`;
+            return `Book (${formatPrice(groupPrice, priceCurrency)})`;
           }
           return `Book (${formatPrice(price, priceCurrency)})`;
         })()}

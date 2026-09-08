@@ -171,12 +171,15 @@ export const loginUser = async (req, res) => {
       user.publicType = true;
       user.name = resolveDisplayName(user, "teacher");
     } else {
-      user.role = "user";
-      user.publicType = false;
+      // Preserve existing role (teacher or user), never overwrite an existing teacher back to "user" on normal login
+      if (!user.role) {
+        user.role = "user";
+      }
       if (user.sellerName || user.reverseRole) {
         user.reverseRole = true;
       }
-      user.name = resolveDisplayName(user, "user");
+      user.publicType = user.role === "teacher";
+      user.name = resolveDisplayName(user, user.role);
     }
 
     await user.save();
@@ -328,12 +331,15 @@ export const googleLogin = async (req, res) => {
       user.publicType = true;
       user.name = resolveDisplayName(user, "teacher");
     } else {
-      user.role = "user";
-      user.publicType = false;
+      // Preserve existing role (teacher or user), never overwrite an existing teacher back to "user" on normal login
+      if (!user.role) {
+        user.role = "user";
+      }
       if (user.sellerName || user.reverseRole) {
         user.reverseRole = true;
       }
-      user.name = resolveDisplayName(user, "user");
+      user.publicType = user.role === "teacher";
+      user.name = resolveDisplayName(user, user.role);
     }
 
     await user.save();
@@ -655,10 +661,15 @@ export const becomeTeacher = async (req, res) => {
       }
     }
 
+    const sanitizedUser = await User.findById(req.user.id).select(
+      "-password -resetPasswordToken -resetPasswordExpire"
+    );
+
     res.json({
       status: true,
       message: role === "teacher" ? "Switched to teacher successfully" : "Switched to student successfully",
       role: user.role,
+      user: sanitizedUser,
     });
   } catch (error) {
     console.error(error);

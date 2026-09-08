@@ -131,7 +131,7 @@ useEffect(() => {
         dispatch(becomeTeacher(role)).then((res) => {
           if (res.payload?.status) {
             dispatch(getUser());
-            navigate(role === "teacher" ? "/teacher-created" : "/profile");
+            navigate(role === "teacher" ? "/profile?tab=Revenue" : "/profile?tab=My Schedule");
           } else if (res.payload?.needsSellerSetup) {
             navigate("/create-teacher-profile");
           } else {

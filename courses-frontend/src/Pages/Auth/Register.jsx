@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import MainLayout from "../../components/MainLayout";
 import LogoIcon from "../../components/LogoIcon";
 import { useDispatch } from "react-redux";
-import { registerUser } from "../../redux/reducers/AuthReducer";
+import { registerUser, loginUser, getUser } from "../../redux/reducers/AuthReducer";
 import { toast } from "react-toastify";
 import GoogleLoginButton from "./GoogleLoginButton";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
@@ -125,11 +125,24 @@ export default function Register() {
 
     dispatch(registerUser(payload))
       .then((res) => {
-        if (res.payload.status) {
-          toast.success(res.payload.message);
-          navigate("/login");
+        if (res.payload?.status) {
+          toast.success(res.payload.message || "Registration successful!");
+          dispatch(
+            loginUser({
+              email: email.trim(),
+              password,
+              loginAs: registerAs,
+            })
+          ).then((loginRes) => {
+            if (loginRes.payload?.status) {
+              dispatch(getUser());
+              navigate("/");
+            } else {
+              navigate("/login");
+            }
+          });
         } else {
-          toast.error(res.payload.message);
+          toast.error(res.payload?.message || "Registration failed");
         }
       })
       .catch(() => {
@@ -375,7 +388,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="block w-fit rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+              className="block w-fit rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
             >
               {loading ? "Creating..." : "Continue"}
             </button>
@@ -384,7 +397,7 @@ export default function Register() {
                 type="button"
                 disabled={loading}
                 onClick={handleGoBack}
-                className="block w-fit rounded-full bg-black px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+                className="block w-fit rounded-full bg-black hover:bg-neutral-800 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
               >
                 Go back
               </button>

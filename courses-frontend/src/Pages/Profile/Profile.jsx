@@ -113,7 +113,7 @@ export default function Profile() {
         if (role === "user") {
           setSearchParams({ tab: "My Schedule" });
         } else if (role === "teacher") {
-          setSearchParams({ tab: "Dashboard" });
+          setSearchParams({ tab: "Revenue" });
         }
       } else if (res.payload?.needsSellerSetup) {
         navigate("/create-teacher-profile");

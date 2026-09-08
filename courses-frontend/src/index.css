@@ -20,3 +20,9 @@ body {
     font-weight: var(--c-stfwt, 500);
     display: none !important;
 }
+
+/* Remove unwanted browser default black focus ring/border on buttons */
+button:focus,
+button:focus-visible {
+    outline: none !important;
+}

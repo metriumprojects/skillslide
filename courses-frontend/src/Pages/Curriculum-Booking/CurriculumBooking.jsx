@@ -368,6 +368,7 @@ export default function CurriculumBooking() {
                   }
                   duration={singleCurriculum?.lessonPosition?.[0]?.lId?.duration}
                   price={singleCurriculum?.price}
+                  priceCurrency={singleCurriculum?.currency || "USD"}
                 />
               ) : (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">

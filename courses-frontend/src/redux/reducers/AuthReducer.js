@@ -4,6 +4,7 @@ import api from "../api";
 const clearClientSession = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
   }
 };
 
@@ -68,12 +69,10 @@ export const GoogleloginUser = createAsyncThunk(
 export const getUser = createAsyncThunk(
   "user/get-user",
   async (_, { rejectWithValue }) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return rejectWithValue({ message: "No token" });
-    }
     try {
+      const token = localStorage.getItem("token");
       const response = await api.get("/users/profile", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         withCredentials: true,
       });
       const data = response.data;
@@ -231,10 +230,19 @@ export const getUserById = createAsyncThunk(
 
 
 
+const getStoredUserInfo = () => {
+  try {
+    const raw = localStorage.getItem("userInfo");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 // Initial state
 const initialState = {
   user: null,
-  userInfo: null,
+  userInfo: getStoredUserInfo(),
   userbyid: null,
   loading: false,
   error: null,
@@ -263,7 +271,15 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data;
+        state.user = action.payload.user || action.payload.data || action.payload;
+        if (action.payload.user) {
+          state.userInfo = { ...(state.userInfo || {}), ...action.payload.user };
+          try {
+            localStorage.setItem("userInfo", JSON.stringify(state.userInfo));
+          } catch {
+            // ignore
+          }
+        }
         // Save token only when login completed (not teacher-setup intermediate)
         if (action.payload.token && !action.payload.needsSellerSetup) {
           localStorage.setItem("token", action.payload.token);
@@ -281,10 +297,22 @@ const userSlice = createSlice({
       .addCase(getUser.fulfilled, (state, action) => {
         state.loading = false;
         state.userInfo = action.payload;
+        if (action.payload) {
+          try {
+            localStorage.setItem("userInfo", JSON.stringify(action.payload));
+          } catch {
+            // ignore
+          }
+        }
       })
       .addCase(getUser.rejected, (state, action) => {
         state.loading = false;
-        state.userInfo = null;
+        const msg = action.payload?.message;
+        if (msg === "Not authorized" || msg === "Invalid token" || msg === "User not found") {
+          state.userInfo = null;
+          state.user = null;
+          clearClientSession();
+        }
         state.error = action.payload;
       })
       // Get user by ID
@@ -333,8 +361,17 @@ const userSlice = createSlice({
       })
       .addCase(becomeTeacher.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload?.role) {
-          state.userInfo = { ...state.userInfo, role: action.payload.role };
+        if (action.payload?.user) {
+          state.userInfo = { ...(state.userInfo || {}), ...action.payload.user };
+        } else if (action.payload?.role) {
+          state.userInfo = { ...(state.userInfo || {}), role: action.payload.role };
+        }
+        if (state.userInfo) {
+          try {
+            localStorage.setItem("userInfo", JSON.stringify(state.userInfo));
+          } catch {
+            // ignore
+          }
         }
       })
       .addCase(becomeTeacher.rejected, (state, action) => {
@@ -348,7 +385,15 @@ const userSlice = createSlice({
       })
       .addCase(GoogleloginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data;
+        state.user = action.payload.user || action.payload.data || action.payload;
+        if (action.payload.user) {
+          state.userInfo = { ...(state.userInfo || {}), ...action.payload.user };
+          try {
+            localStorage.setItem("userInfo", JSON.stringify(state.userInfo));
+          } catch {
+            // ignore
+          }
+        }
         if (action.payload.token && !action.payload.needsSellerSetup) {
           localStorage.setItem("token", action.payload.token);
         }
