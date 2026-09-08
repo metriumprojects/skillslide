@@ -6,9 +6,9 @@ export default function Legalnotice() {
         window.scrollTo(0, 0);
       }, []);
   return (
-    <MainLayout>
-      <div className="bg-white text-[#000000] px-8 py-12 sm:px-6 sm:py-8 md:px-12 lg:px-24">
-        <div className="max-w-5xl mx-auto space-y-8">
+    <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
+      <div className="w-full min-h-screen text-[#000000] py-8 md:py-12">
+        <div className="w-full max-w-4xl space-y-8 text-left">
 
           {/* Header */}
           <h1 className="text-3xl font-bold leading-tight">Legal Notice</h1>
