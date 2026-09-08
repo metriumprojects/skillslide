@@ -80,8 +80,16 @@ export default function TeacherCreated() {
             <div className="flex flex-col items-start gap-3">
               <button
                 type="button"
+                onClick={() => navigate("/profile")}
+                className="inline-flex items-center rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-6 py-3 text-sm font-medium text-white transition-colors cursor-pointer"
+              >
+                Continue
+              </button>
+
+              <button
+                type="button"
                 onClick={() => navigate("/create-lesson")}
-                className="inline-flex items-center rounded-full bg-[#FA4602] hover:bg-[#e03e02] px-6 py-3 text-sm font-medium text-white transition-colors"
+                className="inline-flex items-center rounded-full bg-black hover:bg-neutral-800 px-6 py-3 text-sm font-medium text-white transition-colors cursor-pointer"
               >
                 Create your first lesson
               </button>
@@ -89,7 +97,7 @@ export default function TeacherCreated() {
               <button
                 type="button"
                 onClick={() => navigate("/withdraw-request")}
-                className="inline-flex items-center rounded-full bg-black hover:bg-neutral-800 px-6 py-3 text-sm font-medium text-white transition-colors"
+                className="inline-flex items-center rounded-full bg-black hover:bg-neutral-800 px-6 py-3 text-sm font-medium text-white transition-colors cursor-pointer"
               >
                 Add your payment information
               </button>
