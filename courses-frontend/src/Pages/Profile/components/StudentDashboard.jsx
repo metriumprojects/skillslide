@@ -120,10 +120,19 @@ export default function StudentDashboard() {
     : [];
 
   const handleCancel = (lesson) => {
-    if(lesson){
-      dispatch(CancelBooking({ bookId: lesson?.bookingId, type: lesson?.type, lId:lesson?.lId })).then((res) => {
-        if (res?.payload.status) {
-          toast.success(res?.payload?.message);
+    if (lesson) {
+      const isCurriculum = lesson?.type === "curriculum" && !lesson?.lId;
+      const confirmText = isCurriculum
+        ? "Are you sure you want to cancel this curriculum? Any remaining sessions will be refunded."
+        : "Are you sure you want to cancel this lesson?";
+
+      if (window.confirm && !window.confirm(confirmText)) {
+        return;
+      }
+
+      dispatch(CancelBooking({ bookId: lesson?.bookingId, type: lesson?.type, lId: lesson?.lId })).then((res) => {
+        if (res?.payload?.status) {
+          toast.success(res?.payload?.message || (isCurriculum ? "Curriculum cancelled successfully" : "Lesson cancelled successfully"));
           // Refresh data after successful cancellation
           const now = new Date();
           const pad = (n) => (n < 10 ? '0' + n : n);
@@ -153,7 +162,7 @@ export default function StudentDashboard() {
             limit: pastLimit 
           }));
         } else {
-          toast.error(res?.payload);
+          toast.error(res?.payload?.message || res?.payload || "Cancellation failed");
         }
       });
     }
@@ -278,14 +287,19 @@ export default function StudentDashboard() {
                 {userMainUpcomingData.length > 0 ? (
                   userMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
+                    const isCurriculum = lesson.type === "curriculum" && !lesson.lId;
                     return (
                       <tr key={index} className="bg-[#F5F5F5]">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
-                        <td className="p-3">{lesson.curriculumTitle}</td>
-                        <td className="p-3">{lesson.lessonTitle}</td>
+                        <td className="p-3 font-medium">
+                          {lesson.curriculumTitle || (isCurriculum ? "Curriculum" : "-")}
+                        </td>
+                        <td className="p-3">
+                          {lesson.lessonTitle || (isCurriculum ? "-" : "-")}
+                        </td>
                         <td className="p-3">{lesson.name || "Unknown Teacher"}</td>
-                        <td className="p-3">{formatPrice(lesson.amount)}</td>
+                        <td className="p-3">{formatPrice(lesson.amount, lesson.currency || "USD")}</td>
                         <td className="p-3">
                           <span className="bg-primary text-white px-4 py-2 rounded font-medium">
                             Upcoming
@@ -296,15 +310,15 @@ export default function StudentDashboard() {
                             <button 
                               onClick={() => handleMessageTeacher(lesson)}
                               disabled={startChatLoading}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60"
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60 cursor-pointer"
                             >
                               {startChatLoading ? "Starting..." : "Message"}
                             </button>
                             <button 
                               onClick={() => handleCancel(lesson)}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors"
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
                             >
-                              Cancel lesson
+                              {isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
                             </button>
                           </div>
                         </td>

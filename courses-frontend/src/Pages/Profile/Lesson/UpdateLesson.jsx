@@ -542,7 +542,7 @@ const UpdateLesson = () => {
             className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-auto flex flex-col"
           >
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">Crop Lesson Cover Image</h3>
+              <h3 className="text-lg font-normal">Crop Lesson Cover Image</h3>
               <div onClick={handleCancelCoverImageCrop} className="text-gray-500 hover:text-gray-700 cursor-pointer">
                 <X size={24} />
               </div>
@@ -580,7 +580,7 @@ const UpdateLesson = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-3 p-4 border-t bg-gray-50">
+              <div className="flex gap-3 p-4 bg-gray-50">
                 <div onClick={handleCancelCoverImageCrop} className="flex-1 px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 cursor-pointer text-center">Cancel</div>
                 <div onClick={handleConfirmCoverImageCrop} className="flex-1 px-4 py-2 bg-black text-white rounded-md font-medium hover:bg-black/90 cursor-pointer text-center">Confirm Crop</div>
               </div>
@@ -665,17 +665,21 @@ const UpdateLesson = () => {
               </div>
               {/* Group Lessons Available */}
               <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
-                <label className="flex items-center gap-3 cursor-pointer">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={isGroupAvailable}
                     onChange={() => setIsGroupAvailable((prev) => !prev)}
                     disabled={loading}
-                    className="w-4 h-4 accent-black"
+                    className="w-4 h-4 mt-0.5 accent-black shrink-0"
                   />
-                  <span className="text-sm font-semibold text-gray-900">Allow Group Lessons</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-900">Group Availability</span>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                      This lesson will be available to multiple students as a group class. You can also set a separate price for it.
+                    </p>
+                  </div>
                 </label>
-                <p className="text-xs text-gray-500 mt-2 ml-7">Enable this option if students can book this lesson together as a group</p>
               </div>
 
               {/* Capacity & Group Pricing - Only show if Group Lessons is enabled */}
@@ -683,7 +687,7 @@ const UpdateLesson = () => {
                 <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block mb-1.5 text-sm font-semibold text-gray-900">Capacity</label>
+                      <label className="block mb-1.5 text-sm font-semibold text-gray-900">Student Capacity</label>
                       <input
                         type="number"
                         value={capacity}
@@ -694,7 +698,7 @@ const UpdateLesson = () => {
                       />
                     </div>
                     <div>
-                      <label className="block mb-1.5 text-sm font-semibold text-gray-900">Group pricing</label>
+                      <label className="block mb-1.5 text-sm font-semibold text-gray-900">Alternative Price</label>
                       <input
                         type="number"
                         value={discount}

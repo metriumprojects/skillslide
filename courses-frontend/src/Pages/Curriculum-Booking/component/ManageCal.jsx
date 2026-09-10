@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CancelBooking, ReShaduleCurriLessonBooking, ReShaduleLessonBooking } from "../../../redux/reducers/BookingReducer";
@@ -39,6 +39,67 @@ export function ManageCal({
   const [userTimezone, setUserTimezone] = useState("UTC");
   const [availableTimes, setAvailableTimes] = useState([]);
   const [slotMetadata, setSlotMetadata] = useState({});
+  const [bookingTab, setBookingTab] = useState("individual"); // "individual" | "group"
+
+  // Helper to check if a slot has group availability
+  const checkSlotIsGroup = (slot) => {
+    if (!slot) return false;
+    if (slot.lessons && Array.isArray(slot.lessons)) {
+      const entry = slot.lessons.find((l) => (myid ? l.lesson === myid : true));
+      if (entry) return Boolean(entry.lessonGroup);
+    }
+    return Boolean(slot.group);
+  };
+
+  const hasAnyGroupSlots = useMemo(() => {
+    if (type === "curri") return false;
+
+    const weeklyHasGroup = Object.values(weeklyAvailability || {}).some((dayObj) =>
+      (dayObj?.slots || []).some(checkSlotIsGroup)
+    );
+    if (weeklyHasGroup) return true;
+
+    const dateHasGroup = (dateAvailability || []).some((dateObj) =>
+      (dateObj?.slots || []).some(checkSlotIsGroup)
+    );
+    if (dateHasGroup) return true;
+
+    return Object.values(slotMetadata || {}).some((meta) => meta?.group);
+  }, [type, weeklyAvailability, dateAvailability, slotMetadata, myid]);
+
+  const individualTimes = useMemo(() => {
+    return availableTimes.filter((time) => !slotMetadata[time]?.group);
+  }, [availableTimes, slotMetadata]);
+
+  const groupTimes = useMemo(() => {
+    return availableTimes.filter((time) => Boolean(slotMetadata[time]?.group));
+  }, [availableTimes, slotMetadata]);
+
+  const displayedTimes = useMemo(() => {
+    if (!hasAnyGroupSlots) return availableTimes;
+    return bookingTab === "group" ? groupTimes : individualTimes;
+  }, [hasAnyGroupSlots, bookingTab, groupTimes, individualTimes, availableTimes]);
+
+  const handleTabChange = (newTab) => {
+    setBookingTab(newTab);
+    if (selectedTime) {
+      const isSelectedGroup = Boolean(slotMetadata[selectedTime]?.group);
+      if ((newTab === "group" && !isSelectedGroup) || (newTab === "individual" && isSelectedGroup)) {
+        onSelectTime("");
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (hasAnyGroupSlots && internalSelectedDate) {
+      if (bookingTab === "individual" && individualTimes.length === 0 && groupTimes.length > 0) {
+        setBookingTab("group");
+      } else if (bookingTab === "group" && groupTimes.length === 0 && individualTimes.length > 0) {
+        setBookingTab("individual");
+      }
+    }
+  }, [hasAnyGroupSlots, internalSelectedDate, individualTimes.length, groupTimes.length, bookingTab]);
+
   const [bookingInfo, setBookingInfo] = useState({
     newDate: "",
     timezone: ""
@@ -701,18 +762,45 @@ export function ManageCal({
         })}
       </div>
 
-      <p className="font-medium text-sm mb-2">Pick a time {availableTimes.length > 0 && `(${availableTimes.length} available)`}</p>
-      <div className="h-40 overflow-y-auto flex items-center justify-center w-full">
-        {availableTimes.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2 w-full h-40 overflow-y-auto">
-            {availableTimes.map((time) => {
+      {/* Tabs: Individual & Group */}
+      {hasAnyGroupSlots && (
+        <div className="flex items-center justify-center p-1 bg-[#F5F5F5] rounded-xl mb-4 gap-1">
+          <button
+            type="button"
+            onClick={() => handleTabChange("individual")}
+            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${
+              bookingTab === "individual"
+                ? "bg-white text-black shadow-sm font-semibold"
+                : "text-gray-500 hover:text-black font-medium"
+            }`}
+          >
+            Individual {internalSelectedDate ? `(${individualTimes.length})` : ""}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange("group")}
+            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${
+              bookingTab === "group"
+                ? "bg-white text-black shadow-sm font-semibold"
+                : "text-gray-500 hover:text-black font-medium"
+            }`}
+          >
+            Group {internalSelectedDate ? `(${groupTimes.length})` : ""}
+          </button>
+        </div>
+      )}
+
+      <div className="h-[185px] overflow-y-auto flex items-center justify-center w-full">
+        {displayedTimes.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2.5 w-full h-[185px] overflow-y-auto py-0.5">
+            {displayedTimes.map((time) => {
               const metadata = slotMetadata[time];
               const isGroup = metadata?.group;
               return (
                 <button
                   key={time}
                   onClick={() => handleTimeSelect(time)}
-                  className={`border rounded py-2 h-20 text-sm relative ${
+                  className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${
                     selectedTime === time
                       ? isGroup
                         ? "bg-yellow-400 text-gray-900 border-yellow-500"
@@ -723,28 +811,37 @@ export function ManageCal({
                   }`}
                 >
                   {isGroup && (
-                    <span className="absolute top-0.5 left-0.5 right-0.5 text-[9px] font-semibold text-yellow-800 bg-yellow-300 px-1 rounded">
+                    <span className="w-full text-[9px] font-semibold text-yellow-800 bg-yellow-300 py-0.5 text-center shrink-0">
                       Group
                     </span>
                   )}
-                  <span className={isGroup ? "mt-2 block" : ""}>{time}</span>
-                  {isGroup && metadata?.usecapacity !== undefined && (
-                    <span className="text-[8px] text-gray-600 block mt-0.5">
-                      Booked: {metadata.usecapacity}
-                    </span>
-                  )}
-                  {isGroup && metadata?.discount > 0 && (
-                    <span className="text-[8px] text-gray-600 block">
-                      -${metadata.discount}
-                    </span>
-                  )}
+                  <div className="flex-1 w-full flex flex-col items-center justify-center px-1">
+                    <span className="font-medium text-sm leading-tight">{time}</span>
+                    {isGroup && metadata?.usecapacity !== undefined && (
+                      <span className="text-[12px] text-gray-600 font-medium leading-tight mt-0.5">
+                        Booked: {metadata.usecapacity}
+                      </span>
+                    )}
+                    {isGroup && metadata?.discount > 0 && (
+                      <span className="text-[12px] text-gray-600 font-semibold leading-tight mt-0.5">
+                        ${metadata.discount}
+                      </span>
+                    )}
+                  </div>
                 </button>
               );
             })}
           </div>
         ) : (
           <div className="text-center py-4 text-gray-500 text-sm">
-            {internalSelectedDate ? "No available times" : "Select a date"}
+            {!internalSelectedDate 
+              ? "Select a date" 
+              : hasAnyGroupSlots
+              ? bookingTab === "group"
+                ? "No group slots available for this date"
+                : "No individual slots available for this date"
+              : "No available times"
+            }
           </div>
         )}
       </div>
@@ -759,15 +856,32 @@ export function ManageCal({
         }`}
       >
         {(() => {
-          const metadata = slotMetadata[selectedTime];
-          const isGroup = metadata?.group;
-          const discount = isGroup ? (metadata.discount || 0) : 0;
-          const finalPrice = price ? Math.max(0, price - discount) : 0;
-          
-          if (!price) return "Reschedule Lesson";
-          if (isGroup && discount > 0) {
-            return `Reschedule Lesson ($${finalPrice.toFixed(2)}${discount > 0 ? ` - $${discount} off` : ''})`;
+          if (selectedTime) {
+            const metadata = slotMetadata[selectedTime];
+            const isGroup = metadata?.group;
+            const discount = isGroup ? (metadata.discount || 0) : 0;
+            const finalPrice = discount > 0 ? discount : (price || 0);
+            
+            if (isGroup && discount > 0) {
+              return `Reschedule Lesson ($${finalPrice.toFixed(2)})`;
+            }
+            if (price) {
+              return `Reschedule Lesson ($${price.toFixed(2)})`;
+            }
+            return `Reschedule Lesson`;
           }
+
+          // Inactive state
+          if (hasAnyGroupSlots && bookingTab === "group") {
+            const defaultGroupPrice = Number(
+              (groupTimes.length > 0 && slotMetadata[groupTimes[0]]?.discount) || 0
+            );
+            if (defaultGroupPrice > 0) {
+              return `Reschedule Lesson ($${defaultGroupPrice.toFixed(2)})`;
+            }
+          }
+
+          if (price) return `Reschedule Lesson ($${price.toFixed(2)})`;
           return `Reschedule Lesson`;
         })()}
       </button>

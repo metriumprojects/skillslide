@@ -320,6 +320,16 @@ export const initiateBooking = async (req, res) => {
 
       itemName = itemData.title;
       amountFloat = itemData.price || 0;
+
+      // If group booking with alternative price, the entered amount becomes the new lesson price
+      const isGroupBooking = Boolean(parsedMeta?.isGroup || parsedMeta?.group);
+      if (isGroupBooking) {
+        const altPrice = Number(parsedMeta?.groupPrice || (itemData.isGroupAvailable ? itemData.discount : 0) || 0);
+        if (altPrice > 0) {
+          amountFloat = altPrice;
+        }
+      }
+
       teacher = itemData.createdBy?._id;
       teacherName = itemData.createdBy?.name;
       productImage = itemData.coverImage.url;
@@ -1612,10 +1622,11 @@ export const cancelBooking = async (req, res) => {
 
     const booking = await Booking.findById(bookingId)
       .populate("lesson")
-      .populate("listing");
+      .populate("listing")
+      .populate("curriculum");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    // 1ï¸âƒ£ If TYPE = LESSON â†’ full booking cancel
+    // 1. If TYPE = LESSON or LISTING -> full booking cancel
     if (type === "lesson" || type === "listing") {
       if (type === "listing") {
         const listingSlots = getListingBookingSlots(booking, booking.listing);
@@ -1639,7 +1650,7 @@ export const cancelBooking = async (req, res) => {
       }
 
       booking.status = "cancelled";
-      if (type === "lesson" || type === "listing") booking.scheduledAt = null;
+      booking.scheduledAt = null;
 
       await booking.save();
 
@@ -1648,7 +1659,142 @@ export const cancelBooking = async (req, res) => {
         message: type === "listing" ? "Order cancelled successfully" : "Lesson booking cancelled successfully",
         booking,
       });
+    } else if (type === "curriculum" && !lId) {
+      // 2. CURRICULUM FULL CANCELLATION (Parent Booking)
+      if (booking.status === "cancelled") {
+        return res.status(400).json({
+          status: false,
+          message: "Curriculum booking is already cancelled",
+        });
+      }
+
+      // Release all upcoming/active slots in lessonPosition
+      const now = new Date();
+      if (Array.isArray(booking.lessonPosition)) {
+        for (let idx = 0; idx < booking.lessonPosition.length; idx++) {
+          const lp = booking.lessonPosition[idx];
+          if (lp.scheduledAt && lp.status !== "completed" && lp.status !== "cancelled") {
+            const lesson = await Lesson.findById(lp.lId);
+            await releaseBookedSlot({
+              teacher: booking.teacher,
+              scheduledAt: lp.scheduledAt,
+              timezone: lp.timezone,
+              duration: lp.duration || lesson?.duration,
+              group: lp.group || booking.group,
+            });
+            booking.lessonPosition[idx].status = "cancelled";
+            booking.lessonPosition[idx].scheduledAt = null;
+            booking.lessonPosition[idx].timezone = null;
+          }
+        }
+      }
+
+      booking.status = "cancelled";
+      booking.scheduledAt = null;
+
+      // PRORATED REFUND LOGIC:
+      // Divide price across total sessions. If a session schedule is over/completed, refund the remaining sessions.
+      const totalSessions = Array.isArray(booking.lessonPosition) && booking.lessonPosition.length > 0
+        ? booking.lessonPosition.length
+        : 1;
+
+      // Completed / past sessions
+      const completedSessionsCount = Array.isArray(booking.lessonPosition)
+        ? booking.lessonPosition.filter((lp) => {
+            if (lp.status === "completed") return true;
+            if (lp.scheduledAt && new Date(lp.scheduledAt) <= now) return true;
+            return false;
+          }).length
+        : 0;
+
+      const remainingSessionsCount = Math.max(0, totalSessions - completedSessionsCount);
+      const refundFraction = totalSessions > 0 ? remainingSessionsCount / totalSessions : 0;
+
+      const baseChargedAmount = booking.chargedAmount || booking.amount || 0;
+      const chargedCurrency = (booking.chargedCurrency || booking.currency || "USD").toUpperCase();
+      const refundAmount = roundMoney(baseChargedAmount * refundFraction, chargedCurrency);
+
+      let stripeRefund = null;
+      const paymentIntentId = booking.stripePaymentIntentId || booking.stripe_payment_intent_id || booking.meta?.stripe?.id;
+
+      if (stripe && paymentIntentId && refundAmount > 0) {
+        try {
+          const amountInSmallestUnit = toSmallestUnit(refundAmount, chargedCurrency);
+          stripeRefund = await stripe.refunds.create({
+            payment_intent: paymentIntentId,
+            amount: amountInSmallestUnit,
+            reason: "requested_by_customer",
+          });
+        } catch (stripeErr) {
+          console.error("Stripe refund error during curriculum cancel:", stripeErr?.message || stripeErr);
+        }
+      }
+
+      // Deduct refunded portion from teacher pending balance
+      if (booking.teacher && refundFraction > 0) {
+        const teacher = await User.findById(booking.teacher);
+        if (teacher) {
+          const commissionRate = await getCommissionRate();
+          const teacherTotalEarnings = booking.amount * (1 - commissionRate);
+          const teacherDeduction = roundMoney(teacherTotalEarnings * refundFraction, booking.currency || "USD");
+
+          if (typeof teacher.moneyPending === "number") {
+            teacher.moneyPending = Math.max(0, teacher.moneyPending - teacherDeduction);
+          }
+          const earningCurrency = (booking.currency || "USD").toUpperCase();
+          if (teacher.balances?.pending?.[earningCurrency]) {
+            teacher.balances.pending[earningCurrency] = Math.max(
+              0,
+              teacher.balances.pending[earningCurrency] - teacherDeduction
+            );
+          }
+          await teacher.save();
+        }
+      }
+
+      if (completedSessionsCount === 0) {
+        booking.paymentStatus = "cancelled";
+        booking.payment_status = "cancelled";
+      } else {
+        booking.paymentStatus = "part";
+        booking.payment_status = "part";
+      }
+
+      booking.meta = {
+        ...(booking.meta || {}),
+        refund: {
+          refundAmount,
+          currency: chargedCurrency,
+          totalSessions,
+          completedSessionsCount,
+          remainingSessionsCount,
+          stripeRefundId: stripeRefund?.id || null,
+          refundedAt: new Date(),
+        },
+      };
+
+      await booking.save();
+
+      let message = "Curriculum cancelled successfully";
+      if (remainingSessionsCount === totalSessions) {
+        message = `Curriculum cancelled successfully. Full refund of ${chargedCurrency} ${refundAmount} processed for all ${totalSessions} sessions.`;
+      } else if (remainingSessionsCount > 0) {
+        message = `Curriculum cancelled successfully. Refund of ${chargedCurrency} ${refundAmount} processed for ${remainingSessionsCount} remaining session(s) (${completedSessionsCount} of ${totalSessions} completed).`;
+      } else {
+        message = `Curriculum cancelled. All ${totalSessions} sessions have already been completed or past, no refund applicable.`;
+      }
+
+      return res.json({
+        status: true,
+        message,
+        refundAmount,
+        remainingSessions: remainingSessionsCount,
+        totalSessions,
+        completedSessions: completedSessionsCount,
+        booking,
+      });
     } else {
+      // 3. CURRICULUM INDIVIDUAL LESSON CANCELLATION
       if (!lId) {
         return res.status(400).json({
           status: false,
@@ -1770,7 +1916,7 @@ export const userCancelBookings = async (req, res) => {
 
     let filter = {
       user: req.user._id,
-      paymentStatus: "paid",
+      paymentStatus: { $in: ["paid", "cancelled", "part"] },
       $or: [{ status: "cancelled" }, { "lessonPosition.status": "cancelled" }],
     };
 
@@ -2136,37 +2282,73 @@ export const userMainUpcomingBookings = async (req, res) => {
     let upcomingLessons = [];
 
     for (const b of bookings) {
+      if (b.status === "cancelled") continue;
+
       // -------------------------
-      // 1ï¸âƒ£ SINGLE LESSON BOOKING
+      // 1. SINGLE LESSON OR CURRICULUM PARENT BOOKING
       // -------------------------
-      if (
+      if (b.type === "curriculum") {
+        const upcomingLps = Array.isArray(b.lessonPosition)
+          ? b.lessonPosition.filter(
+              (lp) =>
+                lp.scheduledAt !== null &&
+                lp.scheduledAt >= newDateUTC &&
+                lp.status !== "pending" &&
+                lp.status !== "cancelled"
+            )
+          : [];
+        const effectiveDate =
+          b.scheduledAt && b.scheduledAt >= newDateUTC
+            ? b.scheduledAt
+            : upcomingLps[0]?.scheduledAt || b.scheduledAt;
+
+        if (effectiveDate && effectiveDate >= newDateUTC && b.status !== "pending") {
+          upcomingLessons.push({
+            bookingId: b._id,
+            lId: null,
+            lessonTitle: null,
+            curriculumTitle: b.curriculum?.title || "Curriculum",
+            scheduledAt: effectiveDate,
+            amount: b.amount,
+            currency: b.currency || "USD",
+            status: b.status,
+            type: "curriculum",
+            isCurriculum: true,
+            name: b.teacher?.name || null,
+            userId: b.teacher?._id || null,
+          });
+        }
+      } else if (
         b.scheduledAt &&
         b.scheduledAt >= newDateUTC &&
-        b.status !== "pending" // ðŸ”¥ Prevent pending
+        b.status !== "pending"
       ) {
         upcomingLessons.push({
           bookingId: b._id,
           lId: b.lesson?._id || null,
           lessonTitle: b.lesson?.title || null,
+          curriculumTitle: null,
           scheduledAt: b.scheduledAt,
           amount: b.lesson?.price || b.amount,
-          currency: b.lesson_currency || b.lesson?.currency || "USD",
+          currency: b.lesson_currency || b.lesson?.currency || b.currency || "USD",
           status: b.status,
           type: b.type,
+          isCurriculum: false,
           name: b.teacher?.name || null,
           userId: b.teacher?._id || null,
         });
       }
 
       // -------------------------
-      // 2ï¸âƒ£ CURRICULUM LESSONS
+      // 2. CURRICULUM LESSONS
       // -------------------------
       if (Array.isArray(b.lessonPosition)) {
         const validLessons = b.lessonPosition.filter(
           (lp) =>
             lp.scheduledAt !== null &&
             lp.scheduledAt >= newDateUTC &&
-            lp.status !== "pending" // ðŸ”¥ Prevent pending
+            lp.status !== "pending" &&
+            lp.status !== "cancelled"
         );
 
         for (const lp of validLessons) {
@@ -2183,9 +2365,10 @@ export const userMainUpcomingBookings = async (req, res) => {
             currency: lessonData?.currency || "USD",
             status: lp.status,
             type: b.type,
+            isCurriculum: false,
             name: b.teacher?.name || null,
             teacherId: b.teacher?._id || null,
-            // â­ NEW FIELD: Curriculum Title
+            userId: b.teacher?._id || null,
             curriculumTitle: b.curriculum?.title || null,
           });
         }
@@ -2253,7 +2436,42 @@ export const teacherMainUpcomingBookings = async (req, res) => {
     // 1ï¸âƒ£ SINGLE LESSONS
     // ============================
     for (const b of bookings) {
-      if (
+      if (b.status === "cancelled") continue;
+
+      if (b.type === "curriculum") {
+        const upcomingLps = Array.isArray(b.lessonPosition)
+          ? b.lessonPosition.filter(
+              (lp) =>
+                lp.lId &&
+                lp.scheduledAt &&
+                lp.scheduledAt >= newDateUTC &&
+                lp.status !== "pending" &&
+                lp.status !== "cancelled"
+            )
+          : [];
+        const effectiveDate =
+          b.scheduledAt && b.scheduledAt >= newDateUTC
+            ? b.scheduledAt
+            : upcomingLps[0]?.scheduledAt || b.scheduledAt;
+
+        if (effectiveDate && effectiveDate >= newDateUTC && b.status !== "pending") {
+          upcomingLessons.push({
+            bookingId: b._id.toString(),
+            lId: null,
+            lessonTitle: null,
+            curriculumTitle: b.curriculum?.title || "Curriculum",
+            scheduledAt: effectiveDate,
+            amount: b.amount,
+            currency: b.currency || "USD",
+            status: b.status,
+            type: "curriculum",
+            isCurriculum: true,
+            group: b.group === true,
+            name: b.user?.name || null,
+            userId: b.user?._id || null,
+          });
+        }
+      } else if (
         b.scheduledAt &&
         b.scheduledAt >= newDateUTC &&
         b.status !== "pending" &&
@@ -2268,9 +2486,10 @@ export const teacherMainUpcomingBookings = async (req, res) => {
           currency: b.lesson_currency || b.lesson.currency || "USD",
           status: b.status,
           type: b.type,
+          isCurriculum: false,
           group: b.group === true,
           name: b.user?.name || null,
-          curriculumTitle: b.curriculum?.title || null,
+          curriculumTitle: null,
         });
       }
 

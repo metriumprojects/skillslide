@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import moment from "moment-timezone";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function MyCalendar({
   selectedDate,
@@ -399,8 +400,19 @@ export function MyCalendar({
     return days;
   };
 
+  // Check if any dates in the current month have availability
+  const hasAnyAvailableDatesInMonth = () => {
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = createDateAtStartOfDay(year, currentMonth.getMonth(), d);
+      if (!isPastDate(date) && isDateAvailable(date)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   return (
-    <div className={`w-full bg-white rounded-2xl p-5 shadow-lg ${isDisabled ? 'opacity-60' : ''}`}>
+    <div className={`w-full bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)] ${isDisabled ? 'opacity-60' : ''}`}>
       {/* Lesson title and number */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -415,27 +427,33 @@ export function MyCalendar({
             </span>
           )}
         </div>
-        <h4 className="font-semibold text-gray-800 mb-2 truncate">{lessonTitle}</h4>
+        <h4 className="font-semibold text-gray-800 mb-2 break-words">{lessonTitle}</h4>
       </div>
 
       <div className="flex justify-between items-center mb-3">
-        <button
-          onClick={handlePrevMonth}
-          disabled={isDisabled}
-          className={`px-2 py-1 ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'} rounded`}
-        >
-          ‹
-        </button>
-        <p className="font-semibold">
+        <p className="font-semibold text-xl">
           {monthName} {year}
         </p>
-        <button
-          onClick={handleNextMonth}
-          disabled={isDisabled}
-          className={`px-2 py-1 ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'} rounded`}
-        >
-          ›
-        </button>
+        <div>
+          <button
+            onClick={handlePrevMonth}
+            disabled={isDisabled}
+            className={`px-2 py-1 rounded transition-colors ${
+              isDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+            }`}
+          >
+            <ChevronLeft />
+          </button>
+          <button
+            onClick={handleNextMonth}
+            disabled={isDisabled}
+            className={`px-2 py-1 rounded transition-colors ${
+              isDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+            }`}
+          >
+            <ChevronRight />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-600 mb-1">
@@ -444,9 +462,9 @@ export function MyCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center mb-5">
+      <div className="grid grid-cols-7 border border-gray-300 rounded-xl text-center mb-5 overflow-hidden bg-white">
         {generateDays().map((day, i) => {
-          if (!day) return <div key={i} className="py-2"></div>;
+          if (!day) return <div key={i} className="py-2 border border-gray-300"></div>;
 
           const date = createDateAtStartOfDay(year, currentMonth.getMonth(), day);
           const isPast = isPastDate(date);
@@ -457,14 +475,14 @@ export function MyCalendar({
             <div
               key={i}
               onClick={() => !isPast && isAvailable && !isDisabled && handleSelectDate(day)}
-              className={`py-2 rounded text-sm ${
+              className={`py-2 text-sm border border-gray-300 ${
                 isDisabled || isPast
-                  ? "text-gray-300 cursor-not-allowed bg-gray-100"
+                  ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
                   : !isAvailable
-                  ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                  ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
                   : isSelected
                   ? "bg-primary text-white"
-                  : "text-primary hover:bg-blue-100 cursor-pointer"
+                  : "text-black hover:bg-blue-100 cursor-pointer bg-white"
               }`}
               title={
                 isDisabled 
@@ -482,33 +500,59 @@ export function MyCalendar({
         })}
       </div>
 
-      <p className="font-medium text-sm mb-2">
-        Pick a time{" "}
-        {availableTimes.length > 0 && `(${availableTimes.length} available)`}
-      </p>
-      <div className="h-40 overflow-y-auto flex items-center justify-center w-full">
+      <div className="h-40 overflow-y-auto hide-scrollbar flex items-center justify-center w-full">
         {availableTimes.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2 w-full h-40 overflow-y-auto">
-            {availableTimes.map((time) => (
-              <button
-                key={time}
-                onClick={() => !isDisabled && handleTimeSelect(time)}
-                disabled={isDisabled}
-                className={`border rounded py-2 text-sm ${
-                  isDisabled
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : selectedTime === time
-                    ? "bg-primary text-white border-primary"
-                    : "hover:bg-blue-100 text-gray-700 border-gray-300"
-                }`}
-              >
-                {time}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2 w-full h-40 overflow-y-auto hide-scrollbar">
+            {availableTimes.map((time) => {
+              // Check if time is in the past on today's date
+              const isToday = internalSelectedDate && getDateString(internalSelectedDate) === getDateString(today);
+              let isPastTime = false;
+              if (isToday) {
+                const [timeStr, modifier] = time.split(" ");
+                const [hours, minutes] = timeStr.split(":").map(Number);
+                const slotTime = new Date();
+                slotTime.setHours(
+                  modifier === "PM" && hours !== 12
+                    ? hours + 12
+                    : modifier === "AM" && hours === 12
+                    ? 0
+                    : hours,
+                  minutes,
+                  0,
+                  0
+                );
+                const now = new Date();
+                isPastTime = slotTime < now;
+              }
+
+              const isSlotDisabled = isDisabled || isPastTime;
+
+              return (
+                <button
+                  key={time}
+                  onClick={() => !isSlotDisabled && handleTimeSelect(time)}
+                  disabled={isSlotDisabled}
+                  className={`border rounded-2xl py-2 text-sm h-14 relative overflow-hidden flex items-center justify-center transition-colors ${
+                    isSlotDisabled
+                      ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed opacity-50"
+                      : selectedTime === time
+                      ? "bg-primary text-white border-primary"
+                      : "hover:bg-blue-100 text-gray-700 border-gray-300 bg-white cursor-pointer"
+                  }`}
+                >
+                  <span>{time}</span>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-4 text-gray-500 text-sm">
-            {internalSelectedDate ? "No available times" : "Select a date"}
+            {!internalSelectedDate 
+              ? hasAnyAvailableDatesInMonth() 
+                ? "Pick a date" 
+                : "Sorry, this teacher is currently fully booked."
+              : `Pick a time ${availableTimes.length > 0 ? `(${availableTimes.length} available)` : ""}`
+            }
           </div>
         )}
       </div>
@@ -518,9 +562,9 @@ export function MyCalendar({
         <button
           onClick={handleScheduleClick}
           disabled={!internalSelectedDate || !selectedTime || isDisabled}
-          className={`w-full mt-4 py-2.5 rounded text-sm font-medium ${
+          className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium transition-colors ${
             !internalSelectedDate || !selectedTime
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              ? "bg-gray-400 text-white cursor-not-allowed"
               : "bg-primary hover:bg-blue-700 text-white cursor-pointer"
           }`}
         >

@@ -269,12 +269,12 @@ const CalendarDisplay = ({ weeklyAvailability = {}, dateAvailability = [], isEdi
 
       {/* RIGHT COLUMN: DATE-SPECIFIC HOURS */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-2.5">
           <h2 className="text-base font-semibold text-gray-900">Custom day availability</h2>
           {isEditable && (
             <button
               onClick={onOpenCalendarModal}
-              className="px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add
             </button>

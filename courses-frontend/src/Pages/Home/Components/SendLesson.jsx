@@ -78,10 +78,13 @@ export default function SendLesson({ open, onClose, request }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <motion.div    initial={{ opacity: 0, y: -20, scale: 1 }}
+      <motion.div
+        initial={{ opacity: 0, y: -20, scale: 1 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -40, scale: 0.95 }}
-        transition={{ duration: 0.35, ease: "easeOut" }} className="bg-white w-full max-w-4xl rounded-md shadow-lg p-6 relative">
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="bg-white w-full max-w-4xl rounded-2xl shadow-lg p-6 relative"
+      >
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-black hover:text-black"
@@ -89,7 +92,7 @@ export default function SendLesson({ open, onClose, request }) {
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-semibold mb-2">
+        <h2 className="text-xl font-normal text-gray-900 mb-2">
           Send an existing lesson proposal
         </h2>
         {request ? (
@@ -139,17 +142,23 @@ export default function SendLesson({ open, onClose, request }) {
           )}
         </div>
 
-        <textarea
-          placeholder="Add a message (optional)"
-          className="w-full border border-gray-300 rounded-lg p-3 h-28 outline-none"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          disabled={submitting}
-        ></textarea>
+        {/* Message Input Bubble */}
+        <div className="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100 mb-4">
+          <label className="block mb-2 text-sm font-semibold text-gray-900">
+            Message <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <textarea
+            placeholder="Add a message (optional)"
+            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 h-28 text-sm outline-none focus:ring-0"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            disabled={submitting}
+          ></textarea>
+        </div>
 
         <div className="flex justify-start mt-4">
           <button
-            className="bg-primary text-white px-6 py-2 rounded disabled:opacity-60"
+            className="bg-primary text-white px-6 py-2 rounded-full text-sm font-medium disabled:opacity-60 cursor-pointer"
             onClick={handleSend}
             disabled={submitting || !request}
           >

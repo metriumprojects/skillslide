@@ -45,7 +45,7 @@ export default function Request({
   }, [dispatch]);
 
   return (
-    <div className="w-full py-4 md:py-10 space-y-6">
+    <div className="w-full mt-[20px] pb-10 space-y-6">
       {!proposes || proposes.length === 0 ? (
         <p className="text-center text-gray-500 py-10">No requests found</p>
       ) : (

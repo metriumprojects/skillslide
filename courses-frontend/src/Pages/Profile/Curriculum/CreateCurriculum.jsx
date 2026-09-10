@@ -914,8 +914,8 @@ export default function CurriculumPage() {
   // RENDER LOGIC
   return (
     <MainLayout className="mx-auto" width="100%">
-      <div className="min-h-screen bg-white py-10">
-        <div className="w-full mx-auto px-4">
+      <div className={`bg-white ${currentStep === 2 ? "min-h-[calc(100vh-115px)] flex flex-col justify-center py-4" : "min-h-screen py-10"}`}>
+        <div className="w-full mx-auto">
           {/* STEP 1: CURRICULUM DETAILS & CALENDAR */}
           {currentStep === 1 && (
             <Step1Details
@@ -1243,7 +1243,7 @@ function Step1Details({
 
             {/* Image Preview */}
             {coverImage && (
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-2">
                 <div className="flex justify-between items-center mb-3">
                   <p className="text-sm font-medium text-gray-900">Preview</p>
                   <p className="text-xs text-gray-500">1/1 image</p>
@@ -1386,7 +1386,7 @@ function Step2Type({ lessonType, onChooseType, onBack, onNext }) {
           }`}
         >
           <h3 className="text-base font-semibold text-gray-900 mb-2">
-            Direct Lesson Course
+            Direct Lesson Course (No Units)
           </h3>
           <p className="text-sm text-gray-600 leading-relaxed">
             A simple course made of individual lessons with no grouping. Perfect
@@ -1512,6 +1512,91 @@ function Step3DirectLessons({
   return (
     <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* LEFT: LESSON FORM & CONTROLS */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Add a lesson
+          </h3>
+          <div className="bg-[#F7F7F7] rounded-2xl p-5 border border-gray-100">
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handleAddNewLesson}
+                className="w-full px-4 py-3 rounded-xl bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
+              >
+                Create a new lesson +
+              </button>
+              <select
+                value={existingLessonId}
+                onChange={handleExistingLessonSelect}
+                className="w-full px-4 py-3 border border-[#DDDDDD] rounded-xl text-sm bg-white focus:outline-none focus:border-black"
+              >
+                <option value="">Choose from your existing lessons</option>
+                {availableExistingLessons?.map((lesson) => (
+                  <option key={lesson._id} value={lesson._id}>
+                    {lesson.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {selectedLesson ? (
+            <LessonCard
+              lesson={selectedLesson}
+              unit={null}
+              allUnits={[]}
+              maxPosition={sortedLessons.length}
+              expandedLessons={expandedLessons}
+              setExpandedLessons={setExpandedLessons}
+              handleLessonChange={handleLessonChange}
+              handleCategoryChange={handleCategoryChange}
+              handleDeleteLesson={handleDeleteLesson}
+              handleLessonImageUpload={handleLessonImageUpload}
+              handleLessonImageRemove={handleLessonImageRemove}
+              handleLessonCoverImageUpload={handleLessonCoverImageUpload}
+              allCategories={categories}
+              durationOptions={durationOptions}
+              MAX_DESCRIPTION_LENGTH={MAX_DESCRIPTION_LENGTH}
+              MIN_IMAGES_REQUIRED={MIN_IMAGES_REQUIRED}
+              lessonImageInputRef={lessonImageInputRef}
+              currency={currency}
+              forceExpanded={true}
+              hideHeader={true}
+            />
+          ) : (
+            <div className="bg-[#F7F7F7] rounded-2xl p-6 text-sm text-gray-600 border border-gray-100">
+              Select a lesson to edit its details.
+            </div>
+          )}
+
+          <div className="flex justify-between gap-4 pt-2">
+            <button
+              onClick={onBack}
+              className="w-fit px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <ArrowLeft size={16} /> Back
+            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleAddNewLesson}
+                className=" px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              >
+                Add another lesson
+              </button>
+              <button
+                onClick={onSubmit}
+                disabled={loading || lessons.length < 2}
+                className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {loading ? "Creating..." : "Create Curriculum"}
+                {!loading && <ArrowRight size={16} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: PREVIEW */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
@@ -1602,89 +1687,6 @@ function Step3DirectLessons({
               })}
             </div>
           )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-[#F7F7F7] rounded-2xl p-5 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Add a lesson
-            </h3>
-            <div className="space-y-3">
-                     <button
-                            type="button"
-                            onClick={handleAddNewLesson}
-                            className="w-full px-4 py-3 rounded-xl bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
-                          >
-                            Create a new lesson +
-                          </button>
-              <select
-                value={existingLessonId}
-                onChange={handleExistingLessonSelect}
-                className="w-full px-4 py-3 border border-[#DDDDDD] rounded-xl text-sm bg-white focus:outline-none focus:border-black"
-              >
-                <option value="">Choose from your existing lessons</option>
-                {availableExistingLessons?.map((lesson) => (
-                  <option key={lesson._id} value={lesson._id}>
-                    {lesson.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {selectedLesson ? (
-            <LessonCard
-              lesson={selectedLesson}
-              unit={null}
-              allUnits={[]}
-              maxPosition={sortedLessons.length}
-              expandedLessons={expandedLessons}
-              setExpandedLessons={setExpandedLessons}
-              handleLessonChange={handleLessonChange}
-              handleCategoryChange={handleCategoryChange}
-              handleDeleteLesson={handleDeleteLesson}
-              handleLessonImageUpload={handleLessonImageUpload}
-              handleLessonImageRemove={handleLessonImageRemove}
-              handleLessonCoverImageUpload={handleLessonCoverImageUpload}
-              allCategories={categories}
-              durationOptions={durationOptions}
-              MAX_DESCRIPTION_LENGTH={MAX_DESCRIPTION_LENGTH}
-              MIN_IMAGES_REQUIRED={MIN_IMAGES_REQUIRED}
-              lessonImageInputRef={lessonImageInputRef}
-              currency={currency}
-              forceExpanded={true}
-              hideHeader={true}
-            />
-          ) : (
-            <div className="bg-[#F7F7F7] rounded-2xl p-6 text-sm text-gray-600 border border-gray-100">
-              Select a lesson to edit its details.
-            </div>
-          )}
-
-          <div className="flex justify-between gap-4 pt-2">
-            <button
-              onClick={onBack}
-              className="w-fit px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <ArrowLeft size={16} /> Back
-            </button>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleAddNewLesson}
-                className=" px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-              >
-                Add another lesson
-              </button>
-              <button
-                onClick={onSubmit}
-                disabled={loading || lessons.length < 2}
-                className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {loading ? "Creating..." : "Create Curriculum"}
-                {!loading && <ArrowRight size={16} />}
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1824,184 +1826,7 @@ function Step3Units({
   return (
     <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
-          </div>
-
-          {sortedUnits.length === 0 && lessons.length === 0 ? (
-            <div className="text-gray-500 text-center py-12 bg-[#F7F7F7] rounded-2xl border border-gray-100">
-              No units or lessons yet. Add a unit to get started.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sortedUnits.map((unit) => {
-                const unitLessons = getLessonsForUnit(unit.id);
-                const unitPreviewImage =
-                  unitLessons?.[0]?.coverImage?.url || unitLessons?.[0]?.images?.[0]?.url;
-                const isUnitSelected =
-                  selectedUnitId === unit.id && mode === "unit";
-
-                return (
-                  <div key={`unit-${unit.id}`} className="space-y-3">
-                    <div
-                      className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${
-                        isUnitSelected ? "border-black" : "border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">
-                              Unit {unit.position}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleSelectUnit(unit)}
-                                className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors"
-                              >
-                                Edit
-                              </button>
-                            </div>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">
-                            {unit.name || "Untitled unit"}
-                          </p>
-                          <p className="text-xs text-gray-600 line-clamp-2">
-                            {unit.description || "Add a unit description"}
-                          </p>
-                          <div className="grid grid-cols-3 items-center gap-3 mt-3">
-                            <select
-                              value={String(unit.position)}
-                              onChange={(event) =>
-                                handleUnitPositionChange(
-                                  unit.id,
-                                  event.target.value,
-                                )
-                              }
-                              className="flex-1 min-w-[160px] px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none focus:border-black"
-                            >
-                              {Array.from({ length: units.length }).map(
-                                (_, i) => (
-                                  <option key={i} value={String(i + 1)}>
-                                    Position {i + 1}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => handleAddLessonInline(unit.id)}
-                              className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
-                            >
-                              Add a Lesson +
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleAddUnitInline}
-                              className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
-                            >
-                              Add a Unit +
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pl-6 border-l border-[#DDDDDD]">
-                      {unitLessons.map((lesson) => {
-                        const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url;
-                        const isSelected =
-                          selectedLessonId === lesson.id && mode === "lesson";
-
-                        return (
-                          <div
-                            key={lesson.id}
-                            className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${
-                              isSelected ? "border-black" : "border-transparent"
-                            }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="w-[100px] h-[100px] rounded bg-gray-100 overflow-hidden flex-shrink-0">
-                                {previewImage ? (
-                                  <img
-                                    src={previewImage}
-                                    alt="lesson"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-100" />
-                                )}
-                              </div>
-                              <div className="flex flex-col justify-between flex-1">
-                                <div className="flex items-center justify-between">
-                                  <span className="px-4 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">
-                                    Lesson {lesson.position}
-                                  </span>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSelectLesson(lesson)}
-                                      className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors"
-                                    >
-                                      Edit
-                                    </button>
-                                  </div>
-                                </div>
-                                <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">
-                                  {lesson.title || "Untitled lesson"}
-                                </p>
-                                <div className="grid grid-cols-3 items-center gap-3 mt-3">
-                                  <select
-                                    value={lesson.position}
-                                    onChange={(event) =>
-                                      handleLessonChange(
-                                        lesson.id,
-                                        "position",
-                                        event.target.value,
-                                      )
-                                    }
-                                    className="flex-1 min-w-[140px] px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none focus:border-black"
-                                  >
-                                    {Array.from({
-                                      length: unitLessons.length,
-                                    }).map((_, i) => (
-                                      <option key={i} value={i + 1}>
-                                        Position {i + 1}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleAddLessonInline(unit.id)
-                                    }
-                                    className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
-                                  >
-                                    Add a Lesson +
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={handleAddUnitInline}
-                                    className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
-                                  >
-                                    Add a Unit +
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
+        {/* LEFT: ADD UNIT / LESSON FORM */}
         <div className="space-y-6">
           {mode === "unit" ? (
             <div className="bg-[#F7F7F7] rounded-2xl p-6 border border-gray-100 space-y-4">
@@ -2190,6 +2015,185 @@ function Step3Units({
               </button>
             </div>
           </div>
+        </div>
+
+        {/* RIGHT: PREVIEW */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
+          </div>
+
+          {sortedUnits.length === 0 && lessons.length === 0 ? (
+            <div className="text-gray-500 text-center py-12 bg-[#F7F7F7] rounded-2xl border border-gray-100">
+              No units or lessons yet. Add a unit to get started.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedUnits.map((unit) => {
+                const unitLessons = getLessonsForUnit(unit.id);
+                const unitPreviewImage =
+                  unitLessons?.[0]?.coverImage?.url || unitLessons?.[0]?.images?.[0]?.url;
+                const isUnitSelected =
+                  selectedUnitId === unit.id && mode === "unit";
+
+                return (
+                  <div key={`unit-${unit.id}`} className="space-y-3">
+                    <div
+                      className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${
+                        isUnitSelected ? "border-black" : "border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">
+                              Unit {unit.position}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSelectUnit(unit)}
+                                className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors"
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">
+                            {unit.name || "Untitled unit"}
+                          </p>
+                          <p className="text-xs text-gray-600 line-clamp-2">
+                            {unit.description || "Add a unit description"}
+                          </p>
+                          <div className="grid grid-cols-3 items-center gap-3 mt-3">
+                            <select
+                              value={String(unit.position)}
+                              onChange={(event) =>
+                                handleUnitPositionChange(
+                                  unit.id,
+                                  event.target.value,
+                                )
+                              }
+                              className="flex-1 min-w-[160px] px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none focus:border-black"
+                            >
+                              {Array.from({ length: units.length }).map(
+                                (_, i) => (
+                                  <option key={i} value={String(i + 1)}>
+                                    Position {i + 1}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => handleAddLessonInline(unit.id)}
+                              className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
+                            >
+                              Add a Lesson +
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleAddUnitInline}
+                              className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
+                            >
+                              Add a Unit +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pl-6 border-l border-[#DDDDDD]">
+                      {unitLessons.map((lesson) => {
+                        const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url;
+                        const isSelected =
+                          selectedLessonId === lesson.id && mode === "lesson";
+
+                        return (
+                          <div
+                            key={lesson.id}
+                            className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${
+                              isSelected ? "border-black" : "border-transparent"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-[100px] h-[100px] rounded bg-gray-100 overflow-hidden flex-shrink-0">
+                                {previewImage ? (
+                                  <img
+                                    src={previewImage}
+                                    alt="lesson"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-100" />
+                                )}
+                              </div>
+                              <div className="flex flex-col justify-between flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="px-4 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">
+                                    Lesson {lesson.position}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSelectLesson(lesson)}
+                                      className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors"
+                                    >
+                                      Edit
+                                    </button>
+                                  </div>
+                                </div>
+                                <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">
+                                  {lesson.title || "Untitled lesson"}
+                                </p>
+                                <div className="grid grid-cols-3 items-center gap-3 mt-3">
+                                  <select
+                                    value={lesson.position}
+                                    onChange={(event) =>
+                                      handleLessonChange(
+                                        lesson.id,
+                                        "position",
+                                        event.target.value,
+                                      )
+                                    }
+                                    className="flex-1 min-w-[160px] px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none focus:border-black"
+                                  >
+                                    {Array.from({
+                                      length: unitLessons.length,
+                                    }).map((_, i) => (
+                                      <option key={i} value={i + 1}>
+                                        Position {i + 1}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleAddLessonInline(unit.id)
+                                    }
+                                    className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
+                                  >
+                                    Add a Lesson +
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleAddUnitInline}
+                                    className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
+                                  >
+                                    Add a Unit +
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

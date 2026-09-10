@@ -156,7 +156,7 @@ export default function CreateRequestPopup({ open, onClose }) {
   transition={{ duration: 0.35, ease: "easeOut" }} className="bg-white rounded-2xl shadow-xl p-6 md:p-7 relative max-h-[95vh] overflow-y-auto hide-scrollbar w-full max-w-4xl">
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Post request</h2>
+          <h2 className="text-lg font-normal text-gray-900">Post request</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-black"
@@ -324,21 +324,21 @@ export default function CreateRequestPopup({ open, onClose }) {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col items-start gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={loading || selectedFiles.length < 2}
+              className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {loading ? "Posting..." : "Post"}
+            </button>
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-black/90 transition-colors disabled:opacity-50"
+              className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-black/90 transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || selectedFiles.length < 2}
-              className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Posting..." : "Post"}
             </button>
           </div>
         </form>

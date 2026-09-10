@@ -5,20 +5,44 @@ import "swiper/css";
 import { IoCalendarOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { getcuriBooking, userUpcomingBookings } from "../../../redux/reducers/BookingReducer";
-import { Calendar, Star, X, CheckCircle, Clock } from "lucide-react";
+import { getUserFavorites, toggleFavorite } from "../../../redux/reducers/FavoriteReducer";
+import { Calendar, Star, X, CheckCircle, Clock, Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import moment from "moment-timezone";
+import { toast } from "react-toastify";
+import { useCurrency } from "../../../currency/CurrencyContext";
 
 export default function Upcoming() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
+  const cardPriceOptions = { currencyDisplay: "narrowSymbol" };
   const { userInfo, loading } = useSelector((state) => state.auth);
   const { userUpcomingdata, getcuriBookingdata, getcuridata } = useSelector((state) => state.book);
-  const [selectedCurriculum, setSelectedCurriculum] = useState(null);
-  const [showLessonsPopup, setShowLessonsPopup] = useState(false);
+  const { favorites } = useSelector((state) => state.favorite);
   const [localTimeZone, setLocalTimeZone] = useState("");
-  const [filteredScheduledLessons, setFilteredScheduledLessons] = useState([]);
 
+  useEffect(() => {
+    dispatch(getUserFavorites());
+  }, [dispatch]);
+
+  const curriculumFavorites = Array.isArray(favorites)
+    ? favorites.filter((fav) => fav?.curriculum)
+    : favorites?.curriculums || [];
+
+  const lessonFavorites = Array.isArray(favorites)
+    ? favorites.filter((fav) => fav?.lesson)
+    : favorites?.lessons || [];
+
+  const handleSave = (itemId, itemType) => {
+    dispatch(toggleFavorite({ id: itemId, type: itemType })).then((res) => {
+      if (res?.payload?.status) {
+        dispatch(getUserFavorites());
+      } else {
+        toast.info(res?.payload?.message || "Unable to update favorite");
+      }
+    });
+  };
   useEffect(() => {
     const now = new Date();
     const pad = (n) => (n < 10 ? '0' + n : n);
@@ -34,25 +58,6 @@ export default function Upcoming() {
     setLocalTimeZone(timezone);
     dispatch(userUpcomingBookings({ scheduledAt, timezone }));
   }, [dispatch]);
-
-  useEffect(() => {
-    if (selectedCurriculum?._id) {
-      dispatch(getcuriBooking(selectedCurriculum?._id));
-    }
-  }, [selectedCurriculum?._id, dispatch]);
-
-  // Filter lessons to show only scheduled ones when popup opens or data changes
-  useEffect(() => {
-    if (getcuriBookingdata && getcuriBookingdata.length > 0) {
-      // Filter lessons that have status 'scheduled' AND have scheduledAt
-      const scheduledLessons = getcuriBookingdata.filter(lesson => 
-        lesson.status === 'scheduled' && lesson.scheduledAt
-      );
-      setFilteredScheduledLessons(scheduledLessons);
-    } else {
-      setFilteredScheduledLessons([]);
-    }
-  }, [getcuriBookingdata, showLessonsPopup]);
 
   // Function to convert UTC time to local system time
   const convertToLocalTime = (utcTimeString) => {
@@ -88,32 +93,47 @@ export default function Upcoming() {
 
   const handleCurriculumClick = (course) => {
     if (course.type === 'curriculum') {
-      setSelectedCurriculum(course);
-      setShowLessonsPopup(true);
+      navigate(`/after-payment-curri/${course._id}?manage=true`);
     } else {
       handleManage(`/manage-lesson/${course.lesson?._id}`, course._id, course.lesson?._id, "lesson", course.group);
-      
     }
   };
 
   // Function to get booking details based on type
   const getBookingDetails = (course) => {
     if (course.type === 'curriculum' && course.curriculum) {
+      const item = course.curriculum;
+      const coverUrl =
+        item.coverImage?.url ||
+        (Array.isArray(item.images) && (item.images[0]?.url || (typeof item.images[0] === 'string' ? item.images[0] : null))) ||
+        course.coverImage?.url;
       return {
-        id: course.curriculum._id,
-        title: course.curriculum.title,
-        images: course.curriculum.images,
-        averageRating: course.curriculum.averageRating,
-        totalRatings: course.curriculum.totalRatings,
+        id: item._id,
+        title: item.title,
+        coverImage: coverUrl ? { url: coverUrl } : null,
+        images: item.images,
+        averageRating: item.averageRating,
+        totalRatings: item.totalRatings,
+        price: item.price,
+        currency: item.currency,
         type: 'curriculum'
       };
     } else if (course.type === 'lesson' && course.lesson) {
+      const item = course.lesson;
+      const coverUrl =
+        item.coverImage?.url ||
+        (Array.isArray(item.images) && (item.images[0]?.url || (typeof item.images[0] === 'string' ? item.images[0] : null))) ||
+        course.coverImage?.url;
       return {
-        id: course.lesson._id,
-        title: course.lesson.title,
-        images: course.lesson.images,
-        averageRating: course.lesson.averageRating,
-        totalRatings: course.lesson.totalRatings,
+        id: item._id,
+        title: item.title,
+        coverImage: coverUrl ? { url: coverUrl } : null,
+        images: item.images,
+        averageRating: item.averageRating,
+        totalRatings: item.totalRatings,
+        duration: item.duration,
+        price: item.price,
+        currency: item.currency,
         type: 'lesson'
       };
     }
@@ -131,24 +151,10 @@ export default function Upcoming() {
     }
   };
 
-  // Function to format date/time for display in popup
-  const formatScheduleTime = (scheduledAt, timezone) => {
-    if (!scheduledAt) return 'Not scheduled';
-    
-    return moment(scheduledAt)
-      .tz(timezone || 'UTC')
-      .format('MMM D, YYYY • hh:mm A');
-  };
-
-  // Function to count scheduled lessons
-  const getScheduledLessonsCount = () => {
-    return filteredScheduledLessons.length;
-  };
-
   return (
-    <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl mt-10">
+    <div className="w-full mt-6">
       {userUpcomingdata?.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-6">
           {userUpcomingdata?.map((course, index) => {
             const details = getBookingDetails(course);
             
@@ -158,221 +164,108 @@ export default function Upcoming() {
             const localTime = convertToLocalTime(displayTime);
             const relativeTime = getRelativeTime(displayTime);
 
+            const isBookmarked = details.type === 'curriculum'
+              ? curriculumFavorites.some((fav) => fav?.curriculum?._id === details.id)
+              : lessonFavorites.some((fav) => fav?.lesson?._id === details.id);
+
+            const targetLink = details.type === 'curriculum'
+              ? `/curriculum-booking/${details.id}`
+              : `/lesson-booking/${details.id}`;
+
             return (
-              <div key={index} className="overflow-hidden flex flex-col gap-5">
-                <div className="relative overflow-hidden h-[335px]">
-                  <Link to={``}>
+              <article key={course._id || index} className="mb-4 min-w-0 group flex flex-col">
+                {/* Image Container matching Home Screen */}
+                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
+                  <Link to={targetLink}>
                     <img
-                      src={details.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
+                      src={
+                        details.coverImage?.url ||
+                        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80"
+                      }
                       alt={details.title}
-                      className="w-full h-full object-cover rounded-[20px]"
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </Link>
+
+                  {/* Rating Badge */}
+                  <span className="absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-base leading-none text-white backdrop-blur-sm">
+                    {details?.averageRating === 0 ? 100 : details?.averageRating ?? 100}%
+                  </span>
+
+                  {/* Bookmark Button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSave(details.id, details.type);
+                    }}
+                    className="absolute right-3 top-3 rounded-full bg-black/45 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/65 cursor-pointer"
+                    aria-label={isBookmarked ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        isBookmarked ? "fill-red-500 text-red-500" : "text-white"
+                      }`}
+                    />
+                  </button>
                 </div>
 
-                <div className="flex flex-col gap-5">
-                  <div className="flex justify-between">
-                    <div className="flex items-center gap-3">
-                      <Link
-                        to={getUserProfilePath(course, details)}
-                        className="w-8 h-8 bg-gray-300 rounded-md overflow-hidden"
-                      >
-                        <img
-                          src={
-                            course?.teacher?.image?.url ||
-                            "https://i.ibb.co/tpV3m2GW/no-image.png"
-                          }
-                          alt={course.teacher?.name}
-                          className="w-full h-10 object-cover"
-                        />
-                      </Link>
+                {/* Details Section matching Home Screen */}
+                <div className="pt-2 flex flex-col flex-1">
+                  <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">
+                    {details.title}
+                  </h3>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-base font-medium truncate">
-                          {course?.teacher?.name || "Unknown"}
-                        </p>
-                      </div>
-                    </div>
+                  <p className="mt-1 text-base text-[#6A6A6A]">
+                    {formatPrice(course.amount || details.price, details.currency || "USD", cardPriceOptions)} &nbsp;·&nbsp; {details.type === 'curriculum' ? 'Curriculum' : `${details.duration || 60} min lesson`}
+                  </p>
 
-                
+                  <div className="mt-2">
+                    <Link
+                      to={getUserProfilePath(course, details)}
+                      className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black hover:bg-gray-200 transition-colors"
+                    >
+                      <img
+                        src={
+                          course?.teacher?.image?.url ||
+                          "https://i.ibb.co/tpV3m2GW/no-image.png"
+                        }
+                        loading="lazy"
+                        alt={course.teacher?.name}
+                        className="h-6 w-6 rounded-full object-cover"
+                      />
+                      <span className="truncate">
+                        {course?.teacher?.name || "Unknown"} ({course?.teacher?.averageRating === 0 ? 100 : course?.teacher?.averageRating ?? 100}%)
+                      </span>
+                    </Link>
                   </div>
 
-                  <p className="text-base text-gray-600 line-clamp-3">
-                    {details.title}
-                  </p>
+                  {/* Scheduled info for lessons */}
+                  {details.type === 'lesson' && displayTime && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
+                      <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>{localTime}</span>
+                      {relativeTime && <span className="text-gray-400">({relativeTime})</span>}
+                    </div>
+                  )}
 
-                  <p className="text-base text-gray-700 font-medium">
-                    {details.type === 'curriculum' 
-                      ? `Curriculum for ${course.amount}$`
-                      : `${course.lesson?.duration} min lesson for ${course.amount}$`
-                    }
-                  </p>
-
-                  <div className="space-y-2">
-                    {details.type === 'lesson' && (
-                      <button
-                        className="w-full bg-primary text-white font-medium py-2.5 rounded-md flex justify-center items-center gap-2 text-sm"
-                      >
-                        <Calendar className="w-4 h-4" />
-                        <div className="flex flex-col items-center">
-                          <span>{localTime}</span>
-                          {relativeTime && (
-                            <span className="text-xs opacity-80">({relativeTime})</span>
-                          )}
-                        </div>
-                      </button>
-                    )}
-                    
+                  {/* Action Button */}
+                  <div className="mt-3">
                     <button
                       onClick={() => handleCurriculumClick(course)}
-                      className="w-full bg-primary text-white text-base font-medium py-3 rounded-md flex justify-center items-center gap-2"
+                      className="w-full bg-primary hover:bg-[#e03e00] text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-sm"
                     >
                       {details.type === 'curriculum' ? 'Manage Curriculum' : 'Manage Lesson'}
                       <BiSolidZap className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
       ) : (
-        <p>No Upcoming Bookings yet</p>
-      )}
-
-      {/* Lessons Popup for Curriculum - Only show scheduled lessons */}
-      {showLessonsPopup && selectedCurriculum && (
-        <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-md max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="flex justify-between items-center p-3 border-b">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  Scheduled Lessons in {selectedCurriculum.curriculum?.title}
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  Scheduled Lessons: {getScheduledLessonsCount()}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowLessonsPopup(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Lessons Slider - Only show scheduled lessons */}
-            <div className="flex-1 p-6">
-              {filteredScheduledLessons.length > 0 ? (
-                <Swiper
-                  spaceBetween={20}
-                  slidesPerView={1}
-                  breakpoints={{
-                    640: { slidesPerView: 2 },
-                    768: { slidesPerView: 2 },
-                    1024: { slidesPerView: 3 },
-                    1280: { slidesPerView: 4 }
-                  }}
-                  className="w-full"
-                >
-                  {filteredScheduledLessons.map((lessonItem, index) => (
-                    <SwiperSlide key={lessonItem._id}>
-                      <div className="h-full">
-                        <div className="overflow-hidden flex flex-col gap-5 h-full rounded">
-                          {/* Image Section */}
-                          <div className="relative overflow-hidden h-[200px] rounded-[15px]">
-                            <img
-                              src={lessonItem.lId?.images?.[0]?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
-                              alt={lessonItem.lId?.title}
-                              className="w-full h-full object-cover"
-                            />
-                            
-                            {/* Status Badge */}
-                            <div className="absolute top-3 right-3 text-white px-2 py-1 rounded-md text-sm font-semibold flex items-center gap-1 bg-green-500">
-                              <Clock className="w-3 h-3" />
-                              Scheduled
-                            </div>
-                            
-                            {/* Rating */}
-                            {lessonItem.lId?.averageRating > 0 && (
-                              <div className="absolute top-3 left-3 text-white px-2 py-1 rounded-md text-sm font-semibold flex items-center gap-1 bg-black/50">
-                                ({lessonItem.lId.averageRating}%)
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Content Section */}
-                          <div className="flex flex-col gap-4 flex-1">
-                            {/* Lesson Title */}
-                            <div>
-                              <h3 className="font-semibold text-lg mb-1 line-clamp-2">
-                                {lessonItem.position}. {lessonItem.lId?.title}
-                              </h3>
-                              {lessonItem.unitName && (
-                                <p className="text-gray-600 text-sm">
-                                  Unit: {lessonItem.unitName}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Schedule Time */}
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Clock className="w-4 h-4" />
-                              <span>
-                                {formatScheduleTime(lessonItem.scheduledAt, selectedCurriculum.timezone)}
-                              </span>
-                            </div>
-
-                            {/* Rating Info */}
-                            <div>
-                              {lessonItem.lId?.totalRatings > 0 ? (
-                                <p className="text-sm text-gray-500">
-                                  <span className="text-gray-900">
-                                    ({lessonItem.lId.averageRating}%)
-                                  </span>
-                                </p>
-                              ) : (
-                                <p className="text-sm text-gray-400">No Reviews Yet</p>
-                              )}
-                            </div>
-
-                            {/* Action Button */}
-                            <div className="mt-auto pt-2">
-                              <button
-                                onClick={() => {
-                                  handleManage(
-                                    `/manage-lesson/${lessonItem.lId?._id}?curiid=${getcuridata.curriculum?.calenderId}`, 
-                                    lessonItem._id,
-                                    lessonItem.lId?._id,
-                                    "curriculum",
-                                    lessonItem.group || false
-                                  );
-                                  setShowLessonsPopup(false);
-                                }}
-                                className="w-full bg-primary text-white text-base font-medium py-3 rounded flex justify-center items-center gap-2"
-                              >
-                                Manage Lesson
-                                <BiSolidZap className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-gray-500">No scheduled lessons found in this curriculum.</p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    All lessons are either completed or not yet scheduled.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <p className="text-center text-gray-500 py-8">No Upcoming Bookings yet</p>
       )}
     </div>
   );

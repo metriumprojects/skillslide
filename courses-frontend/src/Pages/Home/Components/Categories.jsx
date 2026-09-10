@@ -109,7 +109,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     <div className="w-full hidden lg:block">
       <div className="flex w-full items-center justify-between gap-8">
         <div className="flex min-w-0 items-center gap-8">
-          <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
+          <Link to="/" className="flex shrink-0 items-center gap-[32px] select-none" aria-label="SkillSlide home">
             {/* S Orange Icon Badge - Official SVG */}
             <LogoIcon className="h-[46px] w-[46px]" />
 

@@ -74,6 +74,11 @@ export default function LessonPayment() {
       type: "lesson",
       timezone: bookingData?.timezone,
       checkoutCurrency: currency,
+      meta: {
+        ...(bookingData || {}),
+        groupPrice: groupDiscount,
+        isGroup: groupDiscount > 0,
+      },
     };
 
     dispatch(initiateBooking(data)).then((res) => {
@@ -203,22 +208,22 @@ export default function LessonPayment() {
             <div className="mt-6 space-y-2 text-base">
               <div className="flex justify-between">
                 <span>Price: </span>
-                <span>{formatPrice(lesson?.price || 0, lesson?.currency || "USD")}</span>
+                <span>{formatPrice(groupDiscount > 0 ? groupDiscount : (lesson?.price || 0), lesson?.currency || "USD")}</span>
               </div>
-              {groupDiscount > 0 && (
-                <div className="flex justify-between text-green-600 font-medium">
-                  <span>Group Discount: </span>
-                  <span>-{formatPrice(groupDiscount, lesson?.currency || "USD")}</span>
+              {groupDiscount > 0 && (lesson?.price || 0) > groupDiscount && (
+                <div className="flex justify-between text-gray-500 line-through text-sm">
+                  <span>Regular Price: </span>
+                  <span>{formatPrice(lesson?.price || 0, lesson?.currency || "USD")}</span>
                 </div>
               )}
               <hr className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>{formatPrice(Math.max(0, (lesson?.price || 0) - groupDiscount), lesson?.currency || "USD")}</span>
+                <span>{formatPrice(groupDiscount > 0 ? groupDiscount : (lesson?.price || 0), lesson?.currency || "USD")}</span>
               </div>
               {currency !== (lesson?.currency || "USD") && (
                 <p className="text-xs text-gray-500 text-right">
-                  Original price: {formatOriginalPrice(Math.max(0, (lesson?.price || 0) - groupDiscount), lesson?.currency || "USD")}
+                  Original price: {formatOriginalPrice(groupDiscount > 0 ? groupDiscount : (lesson?.price || 0), lesson?.currency || "USD")}
                 </p>
               )}
               <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">

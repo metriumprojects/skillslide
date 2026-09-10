@@ -323,12 +323,17 @@ export default function LessonsDashboard() {
                 {teacherMainUpcomingData.length > 0 ? (
                   teacherMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
+                    const isCurriculum = lesson.type === "curriculum" && !lesson.lId;
                     return (
                       <tr key={index} className="bg-[#F5F5F5]">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
-                        <td className="p-3">{lesson.curriculumTitle}</td>
-                        <td className="p-3">{lesson.lessonTitle}</td>
+                        <td className="p-3 font-medium">
+                          {lesson.curriculumTitle || (isCurriculum ? "Curriculum" : "-")}
+                        </td>
+                        <td className="p-3">
+                          {lesson.lessonTitle || (isCurriculum ? "-" : "-")}
+                        </td>
                         <td className="p-3">{lesson.name || "Unknown Student"}</td>
                         <td className="p-3">{formatPrice(lesson.amount, lesson.currency || "USD")}</td>
                         <td className="p-3">
@@ -340,15 +345,15 @@ export default function LessonsDashboard() {
                           <button 
                             onClick={() => handleMessageStudent(lesson)}
                             disabled={startChatLoading}
-                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60"
+                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60 cursor-pointer"
                           >
                             {startChatLoading ? "Starting..." : "Message Student"}
                           </button>
                           <button 
                             onClick={() => handleCancel(lesson)}
-                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors"
+                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
                           >
-                            Cancel lesson
+                            {isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
                           </button>
                         </td>
                       </tr>

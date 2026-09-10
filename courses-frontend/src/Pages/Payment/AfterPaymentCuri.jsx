@@ -1,9 +1,9 @@
-import { Calendar, CircleCheck, MessageCircle } from "lucide-react";
+import { Calendar, CircleCheck, MessageCircle, MessageSquare, Check, ChevronLeft, CalendarX } from "lucide-react";
 import MainLayout from "../../components/MainLayout";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState, useRef } from "react";
-import { confirmBooking, getcuriBooking, ReShaduleCurriLessonBooking } from "../../redux/reducers/BookingReducer";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { CancelBooking, confirmBooking, getcuriBooking, ReShaduleCurriLessonBooking } from "../../redux/reducers/BookingReducer";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getLessonAvailability, getTeacherAvailability, getTeacherUnAvailability } from "../../redux/reducers/AvailabilityReducer";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -17,6 +17,8 @@ import { useCurrency } from "../../currency/CurrencyContext";
 export default function AfterPaymentCurri() {
   const { formatPrice } = useCurrency();
   const { bookId } = useParams();
+  const [searchParams] = useSearchParams();
+  const isManage = searchParams.get("manage") === "true";
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { getcuriBookingdata, teacherId, getcuridata } = useSelector((state) => state.book);
@@ -35,6 +37,7 @@ export default function AfterPaymentCurri() {
 
   const [submitting, setSubmitting] = useState(false);
   const [bookingConfirmInProgress, setBookingConfirmInProgress] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
   
   // Ref to track if confirmBooking has been called
   const confirmBookingCalled = useRef(false);
@@ -71,8 +74,12 @@ export default function AfterPaymentCurri() {
   // Single lesson bookings store date/time on the booking itself (not lessonPosition).
   const isLessonBooking = getcuridata?.type === "lesson";
   const pendingLessons = isLessonBooking
-    ? []
-    : getcuriBookingdata?.filter((lesson) => lesson.status === "pending") || [];
+    ? (!getcuridata?.scheduledAt || getcuridata?.status === "cancelled" ? [getcuridata] : [])
+    : getcuriBookingdata?.filter(
+        (lesson) =>
+          lesson.status !== "completed" &&
+          (lesson.status !== "scheduled" || !lesson.scheduledAt)
+      ) || [];
   const curriculumScheduledLessons = isLessonBooking
     ? []
     : getcuriBookingdata?.filter((lesson) => lesson.status === "scheduled" && lesson.scheduledAt) || [];
@@ -205,8 +212,19 @@ export default function AfterPaymentCurri() {
       newDate: bookingInfo.newDate, 
       timezone: bookingInfo.timezone
     })).then((res) => {
-      if (res?.payload.status) {
-        toast.success(res?.payload?.message);
+      if (res?.payload?.status) {
+        toast.success(res?.payload?.message || "Lesson scheduled successfully");
+        // Clear selected date & time for this lesson
+        setSelectedDates(prev => {
+          const next = { ...prev };
+          delete next[lessonId];
+          return next;
+        });
+        setSelectedTimes(prev => {
+          const next = { ...prev };
+          delete next[lessonId];
+          return next;
+        });
         // Refresh the data after successful scheduling
         dispatch(getcuriBooking(bookId));
       } else {
@@ -218,7 +236,57 @@ export default function AfterPaymentCurri() {
     });
   };
 
+  const handleCancelSchedule = async (lesson) => {
+    const lessonId = lesson.lId?._id || lesson.lId;
+    if (!lessonId && !isLessonBooking) {
+      toast.error("Lesson details not found");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to cancel this scheduled lesson? You will be able to reschedule it right away using the calendar.")) {
+      return;
+    }
+
+    try {
+      setCancellingId(lesson._id);
+      const res = await dispatch(
+        CancelBooking({
+          bookId,
+          type: isLessonBooking ? "lesson" : "curriculum",
+          lId: lessonId,
+        })
+      ).unwrap();
+
+      toast.success(res?.message || "Schedule cancelled. Select a new date and time below to reschedule.");
+      
+      // Refresh curriculum booking data so the cancelled lesson appears in pendingLessons
+      await dispatch(getcuriBooking(bookId)).unwrap();
+
+      // Smooth scroll down to the calendar section so the user can immediately reschedule
+      setTimeout(() => {
+        const el = document.getElementById("schedule-calendar-section");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 250);
+    } catch (error) {
+      toast.error(error?.message || error || "Failed to cancel schedule");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   useEffect(() => {
+    // If accessed in manage mode, skip confirmBooking and fetch existing booking directly
+    if (isManage) {
+      dispatch(getcuriBooking(bookId)).then(() => {
+        setBookingConfirmInProgress(false);
+      }).catch(() => {
+        setBookingConfirmInProgress(false);
+      });
+      return;
+    }
+
     // Prevent multiple calls using ref - only call once on component mount
     if (confirmBookingCalled.current) {
       return;
@@ -272,7 +340,7 @@ export default function AfterPaymentCurri() {
     }).catch(() => {
       setBookingConfirmInProgress(false);
     });
-  }, [bookId, dispatch]); // Added dispatch to dependencies
+  }, [bookId, dispatch, isManage]);
 
   // message
     const handleSend = async () => {
@@ -318,80 +386,73 @@ export default function AfterPaymentCurri() {
     };
 
   return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-8 min-h-[77vh]">
-        {/* Success Message Card */}
-        <div className="w-full bg-[#f5f5f5] rounded-2xl p-6 mb-8 space-y-2">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-shrink-0">
-              <CircleCheck size={30} className="fill-green-500 text-[#f5f5f5]" />
-            </div>
-            
-            <div className="flex-1 text-center md:text-left">
-              <p className="text-gray-700 leading-snug">
-                Thank you! Payment is successful.{" "}
-                Your teacher will be in touch with you shortly but you can reach out now if you
-                have any queries regarding your lesson!
-              </p>
-            </div>
+    <MainLayout width="100%">
+      <div className="w-full py-8 min-h-[77vh]">
+        {/* Back to Upcoming link when in manage mode */}
+        {isManage && (
+          <div className="w-full max-w-[1520px] mb-6">
+            <Link
+              to="/profile?tab=Upcoming"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-black transition-colors"
+            >
+              <ChevronLeft size={18} />
+              Back to Upcoming
+            </Link>
           </div>
+        )}
 
-            <div className="flex flex-col md:flex-row w-full justify-center gap-3 mt-4 md:mt-0 mx-auto">
-              <button disabled={submitting || bookingConfirmInProgress} onClick={handleSend} className="bg-[#051842] text-white px-5 py-2.5 rounded-full text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                <MessageCircle size={20} />
-                {bookingConfirmInProgress ? "Setting up..." : submitting ? "Sending..." : "Message teacher"}
-              </button>
-              {googleCalendarUrl && (
-                <a
-                  href={googleCalendarUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white border border-[#051842] text-[#051842] px-5 py-2.5 rounded-full text-sm flex items-center justify-center gap-2"
-                >
-                  <Calendar size={20} />
-                  Add to Google Calendar
-                </a>
-              )}
-              {calendarLesson && (
-                <button
-                  type="button"
-                  onClick={() => downloadIcalFile(calendarLesson)}
-                  className="bg-white border border-[#051842] text-[#051842] px-5 py-2.5 rounded-full text-sm flex items-center justify-center gap-2"
-                >
-                  <Calendar size={20} />
-                  Add to iCal
-                </button>
-              )}
-              {calendarLesson && (
-                <button
-                  type="button"
-                  onClick={() => downloadIcalFile(calendarLesson)}
-                  className="bg-white border border-[#051842] text-[#051842] px-5 py-2.5 rounded-full text-sm flex items-center justify-center gap-2"
-                >
-                  <Calendar size={20} />
-                  Add to Outlook
-                </button>
-              )}
+        {/* Success Message Card - Centered (Only shown when not managing) */}
+        {!isManage && (
+          <div className="w-full max-w-[1520px] mx-auto bg-[#142038] rounded-2xl p-8 sm:p-10 mb-8 flex flex-col items-center text-center">
+            {/* Top orange checkmark circle badge */}
+            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mb-3.5">
+              <div className="w-7 h-7 rounded-full border-[2.5px] border-primary flex items-center justify-center bg-primary/20">
+                <Check size={14} className="text-primary stroke-[3]" />
+              </div>
             </div>
-        </div>
+
+            {/* Heading */}
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              You're enrolled!
+            </h2>
+
+            {/* Description */}
+            <p className="text-gray-300 max-w-4xl text-sm sm:text-base leading-relaxed mb-6">
+              {(() => {
+                const count = pendingLessons.length;
+                const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+                const countWord = words[count] || count;
+                
+                if (count === 0) {
+                  return "You’ve successfully scheduled your first lesson - wonderful progress! All lessons in your curriculum are scheduled. Whenever you’re ready, continue your learning journey with confidence.";
+                }
+                
+                return `You’ve successfully scheduled your first lesson - wonderful progress! You have ${countWord} more ${count === 1 ? "lesson" : "lessons"} remaining in your curriculum. Whenever you’re ready, please go ahead and schedule ${count === 1 ? "it" : "them"} so you can continue your learning journey with confidence.`;
+              })()}
+            </p>
+
+            {/* Message Teacher button */}
+            <button
+              disabled={submitting || bookingConfirmInProgress}
+              onClick={handleSend}
+              className="border border-white/40 hover:border-white text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-transparent hover:bg-white/10 cursor-pointer"
+            >
+              <MessageSquare size={16} />
+              {bookingConfirmInProgress ? "Setting up..." : submitting ? "Sending..." : "Message Teacher"}
+            </button>
+          </div>
+        )}
 
         {/* Scheduled Lessons Summary */}
         {scheduledLessons.length > 0 && (
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-
+          <div className="w-full max-w-[1520px] mb-8">
             <h2 className="text-xl font-semibold mb-4">
               {isLessonBooking ? "Scheduled Lesson" : "Scheduled Lessons"}
             </h2>
-            {!isLessonBooking && (
-              <Link to="/profile" className="text-[#051842]">
-                Schedule Later
-              </Link>
-            )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {scheduledLessons.map((lesson) => (
-                <div key={lesson._id} className="bg-white rounded-xl p-4 shadow">
+                <div key={lesson._id} className="bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)]">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-sm font-medium text-gray-500">
                       Lesson {lesson.position}
@@ -400,7 +461,7 @@ export default function AfterPaymentCurri() {
                       Scheduled
                     </span>
                   </div>
-                  <h3 className="font-semibold text-gray-800 mb-2 truncate">
+                  <h3 className="font-semibold text-gray-800 mb-2 break-words">
                     {lesson.lId?.title}
                   </h3>
                   <div className="text-sm text-gray-600">
@@ -411,13 +472,13 @@ export default function AfterPaymentCurri() {
                     <p className="text-xs mt-1">Timezone: {lesson.timezone || "Not set"}</p>
                   </div>
                   {(getGoogleCalendarUrl(lesson) || getLessonScheduleBounds(lesson)) && (
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-col items-start gap-2">
                       {getGoogleCalendarUrl(lesson) && (
                         <a
                           href={getGoogleCalendarUrl(lesson)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842]"
+                          className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842] hover:bg-[#051842] hover:text-white transition-colors"
                         >
                           <Calendar size={16} />
                           Google Calendar
@@ -427,7 +488,7 @@ export default function AfterPaymentCurri() {
                         <button
                           type="button"
                           onClick={() => downloadIcalFile(lesson)}
-                          className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842]"
+                          className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842] hover:bg-[#051842] hover:text-white transition-colors cursor-pointer"
                         >
                           <Calendar size={16} />
                           Add to iCal
@@ -437,7 +498,7 @@ export default function AfterPaymentCurri() {
                         <button
                           type="button"
                           onClick={() => downloadIcalFile(lesson)}
-                          className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842]"
+                          className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842] hover:bg-[#051842] hover:text-white transition-colors cursor-pointer"
                         >
                           <Calendar size={16} />
                           Add to Outlook
@@ -445,6 +506,19 @@ export default function AfterPaymentCurri() {
                       )}
                     </div>
                   )}
+
+                  {/* Cancel Schedule Button */}
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      disabled={cancellingId === lesson._id}
+                      onClick={() => handleCancelSchedule(lesson)}
+                      className="inline-flex items-center gap-2 rounded-full border border-red-500 text-red-600 hover:bg-red-50 px-4 py-2 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <CalendarX size={16} />
+                      {cancellingId === lesson._id ? "Cancelling..." : "Cancel Schedule"}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -453,10 +527,22 @@ export default function AfterPaymentCurri() {
 
         {/* Calendar Section for Pending Lessons */}
         {pendingLessons.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">
-              Schedule Your Lessons ({pendingLessons.length} remaining)
+          <div id="schedule-calendar-section" className="w-full max-w-[1520px]">
+            <h2 className="text-xl font-semibold mb-3">
+              Schedule Your Remaining Lessons ({pendingLessons.length} remaining)
             </h2>
+
+            {!isLessonBooking && (
+              <div className="mb-4">
+                <Link
+                  to="/profile"
+                  className="flex w-fit items-center gap-2 rounded-full border border-[#051842] px-4 py-2 text-sm font-medium text-[#051842] hover:bg-[#051842] hover:text-white transition-colors"
+                >
+                  <Calendar size={16} />
+                  Schedule Later
+                </Link>
+              </div>
+            )}
             
             {/* Swiper for horizontal calendar display */}
             <Swiper
@@ -477,7 +563,7 @@ export default function AfterPaymentCurri() {
                 clickable: true,
               }}
               modules={[Pagination]}
-              className="pb-10"
+              className="w-full pb-10 !overflow-visible"
             >
               {pendingLessons.map((lesson) => (
                 <SwiperSlide key={lesson._id}>
@@ -506,12 +592,16 @@ export default function AfterPaymentCurri() {
 
         {/* If all lessons are scheduled */}
         {pendingLessons.length === 0 && scheduledLessons.length > 0 && (
-          <div className="text-center py-8">
-            <CircleCheck size={48} className="fill-green-500 text-white mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">All Lessons Scheduled!</h3>
-            <p className="text-gray-600">
-              All your lessons have been scheduled. You'll receive reminders before each lesson.
-            </p>
+          <div className="w-full max-w-[1520px] bg-white rounded-2xl p-6 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)] flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+              <CircleCheck size={26} className="text-green-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-xl font-semibold mb-1 text-gray-900">All Lessons Scheduled!</h3>
+              <p className="text-gray-600 text-sm sm:text-base">
+                All your lessons have been scheduled. You'll receive reminders before each lesson.
+              </p>
+            </div>
           </div>
         )}
       </div>

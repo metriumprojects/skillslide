@@ -155,11 +155,11 @@ useEffect(() => {
   
 
   return (
-    <header className="relative mx-auto flex items-center justify-between gap-4 px-3 md:px-10 pt-5">
+    <header className="relative mx-auto flex items-center justify-between gap-4 px-3 md:px-10 pt-[32px]">
       {/* Left Section - Logo */}
       <Link
         to="/"
-        className="flex lg:hidden shrink-0 items-center gap-2 select-none"
+        className="flex lg:hidden shrink-0 items-center gap-[32px] select-none"
         aria-label="SkillSlide home"
       >
         <LogoIcon className="h-[40px] w-[40px]" />

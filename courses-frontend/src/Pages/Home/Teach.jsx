@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import {
   Search,
   ChevronRight,
@@ -16,6 +16,8 @@ import { Navigation } from "swiper/modules";
 import MainLayout from "../../components/MainLayout";
 import { CiLocationOn } from "react-icons/ci";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   getAllLessons,
   getTeacherLessons,
@@ -25,8 +27,11 @@ import Request from "./Components/Request";
 import CreateRequestPopup from "./Components/CreateRequestPopup";
 import Info from "./Components/Info";
 import LessonProposalPopup from "./Components/SendLesson";
-import CreateLessonPopup from "./Components/CreateLessonPopup";
-import { getAllProposes } from "../../redux/reducers/ProposeReducer";
+import {
+  getAllProposes,
+  getProposeByUser,
+  deletePropose,
+} from "../../redux/reducers/ProposeReducer";
 import { motion } from "framer-motion";
 import LocationAutocomplete from "./Components/LocationAutocomplete";
 import { getCategories } from "../../redux/reducers/CategoryReducer";
@@ -34,12 +39,35 @@ import CategoriesBar from "./Components/Categories";
 import CategoryMobile from "./Components/CategoryMobile";
 import SearchBar from "./Components/SearchBar";
 import { useCurrency } from "../../currency/CurrencyContext";
+import ProfileRequestCard from "../Profile/components/ProfileRequestCard";
+import UpdateRequest from "../Profile/Request/UpdateRequest";
 
 const Teach = () => {
+  const navigate = useNavigate();
   const { currency } = useCurrency();
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.category);
-  const { proposes } = useSelector((state) => state.propose);
+  const { proposes, userProposes } = useSelector((state) => state.propose);
+  const { userInfo } = useSelector((state) => state.auth);
+  const { favorites } = useSelector((state) => state.favorite);
+
+  const [activeTab, setActiveTab] = useState("All Requests");
+  const [editRequestId, setEditRequestId] = useState(null);
+  const [showEditRequest, setShowEditRequest] = useState(false);
+
+  const savedProposes = useMemo(() => {
+    if (!favorites) return [];
+    const list = Array.isArray(favorites)
+      ? favorites
+      : Array.isArray(favorites?.data)
+      ? favorites.data
+      : Array.isArray(favorites?.favorites)
+      ? favorites.favorites
+      : [];
+    return list
+      .filter((fav) => fav.type === "propose" && fav.propose)
+      .map((fav) => fav.propose);
+  }, [favorites]);
 
   const [isOnlineSelected, setIsOnlineSelected] = useState(true);
   const [isInPersonSelected, setIsInPersonSelected] = useState(false);
@@ -60,7 +88,6 @@ const Teach = () => {
   const [showInfo, setShowInfo] = useState(false);
   const [showLessonPopup, setShowLessonPopup] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showCreateLesson, setShowCreateLesson] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
 
   const swiperRef = useRef(null);
@@ -205,6 +232,55 @@ const Teach = () => {
     fetchProposes();
   }, [fetchProposes]);
 
+  // Fetch user's own requests or favorites when tab is selected
+  useEffect(() => {
+    if (activeTab === "My Requests" && userInfo) {
+      dispatch(getProposeByUser());
+    } else if (activeTab === "Saves" && userInfo) {
+      dispatch(getUserFavorites());
+    }
+  }, [activeTab, userInfo, dispatch]);
+
+  const handleEditRequest = (id) => {
+    setEditRequestId(id);
+    setShowEditRequest(true);
+  };
+
+  const handleDeleteRequest = (id) => {
+    toast.info(
+      <div>
+        <p className="font-medium">Are you sure you want to delete?</p>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={() => {
+              dispatch(deletePropose(id)).then((res) => {
+                if (res?.payload?.status) {
+                  toast.success("Request deleted successfully");
+                  dispatch(getProposeByUser());
+                  fetchProposes();
+                } else {
+                  toast.error(res?.payload?.message || "Failed to delete request");
+                }
+              });
+              toast.dismiss();
+            }}
+            className="bg-red-500 text-white px-3 py-1 rounded"
+          >
+            Yes
+          </button>
+
+          <button
+            onClick={() => toast.dismiss()}
+            className="bg-gray-300 px-3 py-1 rounded"
+          >
+            No
+          </button>
+        </div>
+      </div>,
+      { autoClose: false }
+    );
+  };
+
   return (
     <MainLayout 
       width="1920px"
@@ -247,23 +323,62 @@ const Teach = () => {
 
       {/* Search Header */}
       {!showSearchBar && (
-        <div className="flex items-center justify-between mb-[20px] md:mb-[30px] mt-[20px] md:mt-[40px]">
-          <h3 className="text-2xl font-bold">Requests</h3>
+        <div className="mt-[20px]">
+          <h3 className="text-2xl font-normal text-black">Requests</h3>
           
-      <div className="flex justify-left items-center gap-2 pt-4">
-        <button
-          onClick={() => setShowCreateRequest(true)}
-          className="bg-[#E9EAEE] text-black px-6 py-2 rounded-lg text-sm"
-        >
-          <span>Request</span>
-        </button>
-          <button
-            onClick={() => setShowFilter(true)}
-            className="flex items-center justify-center p-2 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <ListFilter size={20} />
-          </button>
-      </div>
+          {/* Tabs like bubble: All Requests, My Requests, and Saves */}
+          <div className="w-fit rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black flex items-center mt-[20px]">
+            <button
+              type="button"
+              onClick={() => setActiveTab("All Requests")}
+              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
+                activeTab === "All Requests"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-black hover:bg-gray-100"
+              }`}
+            >
+              All Requests
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("My Requests")}
+              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
+                activeTab === "My Requests"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-black hover:bg-gray-100"
+              }`}
+            >
+              My Requests
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("Saves")}
+              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
+                activeTab === "Saves"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-black hover:bg-gray-100"
+              }`}
+            >
+              Saves
+            </button>
+          </div>
+
+          {/* Action buttons on next line */}
+          <div className="flex items-center justify-start gap-3 mt-[20px]">
+            <button
+              onClick={() => setShowCreateRequest(true)}
+              className="bg-[#E9EAEE] hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-sm transition-colors cursor-pointer"
+            >
+              <span>Place a Request</span>
+            </button>
+            <button
+              onClick={() => setShowFilter(true)}
+              className="flex items-center justify-center p-2 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors cursor-pointer"
+              title="Filter"
+            >
+              <ListFilter size={20} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -306,18 +421,95 @@ const Teach = () => {
         }}
       />
 
-      {/* Lessons Grid */}
-      <Request
-        proposes={proposes}
-        openCreateLesson={(req) => {
-          setSelectedRequest(req || null);
-          setShowCreateLesson(true);
-        }}
-        onSendExistingLesson={(req) => {
-          setSelectedRequest(req);
-          setShowLessonPopup(true);
-        }}
-      />
+      {/* Lessons Grid / User Requests / Saved Proposals */}
+      {activeTab === "All Requests" ? (
+        <Request
+          proposes={proposes}
+          openCreateLesson={(req) => {
+            if (!userInfo) {
+              navigate("/login");
+              return;
+            }
+            navigate("/create-lesson", { state: { request: req } });
+          }}
+          onSendExistingLesson={(req) => {
+            setSelectedRequest(req);
+            setShowLessonPopup(true);
+          }}
+        />
+      ) : activeTab === "My Requests" ? (
+        <div className="w-full mt-[20px] pb-10 space-y-6">
+          {!userInfo ? (
+            <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
+              <p className="text-gray-700 mb-3">Please log in to view your requests.</p>
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="bg-black text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+              >
+                Log in
+              </button>
+            </div>
+          ) : userProposes && userProposes.length > 0 ? (
+            userProposes.map((req) => (
+              <ProfileRequestCard
+                key={req._id}
+                req={req}
+                onEdit={handleEditRequest}
+                onDelete={handleDeleteRequest}
+              />
+            ))
+          ) : (
+            <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
+              <p className="text-gray-600 mb-3">No requests found</p>
+              <button
+                type="button"
+                onClick={() => setShowCreateRequest(true)}
+                className="bg-black text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+              >
+                Place a request
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Saved Proposals Tab */
+        !userInfo ? (
+          <div className="w-full mt-[20px] pb-10">
+            <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
+              <p className="text-gray-700 mb-3">Please log in to view your saved requests.</p>
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="bg-black text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+              >
+                Log in
+              </button>
+            </div>
+          </div>
+        ) : savedProposes && savedProposes.length > 0 ? (
+          <Request
+            proposes={savedProposes}
+            openCreateLesson={(req) => {
+              if (!userInfo) {
+                navigate("/login");
+                return;
+              }
+              navigate("/create-lesson", { state: { request: req } });
+            }}
+            onSendExistingLesson={(req) => {
+              setSelectedRequest(req);
+              setShowLessonPopup(true);
+            }}
+          />
+        ) : (
+          <div className="w-full mt-[20px] pb-10">
+            <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
+              <p className="text-gray-600">No saved proposals found</p>
+            </div>
+          </div>
+        )
+      )}
 
       <LessonProposalPopup
         open={showLessonPopup}
@@ -328,19 +520,32 @@ const Teach = () => {
         }}
       />
 
-      <CreateLessonPopup
-        open={showCreateLesson}
-        request={showCreateLesson ? selectedRequest : null}
+      <CreateRequestPopup
+        open={showCreateRequest}
         onClose={() => {
-          setShowCreateLesson(false);
-          setSelectedRequest(null);
+          setShowCreateRequest(false);
+          if (userInfo) {
+            dispatch(getProposeByUser());
+          }
+          fetchProposes();
         }}
       />
 
-      <CreateRequestPopup
-        open={showCreateRequest}
-        onClose={() => setShowCreateRequest(false)}
-      />
+      {showEditRequest && (
+        <UpdateRequest
+          id={editRequestId}
+          open={showEditRequest}
+          onClose={() => {
+            setShowEditRequest(false);
+            setEditRequestId(null);
+            if (userInfo) {
+              dispatch(getProposeByUser());
+            }
+            fetchProposes();
+          }}
+        />
+      )}
+
       <Info open={showInfo} onClose={() => setShowInfo(false)} />
 
       {/* Filter Popup */}

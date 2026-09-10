@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { checkAvailablity, initiateBooking } from "../../../redux/reducers/BookingReducer";
@@ -41,6 +41,68 @@ export function Calendar({
   const [availableTimes, setAvailableTimes] = useState([]);
   // Store slot metadata for each time slot
   const [slotMetadata, setSlotMetadata] = useState({});
+  const [bookingTab, setBookingTab] = useState("individual"); // "individual" | "group"
+
+  // Helper to check if a slot has group availability
+  const checkSlotIsGroup = (slot) => {
+    if (!slot) return false;
+    if (slot.lessons && Array.isArray(slot.lessons)) {
+      const entry = slot.lessons.find((l) => (myid ? l.lesson === myid : true));
+      if (entry) return Boolean(entry.lessonGroup);
+    }
+    return Boolean(slot.group);
+  };
+
+  // Determine if this calendar / lesson has any group slots at all
+  const hasAnyGroupSlots = useMemo(() => {
+    if (type === "curri") return false;
+
+    const weeklyHasGroup = Object.values(weeklyAvailability || {}).some((dayObj) =>
+      (dayObj?.slots || []).some(checkSlotIsGroup)
+    );
+    if (weeklyHasGroup) return true;
+
+    const dateHasGroup = (dateAvailability || []).some((dateObj) =>
+      (dateObj?.slots || []).some(checkSlotIsGroup)
+    );
+    if (dateHasGroup) return true;
+
+    return Object.values(slotMetadata || {}).some((meta) => meta?.group);
+  }, [type, weeklyAvailability, dateAvailability, slotMetadata, myid]);
+
+  const individualTimes = useMemo(() => {
+    return availableTimes.filter((time) => !slotMetadata[time]?.group);
+  }, [availableTimes, slotMetadata]);
+
+  const groupTimes = useMemo(() => {
+    return availableTimes.filter((time) => Boolean(slotMetadata[time]?.group));
+  }, [availableTimes, slotMetadata]);
+
+  const displayedTimes = useMemo(() => {
+    if (!hasAnyGroupSlots) return availableTimes;
+    return bookingTab === "group" ? groupTimes : individualTimes;
+  }, [hasAnyGroupSlots, bookingTab, groupTimes, individualTimes, availableTimes]);
+
+  const handleTabChange = (newTab) => {
+    setBookingTab(newTab);
+    if (selectedTime) {
+      const isSelectedGroup = Boolean(slotMetadata[selectedTime]?.group);
+      if ((newTab === "group" && !isSelectedGroup) || (newTab === "individual" && isSelectedGroup)) {
+        onSelectTime("");
+      }
+    }
+  };
+
+  // When selected date slots load, if active tab has 0 slots while the other has slots, auto-switch
+  useEffect(() => {
+    if (hasAnyGroupSlots && internalSelectedDate) {
+      if (bookingTab === "individual" && individualTimes.length === 0 && groupTimes.length > 0) {
+        setBookingTab("group");
+      } else if (bookingTab === "group" && groupTimes.length === 0 && individualTimes.length > 0) {
+        setBookingTab("individual");
+      }
+    }
+  }, [hasAnyGroupSlots, internalSelectedDate, individualTimes.length, groupTimes.length, bookingTab]);
 
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -523,6 +585,7 @@ export function Calendar({
         newDate: `${dateStr} ${time24h}:00`,
         timezone: userTimezone,
         groupPrice: groupPrice,
+        discount: groupPrice,
         isGroup: metadata?.group || false,
         group: metadata?.group || false,
         global: false,
@@ -594,6 +657,7 @@ export function Calendar({
           type: type === "lesson" ? "lesson" : "curriculum",
           timezone: userTimezone,
           checkoutCurrency: currency,
+          meta: parsedData,
         };
 
         // Initiate booking and redirect to checkout
@@ -708,10 +772,38 @@ export function Calendar({
         })}
       </div>
 
-      <div className="h-40 overflow-y-auto hide-scrollbar flex items-center justify-center w-full">
-        {availableTimes.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2 w-full h-40 overflow-y-auto hide-scrollbar">
-            {availableTimes.map((time) => {
+      {/* Tabs: Individual & Group */}
+      {hasAnyGroupSlots && (
+        <div className="flex items-center justify-center p-1 bg-[#F5F5F5] rounded-xl mb-4 gap-1">
+          <button
+            type="button"
+            onClick={() => handleTabChange("individual")}
+            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${
+              bookingTab === "individual"
+                ? "bg-white text-black shadow-sm font-semibold"
+                : "text-gray-500 hover:text-black font-medium"
+            }`}
+          >
+            Individual {internalSelectedDate ? `(${individualTimes.length})` : ""}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange("group")}
+            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${
+              bookingTab === "group"
+                ? "bg-white text-black shadow-sm font-semibold"
+                : "text-gray-500 hover:text-black font-medium"
+            }`}
+          >
+            Group {internalSelectedDate ? `(${groupTimes.length})` : ""}
+          </button>
+        </div>
+      )}
+
+      <div className="h-[185px] overflow-y-auto hide-scrollbar flex items-center justify-center w-full">
+        {displayedTimes.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2.5 w-full h-[185px] overflow-y-auto hide-scrollbar py-0.5">
+            {displayedTimes.map((time) => {
               const metadata = slotMetadata[time];
               const isGroup = metadata?.group;
               const maxCapacity = lessonCapacity || 10;
@@ -738,46 +830,50 @@ export function Calendar({
                   key={time}
                   onClick={() => !isDisabled && handleTimeSelect(time)}
                   disabled={isDisabled}
-                  className={`border rounded-2xl py-2 text-sm h-20 relative overflow-hidden ${
+                  className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${
                     isDisabled
                       ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed opacity-50"
                       : selectedTime === time
-                      ? isGroup
-                        ? "bg-primary text-white border-primary/120"
-                        : "bg-primary text-white border-primary"
+                      ? "bg-primary text-white border-primary"
                       : isGroup
-                      ? "bg-primary/20 hover:bg-primary/40 text-gray-800 border-primary/70"
-                      : "hover:bg-blue-100 text-gray-700 border-gray-300"
+                      ? "bg-[#FFF5F2] hover:bg-[#FFEAE3] text-gray-800 border-primary/30 hover:border-primary/60"
+                      : "hover:bg-blue-50 text-gray-700 border-gray-300 bg-white"
                   }`}
                 >
                   {isGroup && (
-                    <span className="absolute top-0 left-0 right-0 text-[9px] font-semibold text-white bg-primary px-1 ">
+                    <span className="w-full text-[9px] font-semibold text-white bg-primary py-0.5 text-center shrink-0">
                       Group
                     </span>
                   )}
-                  <span className={isGroup ? "mt-2 block" : ""}>{time}</span>
-                  {isGroup && metadata?.usecapacity !== undefined && (
-                    <span className="text-[8px] text-gray-600 block mt-0.5">
-                      {currentUsage}/{maxCapacity} Booked
-                    </span>
-                  )}
-                  {isGroup && hasCapacity && groupPrice > 0 && (
-                    <span className="text-[8px] text-green-600 block font-semibold">
-                      ${groupPrice}
-                    </span>
-                  )}
+                  <div className="flex-1 w-full flex flex-col items-center justify-center px-1">
+                    <span className="font-medium text-sm leading-tight">{time}</span>
+                    {isGroup && metadata?.usecapacity !== undefined && (
+                      <span className={`text-[12px] font-medium leading-tight mt-0.5 ${selectedTime === time ? "text-white/90" : "text-gray-600"}`}>
+                        {currentUsage}/{maxCapacity} Booked
+                      </span>
+                    )}
+                    {isGroup && hasCapacity && groupPrice > 0 && (
+                      <span className={`text-[12px] font-semibold leading-tight mt-0.5 ${selectedTime === time ? "text-white" : "text-green-600"}`}>
+                        ${groupPrice}
+                      </span>
+                    )}
+                  </div>
                 </button>
               );
             })}
           </div>
         ) : (
           <div className="text-center py-4 text-gray-500 text-sm">
-                {!internalSelectedDate 
-          ? hasAnyAvailableDatesInMonth() 
-            ? "Pick a date" 
-            : "Sorry, this teacher is currently fully booked."
-          : `Pick a time ${availableTimes.length > 0 && `(${availableTimes.length} available)`}`
-        }
+            {!internalSelectedDate 
+              ? hasAnyAvailableDatesInMonth() 
+                ? "Pick a date" 
+                : "Sorry, this teacher is currently fully booked."
+              : hasAnyGroupSlots
+              ? bookingTab === "group"
+                ? "No group slots available for this date"
+                : "No individual slots available for this date"
+              : `Pick a time ${availableTimes.length > 0 ? `(${availableTimes.length} available)` : ""}`
+            }
           </div>
         )}
       </div>
@@ -792,17 +888,32 @@ export function Calendar({
         }`}
       >
         {(() => {
-          const metadata = slotMetadata[selectedTime];
-          const isGroup = metadata?.group;
-          const maxCapacity = lessonCapacity || 10;
-          const currentUsage = metadata?.usecapacity || 0;
-          const hasCapacity = currentUsage < maxCapacity;
-          const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
-          
-          if (!price && !groupPrice) return "Book (Free)";
-          if (isGroup && hasCapacity && groupPrice > 0) {
-            return `Book (${formatPrice(groupPrice, priceCurrency)})`;
+          if (selectedTime) {
+            const metadata = slotMetadata[selectedTime];
+            const isGroup = metadata?.group;
+            const maxCapacity = lessonCapacity || 10;
+            const currentUsage = metadata?.usecapacity || 0;
+            const hasCapacity = currentUsage < maxCapacity;
+            const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
+            
+            if (isGroup && hasCapacity && groupPrice > 0) {
+              return `Book (${formatPrice(groupPrice, priceCurrency)})`;
+            }
+            if (!price && !groupPrice) return "Book (Free)";
+            return `Book (${formatPrice(price, priceCurrency)})`;
           }
+
+          // Inactive state (no slot selected yet) - show group price if in group tab
+          if (hasAnyGroupSlots && bookingTab === "group") {
+            const defaultGroupPrice = Number(
+              (groupTimes.length > 0 && slotMetadata[groupTimes[0]]?.groupPrice) || discount || 0
+            );
+            if (defaultGroupPrice > 0) {
+              return `Book (${formatPrice(defaultGroupPrice, priceCurrency)})`;
+            }
+          }
+
+          if (!price) return "Book (Free)";
           return `Book (${formatPrice(price, priceCurrency)})`;
         })()}
       </button>

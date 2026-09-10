@@ -671,8 +671,8 @@ export default function EditCurriculum() {
 
   return (
     <MainLayout className="mx-auto" width="100%">
-      <div className="min-h-screen bg-white py-10">
-        <div className="w-full mx-auto px-4">
+      <div className={`bg-white ${currentStep === 2 ? "min-h-[calc(100vh-115px)] flex flex-col justify-center py-4" : "min-h-screen py-10"}`}>
+        <div className="w-full mx-auto">
 
           {currentStep === 1 && (
             <EditStep1Details
@@ -922,7 +922,7 @@ function EditStep1Details({
 
             {/* Existing Cover Image */}
             {existingCoverImage && !coverImage && (
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-2">
                 <div className="flex justify-between items-center mb-3">
                   <p className="text-sm font-medium text-gray-900">Current Cover</p>
                   <p className="text-xs text-gray-500">1/1 image</p>
@@ -942,7 +942,7 @@ function EditStep1Details({
 
             {/* New Cover Image Preview */}
             {coverImage && (
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-2">
                 <div className="flex justify-between items-center mb-3">
                   <p className="text-sm font-medium text-gray-900">Preview</p>
                   <p className="text-xs text-gray-500">1/1 image</p>
@@ -1067,7 +1067,7 @@ function EditStep2Type({ lessonType, onChooseType, onBack, onNext }) {
           onClick={() => onChooseType("direct")}
           className={`w-full text-left rounded-2xl border px-5 py-4 transition-all ${lessonType === "direct" ? "border-black shadow-sm" : "border-[#DDDDDD] hover:border-gray-400"}`}
         >
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Direct Lesson Course</h3>
+          <h3 className="text-base font-semibold text-gray-900 mb-2">Direct Lesson Course (No Units)</h3>
           <p className="text-sm text-gray-600 leading-relaxed">
             A simple course made of individual lessons with no grouping. Perfect for quick learning, standalone sessions, or flexible topics without a fixed structure.
           </p>
@@ -1141,53 +1141,10 @@ function EditStep3DirectLessons({
   return (
     <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LEFT: PREVIEW */}
+        {/* LEFT: EDITOR */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
-          {sortedLessons.length === 0 ? (
-            <div className="text-gray-500 text-center py-12 bg-[#F7F7F7] rounded-2xl border border-gray-100">
-              No lessons yet. Add one to get started.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {sortedLessons.map((lesson) => {
-                const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url
-                const isSelected = lesson.id === selectedLessonId
-                return (
-                  <div key={lesson.id} className={`bg-[#F7F7F7] rounded-2xl p-4 transition-all ${isSelected ? "border border-black" : ""}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-                        {previewImage ? <img src={previewImage} alt="lesson" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Lesson {lesson.position}</span>
-                          <div className="flex items-center gap-2">
-                            <button type="button" onClick={() => setSelectedLessonId(lesson.id)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
-                            <Menu size={16} className="text-gray-400" />
-                          </div>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{lesson.title || "Untitled lesson"}</p>
-                        <p className="text-xs text-gray-600 line-clamp-2">{lesson.description || "Add a short description"}</p>
-                        <div className="grid grid-cols-2 items-center gap-3 mt-3">
-                          <select value={lesson.position} onChange={(e) => handleLessonChange(lesson.id, "position", e.target.value)} className="px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none">
-                            {Array.from({ length: sortedLessons.length }).map((_, i) => (<option key={i} value={i + 1}>Position {i + 1}</option>))}
-                          </select>
-                          <button type="button" onClick={handleAddNew} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">Add a Lesson +</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT: EDITOR */}
-        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900">Add a lesson</h3>
           <div className="bg-[#F7F7F7] rounded-2xl p-5 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add a lesson</h3>
             <div className="space-y-3">
               <select value={existingLessonId} onChange={handleExistingSelect} className="w-full px-4 py-3 border border-[#DDDDDD] rounded-xl text-sm bg-white focus:outline-none focus:border-black">
                 <option value="">Choose from your existing lessons</option>
@@ -1228,7 +1185,7 @@ function EditStep3DirectLessons({
             />
           ) : (
             <div className="bg-[#F7F7F7] rounded-2xl p-6 text-sm text-gray-600 border border-gray-100">
-              Select a lesson from the left to edit its details.
+              Select a lesson to edit its details.
             </div>
           )}
 
@@ -1248,6 +1205,49 @@ function EditStep3DirectLessons({
               </button>
             </div>
           </div>
+        </div>
+
+        {/* RIGHT: PREVIEW */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
+          {sortedLessons.length === 0 ? (
+            <div className="text-gray-500 text-center py-12 bg-[#F7F7F7] rounded-2xl border border-gray-100">
+              No lessons yet. Add one to get started.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sortedLessons.map((lesson) => {
+                const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url
+                const isSelected = lesson.id === selectedLessonId
+                return (
+                  <div key={lesson.id} className={`bg-[#F7F7F7] rounded-2xl p-4 transition-all ${isSelected ? "border border-black" : ""}`}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+                        {previewImage ? <img src={previewImage} alt="lesson" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Lesson {lesson.position}</span>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setSelectedLessonId(lesson.id)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
+                            <Menu size={16} className="text-gray-400" />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{lesson.title || "Untitled lesson"}</p>
+                        <p className="text-xs text-gray-600 line-clamp-2">{lesson.description || "Add a short description"}</p>
+                        <div className="grid grid-cols-2 items-center gap-3 mt-3">
+                          <select value={lesson.position} onChange={(e) => handleLessonChange(lesson.id, "position", e.target.value)} className="px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none">
+                            {Array.from({ length: sortedLessons.length }).map((_, i) => (<option key={i} value={i + 1}>Position {i + 1}</option>))}
+                          </select>
+                          <button type="button" onClick={handleAddNew} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">Add a Lesson +</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1333,113 +1333,7 @@ function EditStep3Units({
   return (
     <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LEFT: PREVIEW */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
-          {sortedUnits.length === 0 && lessons.length === 0 ? (
-            <div className="text-gray-500 text-center py-12 bg-[#F7F7F7] rounded-2xl border border-gray-100">
-              No units or lessons yet. Add a unit to get started.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sortedUnits.map((unit) => {
-                const unitLessons = getLessonsForUnit(unit.id)
-                const isUnitSelected = selectedUnitId === unit.id && mode === "unit"
-                return (
-                  <div key={`unit-${unit.id}`} className="space-y-3">
-                    <div className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${isUnitSelected ? "border-black" : "border-transparent"}`}>
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Unit {unit.position}</span>
-                            <div className="flex items-center gap-2">
-                              <button type="button" onClick={() => handleSelectUnit(unit)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
-                              <Menu size={16} className="text-gray-400" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{unit.name || "Untitled unit"}</p>
-                          <p className="text-xs text-gray-600 line-clamp-2">{unit.description || "Add a unit description"}</p>
-                          <div className="grid grid-cols-3 items-center gap-3 mt-3">
-                            <select value={String(unit.position)} onChange={(e) => handleUnitPositionChange(unit.id, e.target.value)} className="px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none">
-                              {Array.from({ length: units.length }).map((_, i) => (<option key={i} value={String(i + 1)}>Position {i + 1}</option>))}
-                            </select>
-                            <button type="button" onClick={() => handleAddLessonInline(unit.id)} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Lesson</button>
-                            <button type="button" onClick={handleAddUnitInline} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Unit</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pl-6 border-l border-[#DDDDDD]">
-                      {unitLessons.map((lesson) => {
-                        const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url
-                        const isSelected = selectedLessonId === lesson.id && mode === "lesson"
-                        return (
-                          <div key={lesson.id} className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${isSelected ? "border-black" : "border-transparent"}`}>
-                            <div className="flex items-start gap-3">
-                              <div className="w-20 h-20 rounded bg-gray-200 overflow-hidden shrink-0">
-                                {previewImage && <img src={previewImage} alt="lesson" className="w-full h-full object-cover" />}
-                              </div>
-                              <div className="flex flex-col justify-between flex-1">
-                                <div className="flex items-center justify-between">
-                                  <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Lesson {lesson.position}</span>
-                                  <div className="flex items-center gap-2">
-                                    <button type="button" onClick={() => handleSelectLesson(lesson)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
-                                    <Menu size={16} className="text-gray-400" />
-                                  </div>
-                                </div>
-                                <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{lesson.title || "Untitled lesson"}</p>
-                                <div className="grid grid-cols-3 items-center gap-3 mt-3">
-                                  <select value={lesson.position} onChange={(e) => handleLessonChange(lesson.id, "position", e.target.value)} className="px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none">
-                                    {Array.from({ length: unitLessons.length }).map((_, i) => (<option key={i} value={i + 1}>Position {i + 1}</option>))}
-                                  </select>
-                                  <button type="button" onClick={() => handleAddLessonInline(unit.id)} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Lesson</button>
-                                  <button type="button" onClick={handleAddUnitInline} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Unit</button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
-
-              {/* Unassigned lessons */}
-              {getUnassignedLessons().length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-700">Without Unit</span>
-                    <button type="button" onClick={() => handleAddLessonInline()} className="px-4 py-1.5 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">Add a Lesson +</button>
-                  </div>
-                  {getUnassignedLessons().map((lesson) => {
-                    const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url
-                    const isSelected = selectedLessonId === lesson.id && mode === "lesson"
-                    return (
-                      <div key={lesson.id} className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${isSelected ? "border-black" : "border-transparent"}`}>
-                        <div className="flex items-start gap-3">
-                          <div className="w-20 h-20 rounded bg-gray-200 overflow-hidden shrink-0">
-                            {previewImage && <img src={previewImage} alt="lesson" className="w-full h-full object-cover" />}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Lesson {lesson.position}</span>
-                              <button type="button" onClick={() => handleSelectLesson(lesson)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{lesson.title || "Untitled lesson"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT: EDITOR */}
+        {/* LEFT: EDITOR */}
         <div className="space-y-6">
           {mode === "unit" ? (
             <div className="bg-[#F7F7F7] rounded-2xl p-6 border border-gray-100 space-y-4">
@@ -1560,6 +1454,112 @@ function EditStep3Units({
               </button>
             </div>
           </div>
+        </div>
+
+        {/* RIGHT: PREVIEW */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
+          {sortedUnits.length === 0 && lessons.length === 0 ? (
+            <div className="text-gray-500 text-center py-12 bg-[#F7F7F7] rounded-2xl border border-gray-100">
+              No units or lessons yet. Add a unit to get started.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedUnits.map((unit) => {
+                const unitLessons = getLessonsForUnit(unit.id)
+                const isUnitSelected = selectedUnitId === unit.id && mode === "unit"
+                return (
+                  <div key={`unit-${unit.id}`} className="space-y-3">
+                    <div className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${isUnitSelected ? "border-black" : "border-transparent"}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Unit {unit.position}</span>
+                            <div className="flex items-center gap-2">
+                              <button type="button" onClick={() => handleSelectUnit(unit)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
+                              <Menu size={16} className="text-gray-400" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{unit.name || "Untitled unit"}</p>
+                          <p className="text-xs text-gray-600 line-clamp-2">{unit.description || "Add a unit description"}</p>
+                          <div className="grid grid-cols-3 items-center gap-3 mt-3">
+                            <select value={String(unit.position)} onChange={(e) => handleUnitPositionChange(unit.id, e.target.value)} className="px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none">
+                              {Array.from({ length: units.length }).map((_, i) => (<option key={i} value={String(i + 1)}>Position {i + 1}</option>))}
+                            </select>
+                            <button type="button" onClick={() => handleAddLessonInline(unit.id)} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Lesson</button>
+                            <button type="button" onClick={handleAddUnitInline} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Unit</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pl-6 border-l border-[#DDDDDD]">
+                      {unitLessons.map((lesson) => {
+                        const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url
+                        const isSelected = selectedLessonId === lesson.id && mode === "lesson"
+                        return (
+                          <div key={lesson.id} className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${isSelected ? "border-black" : "border-transparent"}`}>
+                            <div className="flex items-start gap-3">
+                              <div className="w-20 h-20 rounded bg-gray-200 overflow-hidden shrink-0">
+                                {previewImage && <img src={previewImage} alt="lesson" className="w-full h-full object-cover" />}
+                              </div>
+                              <div className="flex flex-col justify-between flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Lesson {lesson.position}</span>
+                                  <div className="flex items-center gap-2">
+                                    <button type="button" onClick={() => handleSelectLesson(lesson)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
+                                    <Menu size={16} className="text-gray-400" />
+                                  </div>
+                                </div>
+                                <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{lesson.title || "Untitled lesson"}</p>
+                                <div className="grid grid-cols-3 items-center gap-3 mt-3">
+                                  <select value={lesson.position} onChange={(e) => handleLessonChange(lesson.id, "position", e.target.value)} className="px-3 py-2 border border-[#DDDDDD] rounded-lg text-sm bg-white focus:outline-none">
+                                    {Array.from({ length: unitLessons.length }).map((_, i) => (<option key={i} value={i + 1}>Position {i + 1}</option>))}
+                                  </select>
+                                  <button type="button" onClick={() => handleAddLessonInline(unit.id)} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Lesson</button>
+                                  <button type="button" onClick={handleAddUnitInline} className="px-4 py-2 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">+ Unit</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Unassigned lessons */}
+              {getUnassignedLessons().length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-gray-700">Without Unit</span>
+                    <button type="button" onClick={() => handleAddLessonInline()} className="px-4 py-1.5 rounded-full bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors">Add a Lesson +</button>
+                  </div>
+                  {getUnassignedLessons().map((lesson) => {
+                    const previewImage = lesson.coverImage?.url || lesson.images?.[0]?.url
+                    const isSelected = selectedLessonId === lesson.id && mode === "lesson"
+                    return (
+                      <div key={lesson.id} className={`bg-[#F7F7F7] border rounded-2xl p-4 transition-all ${isSelected ? "border-black" : "border-transparent"}`}>
+                        <div className="flex items-start gap-3">
+                          <div className="w-20 h-20 rounded bg-gray-200 overflow-hidden shrink-0">
+                            {previewImage && <img src={previewImage} alt="lesson" className="w-full h-full object-cover" />}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-900">Lesson {lesson.position}</span>
+                              <button type="button" onClick={() => handleSelectLesson(lesson)} className="px-3 py-1 rounded-full bg-[#DDDDDD] text-xs font-semibold text-gray-800 hover:bg-gray-300 transition-colors">Edit</button>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900 mt-2 line-clamp-2">{lesson.title || "Untitled lesson"}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

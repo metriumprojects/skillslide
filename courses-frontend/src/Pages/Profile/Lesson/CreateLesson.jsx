@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LocationAutocomplete from "../../Home/Components/LocationAutocomplete";
 import { useDispatch, useSelector } from "react-redux";
 import { Loader, X, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
@@ -14,20 +14,38 @@ import { getAvailability } from "../../../redux/reducers/AvailabilityReducer";
 import { toast } from "react-toastify";
 import { getCategories } from "../../../redux/reducers/CategoryReducer";
 import MakeAvailability from "../../../components/MakeAvailability";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GrUpload } from "react-icons/gr";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import useTeacherPayoutCurrencies from "../../../hooks/useTeacherPayoutCurrencies";
+import { startChat, sendChatMessage } from "../../../redux/reducers/ChatReducer";
 
 const CreateLesson = () => {
-  const { currency } = useCurrency();
+  const { currency, supportedCurrencies } = useCurrency();
   const { payoutCurrencies, payoutCurrenciesLoading, stripePayoutReady } = useTeacherPayoutCurrencies();
-  const [lessonCurrency, setLessonCurrency] = useState(currency);
+
+  // Currencies list: use payoutCurrencies if teacher has stripe payout setup, otherwise fallback to supportedCurrencies
+  const availableCurrencies = useMemo(() => {
+    if (payoutCurrencies && payoutCurrencies.length > 0) {
+      return payoutCurrencies;
+    }
+    if (supportedCurrencies && supportedCurrencies.length > 0) {
+      return supportedCurrencies;
+    }
+    return [currency || "USD"];
+  }, [payoutCurrencies, supportedCurrencies, currency]);
+
+  const [lessonCurrency, setLessonCurrency] = useState(currency || "USD");
+
   useEffect(() => {
-    if (payoutCurrencies.length && !payoutCurrencies.includes(lessonCurrency)) setLessonCurrency(payoutCurrencies[0]);
-  }, [payoutCurrencies, lessonCurrency]);
+    if (availableCurrencies.length && !availableCurrencies.includes(lessonCurrency)) {
+      setLessonCurrency(availableCurrencies[0]);
+    }
+  }, [availableCurrencies, lessonCurrency]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const request = location.state?.request || null;
   const { categories,  } = useSelector(
     (state) => state.category
   );
@@ -73,6 +91,24 @@ const CreateLesson = () => {
     setLocationFilter(description || "");
     setPlaceId(selectedPlaceId || "");
   };
+
+  // Pre-fill from request proposal if available
+  useEffect(() => {
+    if (request) {
+      if (request.category) setSelectedCategory(request.category);
+      if (typeof request.isOnline === "boolean") {
+        setIsOnlineSelected(request.isOnline);
+        setIsInPersonSelected(!!request.supportsInPerson);
+      }
+      if (request.location) {
+        setFormData((prev) => ({ ...prev, location: request.location }));
+        setLocationFilter(request.location);
+      }
+      if (request.price) {
+        setFormData((prev) => ({ ...prev, price: request.price }));
+      }
+    }
+  }, [request]);
 
   // Memoized callback for calendar changes to prevent infinite loops
   const handleCalendarChange = useCallback((data) => {
@@ -408,8 +444,9 @@ const CreateLesson = () => {
       lessonFormData.append("calender", false);
     }
 
-    dispatch(createLesson(lessonFormData)).then((res) => {
+    dispatch(createLesson(lessonFormData)).then(async (res) => {
       if (res?.payload?.status) {
+        const createdLesson = res.payload.lesson;
         toast.success(res.payload.message || "Lesson created successfully");
         // Reset form on success
         setFormData({
@@ -430,6 +467,36 @@ const CreateLesson = () => {
         setDiscount("");
         setIsGroupAvailable(false);
         setCalendarData(null);
+
+        // If creating a proposal for a request, send it to user via chat
+        if (request?.user?._id && createdLesson?._id) {
+          try {
+            const { room } = await dispatch(
+              startChat({
+                targetUserId: request.user._id,
+              })
+            ).unwrap();
+
+            await dispatch(
+              sendChatMessage({
+                roomId: room._id,
+                lessonId: createdLesson._id,
+                message: undefined,
+              })
+            ).unwrap();
+
+            toast.success("Lesson proposal sent to user via chat!");
+            navigate("/teach");
+            return;
+          } catch (chatErr) {
+            console.error("Failed to send proposal in chat:", chatErr);
+            toast.error("Lesson created, but failed to send proposal in chat.");
+            navigate("/teach");
+            return;
+          }
+        }
+
+        // Standard flow when NOT from a request
         navigate(`/lesson-booking/${res.payload.lesson._id}`);
         // Keep enableCalendar as true (calendar always visible)
       } else {
@@ -456,7 +523,7 @@ const CreateLesson = () => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">Crop Lesson Cover Image</h3>
+              <h3 className="text-lg font-normal">Crop Lesson Cover Image</h3>
               <div
                 onClick={handleCancelCoverImageCrop}
                 className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
@@ -537,7 +604,7 @@ const CreateLesson = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 p-4 border-t bg-gray-50">
+              <div className="flex gap-3 p-4 bg-gray-50">
                 <div
                   onClick={handleCancelCoverImageCrop}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-center"
@@ -556,9 +623,9 @@ const CreateLesson = () => {
         </motion.div>
       )}
 
-      <div className="min-h-screen bg-white pt-[20px] pb-10">
+      <div className="min-h-screen bg-white pt-[32px] pb-10">
         <div className="w-full mx-auto">
-          <div className="flex items-center gap-3 mb-[20px]">
+          <div className="flex items-center gap-[32px] mb-[20px]">
             <svg
               width="24"
               height="24"
@@ -584,7 +651,7 @@ const CreateLesson = () => {
               />
             </svg>
             <h1 className="font-['Roboto'] text-[20px] sm:text-[24px] font-normal text-black tracking-tight leading-none">
-              Create a lesson
+              {request ? "Create & Send Lesson Proposal" : "Create a lesson"}
             </h1>
           </div>
 
@@ -654,8 +721,8 @@ const CreateLesson = () => {
                     disabled={loading} step="any" min="0.01"
                     className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black" />
                   <select value={lessonCurrency} onChange={(event) => setLessonCurrency(event.target.value)} disabled={loading}
-                    className="bg-white border border-gray-200 rounded-xl px-3 py-3 text-sm">
-                    {payoutCurrencies.map((code) => <option key={code} value={code}>{code}</option>)}
+                    className="bg-white border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-black cursor-pointer">
+                    {availableCurrencies.map((code) => <option key={code} value={code}>{code}</option>)}
                   </select>
                 </div>
               </div>
@@ -664,24 +731,27 @@ const CreateLesson = () => {
               <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
                 <div className="space-y-4">
                   {/* Group Availability Checkbox */}
-                  <label className="flex items-center gap-3 cursor-pointer">
+                  <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isGroupAvailable}
                       onChange={() => setIsGroupAvailable((prev) => !prev)}
                       disabled={loading}
-                      className="w-4 h-4 accent-black"
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
                     />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">Group Availability</span>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                        This lesson will be available to multiple students as a group class. You can also set a separate price for it.
+                      </p>
                     </div>
                   </label>
 
                   {/* Capacity & Discount Fields - Show only if Group Available is checked */}
                   {isGroupAvailable && (
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                    <div className="grid grid-cols-2 gap-3 pt-2">
                       <div>
-                        <label className="block mb-1.5 text-sm font-semibold text-gray-900">Capacity</label>
+                        <label className="block mb-1.5 text-sm font-semibold text-gray-900">Student Capacity</label>
                         <input
                           type="number"
                           value={capacity}
@@ -694,7 +764,7 @@ const CreateLesson = () => {
                        
                       </div>
                       <div>
-                        <label className="block mb-1.5 text-sm font-semibold text-gray-900">Group Discount </label>
+                        <label className="block mb-1.5 text-sm font-semibold text-gray-900">Alternative Price</label>
                         <input
                           type="number"
                           value={discount}
@@ -920,15 +990,15 @@ const CreateLesson = () => {
               <button
                 type="submit"
                 disabled={loading || !isFormValid()}
-                className="w-fit bg-black text-white font-medium px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-fit bg-black text-white font-medium px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? (
                   <>
                     <Loader size={18} className="animate-spin" />
-                    Creating Lesson...
+                    {request ? "Creating & Sending..." : "Creating Lesson..."}
                   </>
                 ) : (
-                  "Create Lesson"
+                  request ? "Create and send proposal" : "Create Lesson"
                 )}
               </button>
             </form>
