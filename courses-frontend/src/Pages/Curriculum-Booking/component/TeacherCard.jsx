@@ -149,15 +149,15 @@ const TeacherCard = ({
 
             {/* 3. Timezone Bubble */}
             {displayTimeZone && (
-              <span className="inline-flex items-center gap-1.5 bg-[#FAF5FF] border border-[#E9D5FF] text-[#822AD1] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0 max-w-full">
-                <MapPin className="w-3.5 h-3.5 text-[#822AD1] shrink-0" />
+              <span className="inline-flex items-center gap-1.5 bg-[#F0F9FF] border border-[#BBE6FD] text-[#036AA2] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0 max-w-full">
+                <MapPin className="w-3.5 h-3.5 text-[#036AA2] shrink-0" />
                 <span className="truncate" title={displayTimeZone}>{displayTimeZone}</span>
               </span>
             )}
 
             {/* 4. Students Bubble */}
-            <span className="inline-flex items-center gap-1.5 bg-[#F0F9FF] border border-[#BBE6FD] text-[#036AA2] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
-              <Users className="w-3.5 h-3.5 text-[#036AA2] shrink-0" />
+            <span className="inline-flex items-center gap-1.5 bg-[#FAF5FF] border border-[#E9D5FF] text-[#822AD1] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
+              <Users className="w-3.5 h-3.5 text-[#822AD1] shrink-0" />
               <span>{displayStudents} Students</span>
             </span>
 
