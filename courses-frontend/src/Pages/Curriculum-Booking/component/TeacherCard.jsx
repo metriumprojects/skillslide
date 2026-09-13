@@ -140,8 +140,8 @@ const TeacherCard = ({
             </span>
 
             {/* 2. 1-Star & 100% Bubble */}
-            <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-gray-900 px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" className="shrink-0 text-amber-400">
+            <span className="inline-flex items-center gap-1.5 bg-[#FFFBEA] border border-[#FFF7D8] text-[#A76000] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#F2BE2F" stroke="#F2BE2F" className="shrink-0">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
               <span>{displayRating > 0 ? `${displayRating}%` : "100%"}</span>
@@ -149,21 +149,21 @@ const TeacherCard = ({
 
             {/* 3. Timezone Bubble */}
             {displayTimeZone && (
-              <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-gray-900 px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0 max-w-full">
-                <MapPin className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+              <span className="inline-flex items-center gap-1.5 bg-[#FAF5FF] border border-[#E9D5FF] text-[#822AD1] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0 max-w-full">
+                <MapPin className="w-3.5 h-3.5 text-[#822AD1] shrink-0" />
                 <span className="truncate" title={displayTimeZone}>{displayTimeZone}</span>
               </span>
             )}
 
             {/* 4. Students Bubble */}
-            <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-gray-900 px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
-              <Users className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+            <span className="inline-flex items-center gap-1.5 bg-[#F0F9FF] border border-[#BBE6FD] text-[#036AA2] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
+              <Users className="w-3.5 h-3.5 text-[#036AA2] shrink-0" />
               <span>{displayStudents} Students</span>
             </span>
 
             {/* 5. Lessons Bubble */}
-            <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-gray-900 px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
-              <BookOpen className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+            <span className="inline-flex items-center gap-1.5 bg-[#FFF7ED] border border-[#FEDFBB] text-[#C34511] px-3 py-1 rounded-full text-xs font-medium shadow-sm shrink-0">
+              <BookOpen className="w-3.5 h-3.5 text-[#C34511] shrink-0" />
               <span>{displayLessons || 0} Lessons</span>
             </span>
           </div>
