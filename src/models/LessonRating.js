@@ -15,5 +15,6 @@ const lessonRatingSchema = new mongoose.Schema(
 );
 
 lessonRatingSchema.index({ user: 1, lesson: 1 }, { unique: true });
+lessonRatingSchema.index({ lesson: 1, createdAt: -1 });
 
 export default mongoose.model("LessonRating", lessonRatingSchema);

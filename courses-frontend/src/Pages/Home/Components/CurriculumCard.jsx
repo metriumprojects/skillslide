@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 import { Copy, Heart, Star } from "lucide-react";
 import { BiSolidZap } from "react-icons/bi";
 import { Link, useNavigate } from "react-router-dom";
@@ -42,13 +43,14 @@ const CurriculumCard = ({ course, linkTo }) => {
   return (
     <article className="mb-7 min-w-0 group">
       <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
-        <Link to={linkTo || `/curriculum-booking/${course._id}`}>
+        <Link to={linkTo || `/curriculum-booking/${course._id}`} state={{ preview: course }}>
           <img
             src={
-              course.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"
+              getCardImageUrl(course.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"
             }
             alt={course.title}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         </Link>
@@ -80,10 +82,11 @@ const CurriculumCard = ({ course, linkTo }) => {
                  <Link to={userInfo?._id === course?.createdBy?._id ? "/profile" : `/user-profile/${course?.createdBy?._id}?role=teacher`} className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black">
                    <img
                      src={
-                       course?.createdBy?.image?.url ||
+                       getAvatarUrl(course?.createdBy?.image?.url) ||
                        "https://i.ibb.co/tpV3m2GW/no-image.png"
                      }
                      loading="lazy"
+                     decoding="async"
                      alt={course.createdBy?.name}
                      className="h-6 w-6 rounded-full object-cover"
                    />
@@ -94,4 +97,4 @@ const CurriculumCard = ({ course, linkTo }) => {
   );
 };
 
-export default CurriculumCard;
+export default React.memo(CurriculumCard);

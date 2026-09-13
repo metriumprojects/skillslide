@@ -303,7 +303,7 @@ export default function Chat() {
 
   return (
     <MainLayout width="100%">
-      <div className="flex md:h-full border-2 border-gray-300 overflow-hidden shadow-lg bg-white h-[88vh] relative my-10">
+      <div className="flex md:h-full border-2 border-gray-300 overflow-hidden shadow-lg bg-white h-[88vh] relative my-[32px]">
         {/* Mobile Sidebar Overlay */}
         {showMobileSidebar && (
           <div 

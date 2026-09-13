@@ -73,9 +73,9 @@ const TeacherCard = ({
 
   if (layout === "column") {
     return (
-      <div className={`w-full bg-[#E9EAEE] p-5 rounded-[24px] flex flex-col h-fit shadow-none ${className}`}>
-        {/* Top Header: Eyebrow + Teacher Name & Message Button */}
-        <div className="flex items-center justify-between gap-2 w-full">
+      <div className={`w-full flex flex-col gap-3.5 ${className}`}>
+        {/* Bubble 1: Eyebrow + Teacher Name & Message Button */}
+        <div className="w-full bg-[#E9EAEE] p-5 rounded-[24px] flex items-center justify-between gap-3 shadow-none">
           <div className="flex flex-col min-w-0">
             <span className="text-[11px] font-medium uppercase tracking-wider text-gray-500 leading-tight">
               Meet your teacher
@@ -110,22 +110,24 @@ const TeacherCard = ({
         </div>
 
         {/* Full-width Profile Picture */}
-        <Link to={`/user-profile/${teacher?._id}?role=teacher`} className="block w-full mt-3.5">
+        <Link to={`/user-profile/${teacher?._id}?role=teacher`} className="block w-full overflow-hidden rounded-[20px]">
           {displayImage?.url && displayImage?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
             <img
               src={displayImage.url}
               alt={displayName}
-              className="w-full aspect-square rounded-2xl object-cover block"
+              loading="lazy"
+              decoding="async"
+              className="w-full aspect-square rounded-[20px] object-cover block"
             />
           ) : (
-            <div className="w-full aspect-square rounded-2xl bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-4xl">
+            <div className="w-full aspect-square rounded-[20px] bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-4xl">
               {displayName?.charAt(0)?.toUpperCase() || "T"}
             </div>
           )}
         </Link>
 
-        {/* Details & Badges stacked below, all left-aligned */}
-        <div className="flex flex-col items-start gap-2 mt-3 w-full">
+        {/* Tags & Details Bubble (Grey Bubble) */}
+        <div className="w-full bg-[#E9EAEE] p-4 sm:p-5 rounded-[24px] flex flex-col items-start gap-2 shadow-none">
           {/* Bubbles Flow Row: All uniform size, wrapping naturally to next line */}
           <div className="flex flex-wrap items-center gap-2 w-full">
             {/* 1. Verified Teacher Badge */}
@@ -189,6 +191,8 @@ const TeacherCard = ({
               <img
                 src={displayImage.url}
                 alt={displayName}
+                loading="lazy"
+                decoding="async"
                 className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover shrink-0"
               />
             ) : (

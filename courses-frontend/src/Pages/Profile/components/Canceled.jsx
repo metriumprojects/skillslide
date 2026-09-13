@@ -1,342 +1,212 @@
 import React, { useEffect, useState } from "react";
-import { BiSolidZap } from "react-icons/bi";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
 import { useDispatch, useSelector } from "react-redux";
-import { getcuriBooking, userCancelBookings } from "../../../redux/reducers/BookingReducer";
-import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Star, X, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { userCancelBookings } from "../../../redux/reducers/BookingReducer";
+import { startChat } from "../../../redux/reducers/ChatReducer";
 import moment from "moment-timezone";
+import { toast } from "react-toastify";
+import { useCurrency } from "../../../currency/CurrencyContext";
 
 export default function Canceled() {
-  const { userInfo, loading } = useSelector((state) => state.auth);
+  const { formatPrice } = useCurrency();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { userCanceldata, getcuriBookingdata, getcuridata } = useSelector((state) => state.book);
+  const { userInfo } = useSelector((state) => state.auth);
+  const { userCanceldata, loadingStates } = useSelector((state) => state.book);
+  const { startChatLoading } = useSelector((state) => state.chat);
 
-  // State for curriculum popup
-  const [selectedCurriculum, setSelectedCurriculum] = useState(null);
-  const [showLessonsPopup, setShowLessonsPopup] = useState(false);
+  // Pagination states
+  const [canceledPage, setCanceledPage] = useState(1);
+  const [canceledLimit] = useState(10);
+  const [canceledTotal, setCanceledTotal] = useState(0);
 
   useEffect(() => {
-    dispatch(userCancelBookings({ page: 1, limit: 20 }));
-  }, [dispatch]);
+    dispatch(userCancelBookings({ page: canceledPage, limit: canceledLimit })).then((response) => {
+      if (response?.payload?.total) {
+        setCanceledTotal(response.payload.total);
+      }
+    });
+  }, [dispatch, canceledPage, canceledLimit]);
 
-  useEffect(() => {
-    if (selectedCurriculum?._id) {
-      dispatch(getcuriBooking(selectedCurriculum?._id));
-    }
-  }, [selectedCurriculum?._id, dispatch]);
-
-  const handleReschedule = async (path, bookId, lessonId, type, isGroup = false) => {
-    localStorage.setItem('bookId', bookId);
-    localStorage.setItem('lId', lessonId);
-    localStorage.setItem('type', type);
-    const urlWithGroup = `${path}${path.includes('?') ? '&' : '?'}group=${isGroup}`;
-    await navigate(urlWithGroup);
-  };
-
-  const handleCurriculumClick = (course) => {
-    if (course.type === 'curriculum') {
-      setSelectedCurriculum(course);
-      setShowLessonsPopup(true);
-    } else {
-      handleReschedule(`/manage-lesson/${course.lesson?._id}`, course._id, course.lesson?._id, "lesson", course.group || false);
-    }
-  };
-
-  // Function to get booking details based on type
-  const getBookingDetails = (course) => {
-    if (course.type === 'curriculum' && course.curriculum) {
+  const getTimeDisplay = (utcTimeString) => {
+    if (!utcTimeString) return { date: "-", time: "-" };
+    try {
+      const localTime = moment.utc(utcTimeString).local();
       return {
-        id: course.curriculum._id,
-        title: course.curriculum.title,
-        images: course.curriculum.images,
-        averageRating: course.curriculum.averageRating,
-        totalRatings: course.curriculum.totalRatings,
-        type: 'curriculum'
+        date: localTime.format("MM/DD/YY"),
+        time: localTime.format("h:mmA") + " " + moment.tz(moment.tz.guess()).zoneAbbr(),
       };
-    } else if (course.type === 'lesson' && course.lesson) {
-      return {
-        id: course.lesson._id,
-        title: course.lesson.title,
-        images: course.lesson.images,
-        averageRating: course.lesson.averageRating,
-        totalRatings: course.lesson.totalRatings,
-        type: 'lesson'
-      };
+    } catch (error) {
+      return { date: "-", time: "-" };
     }
-    return null;
   };
 
-  // Function to get the appropriate user profile path
-  const getUserProfilePath = (course, details) => {
-    if (userInfo?._id === course?.teacher?._id) {
-      return '/profile';
-    } else if (details?.type === 'curriculum') {
-      return `/user-profile/${course.curriculum?._id}`;
+  const handleMessageTeacher = async (lesson) => {
+    const teacherId = lesson.userId || lesson.teacher?._id;
+    if (!teacherId) {
+      toast.error("Teacher information not available");
+      return;
+    }
+
+    if (!userInfo?._id) {
+      toast.info("Please log in to send a message.");
+      navigate("/login");
+      return;
+    }
+
+    if (userInfo?._id === teacherId) {
+      toast.info("You cannot message yourself.");
+      return;
+    }
+
+    try {
+      const data = await dispatch(startChat({ targetUserId: teacherId })).unwrap();
+      const roomId = data?.room?._id;
+
+      if (!roomId) {
+        toast.error("Could not start the chat. Please try again.");
+        return;
+      }
+
+      toast.success("Chat ready.");
+      navigate(`/chat/${roomId}`);
+    } catch (error) {
+      const message = typeof error === "string" ? error : "Failed to start chat.";
+      toast.error(message);
+    }
+  };
+
+  const handleRebook = (lesson) => {
+    if (lesson.type === "curriculum" && lesson.curriculumId) {
+      navigate(`/curriculum-booking/${lesson.curriculumId}`);
+    } else if (lesson.lId) {
+      navigate(`/lesson-booking/${lesson.lId}`);
+    } else if (lesson.curriculum?._id) {
+      navigate(`/curriculum-booking/${lesson.curriculum._id}`);
+    } else if (lesson.lesson?._id) {
+      navigate(`/lesson-booking/${lesson.lesson._id}`);
     } else {
-      return `/user-profile/${course.lesson?._id}`;
+      toast.info("Booking details not found for re-booking");
     }
   };
 
-  // Function to check if a lesson can be rescheduled
-  const canRescheduleLesson = (lesson) => {
-    // For canceled bookings, all lessons should be reschedulable
-    // unless they're already completed
-    if (lesson.status === 'completed') {
-      return false;
-    }
-    return true;
-  };
-
-  // Function to get button text based on lesson status
-  const getLessonButtonText = (lesson) => {
-    switch (lesson.status) {
-      case 'completed':
-        return 'Completed';
-      case 'scheduled':
-        return 'Reschedule';
-      case 'canceled':
-        return 'Reschedule Lesson';
-      default:
-        return 'Reschedule Lesson';
-    }
-  };
-
-  // Function to format date/time for display
-  const formatScheduleTime = (scheduledAt, timezone) => {
-    if (!scheduledAt) return 'Not scheduled';
-    
-    return moment(scheduledAt)
-      .tz(timezone || 'UTC')
-      .format('MMM D, YYYY • hh:mm A');
-  };
-
-  // Function to get status badge style
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'canceled':
-        return 'bg-red-100 text-red-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const canceledTotalPages = Math.ceil(canceledTotal / canceledLimit) || 1;
+  const lessonsList = Array.isArray(userCanceldata) ? userCanceldata : [];
 
   return (
-    <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl mt-10">
-      {userCanceldata?.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {userCanceldata?.map((course, index) => {
-            const details = getBookingDetails(course);
-            
-            if (!details) return null;
-
-            return (
-              <div key={index} className="overflow-hidden flex flex-col gap-5">
-                <div className="relative overflow-hidden h-[335px]">
-                  <Link to={``}>
-                    <img
-                      src={details.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
-                      alt={details.title}
-                      className="w-full h-full object-cover rounded-[20px]"
-                    />
-                  </Link>
-                </div>
-
-                <div className="flex flex-col gap-5">
-                  <div className="flex justify-between">
-                    <div className="flex items-center gap-3">
-                      <Link
-                        to={getUserProfilePath(course, details)}
-                        className="w-8 h-8 bg-gray-300 rounded-md overflow-hidden"
-                      >
-                        <img
-                          src={
-                            course?.teacher?.image?.url ||
-                            "https://i.ibb.co/tpV3m2GW/no-image.png"
-                          }
-                          alt={course.teacher?.name}
-                          className="w-full h-[40px] object-cover"
-                        />
-                      </Link>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-base font-medium truncate">
-                          {course?.teacher?.name || "Unknown"}
-                        </p>
-                      </div>
-                    </div>
-
-
-                  </div>
-
-                  <p className="text-base text-gray-600 line-clamp-3">
-                    {details.title}
-                  </p>
-
-                  <p className="text-base text-gray-700 font-medium">
-                    {details.type === 'curriculum' 
-                      ? `Curriculum for ${course.amount}$`
-                      : `${course.lesson?.duration} min lesson for ${course.amount}$`
-                    }
-                  </p>
-
-                  {/* Cancel reason if available */}
-                  {course.cancelReason && (
-                    <div className="flex items-start gap-2 p-3 bg-red-50 rounded-md">
-                      <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-red-700">{course.cancelReason}</p>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => handleCurriculumClick(course)}
-                      className="w-full bg-primary text-white text-base font-medium py-3 rounded-md flex justify-center items-center gap-2 hover:bg-primary-dark transition-colors"
-                    >
-                      {details.type === 'curriculum' ? 'Reschedule Curriculum' : 'Reschedule Lesson'}
-                      <BiSolidZap className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p>No Canceled Bookings yet</p>
-      )}
-
-      {/* Lessons Popup for Curriculum - Same design as Unscheduled page */}
-      {showLessonsPopup && selectedCurriculum && (
-        <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-md max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="flex justify-between items-center p-3 border-b">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  Lessons in {selectedCurriculum.curriculum?.title}
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  Total Lessons: {getcuriBookingdata?.length || 0}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowLessonsPopup(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Lessons Slider */}
-            <div className="flex-1 p-6">
-              {getcuriBookingdata?.length > 0 ? (
-                <Swiper
-                  spaceBetween={20}
-                  slidesPerView={1}
-                  breakpoints={{
-                    640: { slidesPerView: 2 },
-                    768: { slidesPerView: 2 },
-                    1024: { slidesPerView: 3 },
-                    1280: { slidesPerView: 4 }
-                  }}
-                  className="w-full"
-                >
-                  {getcuriBookingdata.map((lessonItem, index) => (
-                    <SwiperSlide key={lessonItem._id}>
-                      <div className="h-full">
-                        <div className={`overflow-hidden flex flex-col gap-5 h-full rounded ${
-                          lessonItem.status === 'canceled' 
-                            ? 'border-red-200 bg-red-50/50' 
-                            : 'border-gray-200'
-                        }`}>
-                          {/* Image Section */}
-                          <div className="relative overflow-hidden h-[200px] rounded-[15px]">
-                            <img
-                              src={lessonItem.lId?.images?.[0]?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
-                              alt={lessonItem.lId?.title}
-                              className="w-full h-full object-cover"
-                            />
-                            
-
-                          </div>
-
-                          {/* Content Section */}
-                          <div className="flex flex-col gap-4 flex-1">
-                            {/* Lesson Title */}
-                            <div>
-                              <h3 className="font-semibold text-lg mb-1 line-clamp-2">
-                                {lessonItem.position}. {lessonItem.lId?.title}
-                              </h3>
-                              {lessonItem.unitName && (
-                                <p className="text-gray-600 text-sm">
-                                  Unit: {lessonItem.unitName}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Schedule Time (if available) */}
-                            {lessonItem.scheduledAt && (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Clock className="w-4 h-4" />
-                                <span>
-                                  {formatScheduleTime(lessonItem.scheduledAt, selectedCurriculum.timezone)}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Rating Info */}
-                            <div>
-
-                            </div>
-
-                            {/* Action Button */}
-                            <div className="mt-auto pt-2">
-                              {canRescheduleLesson(lessonItem) ? (
-                                <button
-                                  onClick={() => {
-                                    handleReschedule(
-                                      `/manage-lesson/${lessonItem.lId?._id}?curiid=${getcuridata.curriculum?.calenderId}`, 
-                                      lessonItem._id,
-                                      lessonItem.lId?._id,
-                                      "curriculum",
-                                      lessonItem.group || false
-                                    );
-                                    setShowLessonsPopup(false);
-                                  }}
-                                  className="w-full bg-primary hover:bg-primary-dark text-white text-base font-medium py-3 rounded flex justify-center items-center gap-2 transition-colors"
-                                >
-                                  {getLessonButtonText(lessonItem)}
-                                  <BiSolidZap className="w-4 h-4" />
-                                </button>
-                              ) : lessonItem.status === 'completed' ? (
-                                <div className="w-full bg-primary text-white text-base font-medium py-3 rounded-md flex justify-center items-center gap-2">
-                                  <CheckCircle className="w-5 h-5" />
-                                  Lesson Completed
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-gray-500">No lessons found in this curriculum.</p>
-                </div>
-              )}
-            </div>
+    <div className="w-full mt-6">
+      {/* Pagination Controls */}
+      {canceledTotalPages > 1 && (
+        <div className="flex justify-end items-center mb-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCanceledPage((prev) => Math.max(1, prev - 1))}
+              disabled={canceledPage === 1}
+              className="p-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <FaChevronLeft />
+            </button>
+            <span className="text-sm">
+              Page {canceledPage} of {canceledTotalPages}
+            </span>
+            <button
+              onClick={() => setCanceledPage((prev) => Math.min(canceledTotalPages, prev + 1))}
+              disabled={canceledPage === canceledTotalPages}
+              className="p-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <FaChevronRight />
+            </button>
           </div>
         </div>
       )}
+
+      {/* Canceled Lessons Table matching StudentDashboard */}
+      <div className="overflow-x-auto rounded-2xl mb-10">
+        <table className="w-full rounded-2xl overflow-hidden">
+          <thead className="bg-[#E9EAEE] text-left text-sm">
+            <tr>
+              <th className="p-3">Date</th>
+              <th className="p-3">Hour</th>
+              <th className="p-3">Curriculum</th>
+              <th className="p-3">Lesson</th>
+              <th className="p-3">Teacher</th>
+              <th className="p-3">Amount</th>
+              <th className="p-3">Status</th>
+              <th className="p-3">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {lessonsList.length > 0 ? (
+              lessonsList.map((lesson, index) => {
+                const dateToDisplay = lesson.cancelledAt || lesson.scheduledAt || lesson.updatedAt;
+                const timeDisplay = getTimeDisplay(dateToDisplay);
+                const curriculumTitle =
+                  lesson.curriculumTitle ||
+                  (lesson.curriculum?.title ? lesson.curriculum.title : "-");
+                const lessonTitle =
+                  lesson.lessonTitle ||
+                  lesson.lesson?.title ||
+                  (lesson.type === "curriculum" ? "-" : "Lesson");
+                const teacherName =
+                  lesson.name ||
+                  lesson.teacher?.name ||
+                  "Unknown Teacher";
+                const amount = lesson.amount ?? lesson.lesson?.price ?? lesson.curriculum?.price ?? 0;
+                const currency = lesson.currency || lesson.lesson?.currency || lesson.curriculum?.currency || "USD";
+                const isRefunded = lesson.isRefunded || lesson.paymentStatus === "cancelled";
+
+                return (
+                  <tr key={lesson._id || index} className="bg-[#F5F5F5]">
+                    <td className="p-3">
+                      <div>{timeDisplay.date}</div>
+                      {lesson.scheduledAt && lesson.cancelledAt && (
+                        <div className="text-[11px] text-gray-500">
+                          Scheduled: {getTimeDisplay(lesson.scheduledAt).date}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3">{timeDisplay.time}</td>
+                    <td className="p-3 font-medium">{curriculumTitle}</td>
+                    <td className="p-3">{lessonTitle}</td>
+                    <td className="p-3">{teacherName}</td>
+                    <td className="p-3">{formatPrice(amount, currency)}</td>
+                    <td className="p-3">
+                      <span className="bg-red-500 text-white px-3 py-1.5 rounded-full text-xs font-medium inline-block">
+                        {isRefunded ? "Refunded" : "Canceled"}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleMessageTeacher(lesson)}
+                          disabled={startChatLoading}
+                          className="bg-[#E9EAEE] hover:bg-gray-300 text-black px-4 py-2 rounded-full text-sm transition-colors disabled:opacity-60 cursor-pointer"
+                        >
+                          {startChatLoading ? "Starting..." : "Message"}
+                        </button>
+                        <button
+                          onClick={() => handleRebook(lesson)}
+                          className="bg-[#E9EAEE] hover:bg-gray-300 text-black px-4 py-2 rounded-full text-sm transition-colors cursor-pointer"
+                        >
+                          Book Again
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="8" className="p-4 text-center text-gray-500 bg-[#F5F5F5]">
+                  No canceled lessons yet
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

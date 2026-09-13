@@ -16,6 +16,21 @@ export const getCategories = createAsyncThunk(
         error.response?.data || { message: "Something went wrong" }
       );
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { category } = getState();
+      if (
+        category?.hasFetched &&
+        Array.isArray(category?.categories) &&
+        category?.categories?.length > 0 &&
+        !category?.loading
+      ) {
+        return false;
+      }
+      return true;
+    },
   }
 );
 
@@ -103,6 +118,9 @@ const categorySlice = createSlice({
     clearSuccessMessage: (state) => {
       state.successMessage = "";
     },
+    invalidateCategoryCache: (state) => {
+      state.hasFetched = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -182,5 +200,5 @@ const categorySlice = createSlice({
   },
 });
 
-export const { clearError, clearSuccessMessage } = categorySlice.actions;
+export const { clearError, clearSuccessMessage, invalidateCategoryCache } = categorySlice.actions;
 export default categorySlice.reducer;

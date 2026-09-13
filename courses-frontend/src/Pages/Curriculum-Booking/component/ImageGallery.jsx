@@ -126,6 +126,8 @@ export default function ImageGallery({ images = [], layout = "grid" }) {
                 <img
                   src={img.url || img}
                   alt={`Gallery ${index + 1}`}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
                   className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                 />
               </div>
@@ -163,6 +165,8 @@ export default function ImageGallery({ images = [], layout = "grid" }) {
                   <img
                     src={img.url || img}
                     alt={`Gallery ${index + 1}`}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
                     className="h-full w-full object-cover transition-transform duration-300"
                   />
                 </div>
@@ -233,6 +237,8 @@ export default function ImageGallery({ images = [], layout = "grid" }) {
                 key={index}
                 src={img.url || img}
                 alt={`Thumbnail ${index + 1}`}
+                loading="lazy"
+                decoding="async"
                 className={`h-16 w-16 object-cover rounded cursor-pointer border-2 ${
                   index === selectedImageIndex
                     ? "border-white"

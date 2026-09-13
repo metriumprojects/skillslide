@@ -121,16 +121,26 @@ export default function StudentDashboard() {
 
   const handleCancel = (lesson) => {
     if (lesson) {
-      const isCurriculum = lesson?.type === "curriculum" && !lesson?.lId;
+      const isCurriculum =
+        lesson?.type === "curriculum" ||
+        !!lesson?.curriculumTitle ||
+        lesson?.isCurriculum === true;
       const confirmText = isCurriculum
-        ? "Are you sure you want to cancel this curriculum? Any remaining sessions will be refunded."
+        ? "Are you sure you want to cancel this entire curriculum? Any completed or past sessions will not be refunded, and all remaining sessions will be refunded."
         : "Are you sure you want to cancel this lesson?";
 
       if (window.confirm && !window.confirm(confirmText)) {
         return;
       }
 
-      dispatch(CancelBooking({ bookId: lesson?.bookingId, type: lesson?.type, lId: lesson?.lId })).then((res) => {
+      dispatch(
+        CancelBooking({
+          bookId: lesson?.bookingId,
+          type: isCurriculum ? "curriculum" : lesson?.type,
+          lId: isCurriculum ? undefined : lesson?.lId,
+          cancelEntireCurriculum: isCurriculum,
+        })
+      ).then((res) => {
         if (res?.payload?.status) {
           toast.success(res?.payload?.message || (isCurriculum ? "Curriculum cancelled successfully" : "Lesson cancelled successfully"));
           // Refresh data after successful cancellation
@@ -216,7 +226,7 @@ export default function StudentDashboard() {
   return (
     <div className="w-full">
       {/* ✅ Tab Navigation */}
-      <div className="flex items-center gap-3 mt-[20px] mb-[20px]">
+      <div className="flex items-center gap-3 mt-[32px] mb-[32px]">
         <button 
           type="button"
           onClick={() => setActiveTab('upcoming')}
@@ -287,16 +297,19 @@ export default function StudentDashboard() {
                 {userMainUpcomingData.length > 0 ? (
                   userMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
-                    const isCurriculum = lesson.type === "curriculum" && !lesson.lId;
+                    const isCurriculum =
+                      lesson.type === "curriculum" ||
+                      !!lesson.curriculumTitle ||
+                      lesson.isCurriculum === true;
                     return (
                       <tr key={index} className="bg-[#F5F5F5]">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
                         <td className="p-3 font-medium">
-                          {lesson.curriculumTitle || (isCurriculum ? "Curriculum" : "-")}
+                          {lesson.curriculumTitle || "-"}
                         </td>
                         <td className="p-3">
-                          {lesson.lessonTitle || (isCurriculum ? "-" : "-")}
+                          {lesson.lessonTitle || "-"}
                         </td>
                         <td className="p-3">{lesson.name || "Unknown Teacher"}</td>
                         <td className="p-3">{formatPrice(lesson.amount, lesson.currency || "USD")}</td>
@@ -310,16 +323,24 @@ export default function StudentDashboard() {
                             <button 
                               onClick={() => handleMessageTeacher(lesson)}
                               disabled={startChatLoading}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60 cursor-pointer"
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60 cursor-pointer hover:bg-gray-300"
                             >
                               {startChatLoading ? "Starting..." : "Message"}
                             </button>
                             <button 
                               onClick={() => handleCancel(lesson)}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
                             >
                               {isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
                             </button>
+                            {isCurriculum && (
+                              <button 
+                                onClick={() => navigate(`/after-payment-curri/${lesson.bookingId}?manage=true`)}
+                                className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
+                              >
+                                Manage curriculum
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -371,6 +392,7 @@ export default function StudentDashboard() {
                 <tr>
                   <th className="p-3">Date</th>
                   <th className="p-3">Hour</th>
+                  <th className="p-3">Curriculum</th>
                   <th className="p-3">Lesson</th>
                   <th className="p-3">Teacher</th>
                   <th className="p-3">Amount</th>
@@ -387,9 +409,10 @@ export default function StudentDashboard() {
                       <tr key={index} className="bg-[#F5F5F5]">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
-                        <td className="p-3">{lesson.lessonTitle}</td>
+                        <td className="p-3 font-medium">{lesson.curriculumTitle || "-"}</td>
+                        <td className="p-3">{lesson.lessonTitle || "-"}</td>
                         <td className="p-3">{lesson.name || "Unknown Teacher"}</td>
-                        <td className="p-3">{formatPrice(lesson.amount)}</td>
+                        <td className="p-3">{formatPrice(lesson.amount, lesson.currency || "USD")}</td>
                         <td className="p-3">
                           {lesson?.status === "completed" ? (
                             <span className="px-4 py-2 rounded ">
@@ -424,7 +447,7 @@ export default function StudentDashboard() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="7" className="p-3 text-center text-gray-500 bg-[#F5F5F5]">
+                    <td colSpan="8" className="p-3 text-center text-gray-500 bg-[#F5F5F5]">
                       No past lessons
                     </td>
                   </tr>

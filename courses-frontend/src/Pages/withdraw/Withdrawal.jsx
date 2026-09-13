@@ -93,8 +93,8 @@ export const Withdrawal = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto py-10 px-4">
-        <div className="mb-6">
+      <div className="max-w-4xl mx-auto pt-[32px] pb-10 px-4">
+        <div className="mb-[32px]">
           <h1 className="text-2xl font-bold text-gray-900">Direct Bank Payouts</h1>
           <p className="text-sm text-gray-600 mt-1">
             Manage your payout bank accounts and review your marketplace earnings directly on SkillSlide.

@@ -101,9 +101,9 @@ export default function LessonPayment() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-10">
+    <div className="min-h-screen flex flex-col items-center pt-[32px] pb-10">
       {/* Back Button - Updated to match CurriPayment */}
-      <div className="w-full max-w-6xl flex items-center mb-6">
+      <div className="w-full max-w-6xl flex items-center mb-[32px]">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-gray-700 hover:text-gray-900 cursor-pointer"

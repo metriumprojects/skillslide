@@ -159,7 +159,7 @@ useEffect(() => {
       {/* Left Section - Logo */}
       <Link
         to="/"
-        className="flex lg:hidden shrink-0 items-center gap-[32px] select-none"
+        className="flex lg:hidden shrink-0 items-center gap-3 select-none"
         aria-label="SkillSlide home"
       >
         <LogoIcon className="h-[40px] w-[40px]" />

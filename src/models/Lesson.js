@@ -74,5 +74,9 @@ const lessonSchema = new mongoose.Schema(
 // 🔥 IMPORTANT INDEX
 lessonSchema.index({ geoLocation: "2dsphere" });
 lessonSchema.index({ status: 1, isIndependent: 1, createdAt: -1 });
+lessonSchema.index({ createdBy: 1, status: 1 });
+lessonSchema.index({ unit: 1 });
+lessonSchema.index({ curriculums: 1 });
+lessonSchema.index({ category: 1, status: 1 });
 
 export default mongoose.model("Lesson", lessonSchema);

@@ -52,7 +52,7 @@ export default function SearchCategoryToolbar({
   const changeLocation = (value) => onLocationChange?.(value);
 
   return (
-    <section className="mb-5 mt-5 min-w-0 w-full">
+    <section className="mb-[32px] mt-[32px] min-w-0 w-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="flex h-11.5 w-full items-center gap-2 rounded-full border border-black px-5 sm:max-w-[560px]">
           <Search size={16} aria-hidden="true" />

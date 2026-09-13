@@ -394,8 +394,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="max-w-[1800px] mx-auto mt-[20px]">
-        <div className="text-sm text-gray-500 mb-[20px]">Time Zone: {timeZone}</div>
+      <div className="max-w-[1800px] mx-auto mt-[32px]">
+        <div className="text-sm text-gray-500 mb-[32px]">Time Zone: {timeZone}</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           {/* LEFT: WEEKLY HOURS */}

@@ -18,14 +18,15 @@ import {
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { upload } from "../middleware/uploadMiddleware.js";
+import { authLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
+router.post("/register", authLimiter, registerUser);
 router.post("/verify/:token", verifyEmail);
-router.post("/login", loginUser);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+router.post("/login", authLimiter, loginUser);
+router.post("/forgot-password", authLimiter, forgotPassword);
+router.post("/reset-password/:token", authLimiter, resetPassword);
 router.get("/profile", protect, getUserProfile);
 router.post("/change-password", protect, changePassword);
 router.get("/logout-user", logoutUser);

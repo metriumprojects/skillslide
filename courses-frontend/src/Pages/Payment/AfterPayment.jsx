@@ -4,7 +4,7 @@ import MainLayout from "../../components/MainLayout";
 export default function AfterPayment() {
   return (
     <MainLayout>
-    <div className="w-full bg-[#f5f5f5] rounded-2xl p-6 flex flex-col items-center text-center md:text-left gap-4 min-h-[77vh]">
+    <div className="w-full bg-[#f5f5f5] rounded-2xl p-6 flex flex-col items-center text-center md:text-left gap-4 min-h-[77vh] mt-[32px]">
 
       {/* Left Icon */}
       <div className="w-full bg-[#f5f5f5] rounded-2xl p-6 flex flex-col items-center text-center md:flex-row md:text-left md:items-center md:justify-start gap-4">

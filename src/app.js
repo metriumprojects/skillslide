@@ -20,22 +20,36 @@ import currencyRoutes from "./routes/currencyRoutes.js";
 import discoverRoutes from "./routes/discoverRoutes.js";
 import stripeConnectRoutes from "./routes/stripeConnectRoutes.js";
 import cookieParser from "cookie-parser";
+import compression from "compression";
+import helmet from "helmet";
 import { stripeWebhook } from "./controllers/stripeWebhookController.js";
 // Places Autocomplete Route
 import placesAutocompleteRoutes from "./routes/placesAutocompleteRoutes.js";
 import studentStoryRoutes from "./routes/studentStoryRoutes.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 dotenv.config();
 connectDB();
 
 const app = express();
 
-// Debug Middleware to log request details
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log(`  Origin: ${req.headers.origin || "No Origin"}`);
-  console.log(`  User-Agent: ${req.headers["user-agent"]}`);
-  next();
-});
+// Security Headers (CSP disabled so external images/CDNs load cleanly)
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// Gzip response compression
+app.use(compression());
+
+// Debug Middleware to log request details in development only
+if (process.env.NODE_ENV === "development") {
+  app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+  });
+}
 
 app.use(
   cors({
@@ -49,13 +63,15 @@ app.use(
 // Stripe requires the unmodified request body to verify webhook signatures.
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
+// Rate limiter for general API routes (skips stripe webhook)
+app.use("/api", apiLimiter);
+
 // Middleware
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 
 app.use(cookieParser());
-app.use("/api/users", userRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/course", curriculumRoutes);

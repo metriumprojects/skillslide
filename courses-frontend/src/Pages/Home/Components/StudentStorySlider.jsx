@@ -48,7 +48,7 @@ export default function StudentStorySlider() {
   if (loading || stories.length === 0) return null;
 
   return (
-    <section className="mb-5 w-full">
+    <section className="mb-[32px] w-full">
       <Swiper
         slidesPerView={1}
         loop={stories.length > 1}
@@ -81,6 +81,8 @@ export default function StudentStorySlider() {
                     <img
                       src={item.profileImage}
                       alt={item.studentName}
+                      loading="lazy"
+                      decoding="async"
                       className="h-10 w-10 rounded-full object-cover ring-2 ring-white/30"
                     />
                     <span className="text-sm font-medium md:text-base">
@@ -126,6 +128,7 @@ export default function StudentStorySlider() {
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
+                  decoding="async"
                 />
               </div>
             </div>

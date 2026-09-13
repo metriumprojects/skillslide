@@ -128,15 +128,14 @@ const stats = await LessonRating.aggregate([
 
     if (type === "lesson") {
       // Single lesson booking - use bookingId directly
-      const updateResult = await Booking.updateOne(
+      await Booking.updateOne(
         { _id: bookingId },
         { $set: { review: true } }
       );
-      console.log('Lesson booking update result:', updateResult);
     } else if (type === "curriculum") {
       // Curriculum booking - update specific lesson position
       // bookingId is the booking _id, id is the lesson lId in lessonPosition
-      const updateResult = await Booking.updateOne(
+      await Booking.updateOne(
         { _id: bookingId, "lessonPosition.lId": id },
         {
           $set: {
@@ -147,7 +146,6 @@ const stats = await LessonRating.aggregate([
           arrayFilters: [{ "elem.lId": id }]
         }
       );
-      console.log('Curriculum booking update result:', updateResult);
     }
 
     res.status(200).json({
@@ -211,7 +209,8 @@ export const curriculumRating = async (req, res) => {
     let rate = await CurriculumRating.find({ curriculum: id }).populate("user", "name image")
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({
       status: true,
@@ -238,7 +237,8 @@ export const lessonRating = async (req, res) => {
     let rate = await LessonRating.find({ lesson: id }).populate("user", "name image")
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({
       status: true,

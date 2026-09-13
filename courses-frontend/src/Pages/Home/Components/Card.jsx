@@ -1,4 +1,5 @@
 import React from "react";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 
 // Haversine formula to calculate distance between two lat/lng points in km
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
@@ -102,11 +103,13 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
             ? "/curriculum-booking"
             : `/lesson-booking/${course._id}`
         )}
+        state={{ preview: course }}
       >
         <img
-          src={course?.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
+          src={getCardImageUrl(course?.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"}
           alt={course.title}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover"
         />
       </Link>
@@ -147,10 +150,11 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
         >
               <img
                 src={
-                  course?.createdBy?.image?.url ||
+                  getAvatarUrl(course?.createdBy?.image?.url) ||
                   "https://i.ibb.co/tpV3m2GW/no-image.png"
                 }
                 loading="lazy"
+                decoding="async"
                 alt={course.createdBy?.name}
                 className="h-6 w-6 rounded-full object-cover"
               />
@@ -161,4 +165,4 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
   );
 };
 
-export default Card;
+export default React.memo(Card);

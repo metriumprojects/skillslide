@@ -82,4 +82,6 @@ curriculumSchema.pre("validate", function () {
 
 curriculumSchema.index({ geoLocation: "2dsphere" });
 curriculumSchema.index({ status: 1, createdAt: -1 });
+curriculumSchema.index({ createdBy: 1, status: 1 });
+curriculumSchema.index({ category: 1, status: 1 });
 export default mongoose.model("Curriculum", curriculumSchema);

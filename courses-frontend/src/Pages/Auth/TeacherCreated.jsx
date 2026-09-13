@@ -19,8 +19,8 @@ export default function TeacherCreated() {
   return (
     <MainLayout hideHeader hideFooter hideMobileMenu contentClassName="!min-h-screen">
       <div className="flex min-h-[calc(100vh-32px)] flex-col pt-0 pb-0">
-        {/* Top: Logo + 20px gap Congratulation + 20px gap subtitle */}
-        <div className="w-full max-w-3xl mx-auto px-2 mt-[20px] shrink-0">
+        {/* Top: Logo + 32px gap Congratulation + 32px gap subtitle */}
+        <div className="w-full max-w-3xl mx-auto px-2 mt-[32px] shrink-0">
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
             {/* S Orange Icon Badge - Official SVG */}
             <LogoIcon className="h-[46px] w-[46px]" />
@@ -32,8 +32,8 @@ export default function TeacherCreated() {
             </span>
           </Link>
 
-          {/* 20px gap: Congratulations heading */}
-          <h1 className="mt-[20px] text-[24px] sm:text-[28px] font-normal leading-snug text-black">
+          {/* 32px gap: Congratulations heading */}
+          <h1 className="mt-[32px] text-[24px] sm:text-[28px] font-normal leading-snug text-black">
             <span className="inline-flex items-center gap-2.5">
               <svg
                 width="24"

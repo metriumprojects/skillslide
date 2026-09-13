@@ -11,7 +11,7 @@ import ProfessionalLoader from "../../components/ProfessionalLoader";
 import { Calendar } from "./component/Calender";
 import Reviews from "./component/Reviews";
 import ImageGallery from "./component/ImageGallery";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getCurriLessonById,
@@ -33,9 +33,21 @@ import {
 import TeacherCard from "./component/TeacherCard";
 import { getUserById } from "../../redux/reducers/AuthReducer";
 import { FaCircleCheck } from "react-icons/fa6";
+import BookingPageSkeleton from "./component/BookingPageSkeleton";
 
 export default function CurriculumLesson() {
-  const { lesson, currilesson, Teacherlessons: Teacheridlessons } = useSelector((state) => state.lesson);
+  const { id } = useParams();
+  const location = useLocation();
+  const preview = location.state?.preview;
+  const { lesson: fetchedLesson, currilesson, Teacherlessons: Teacheridlessons } = useSelector((state) => state.lesson);
+
+  const lesson =
+    fetchedLesson && (fetchedLesson._id === id || fetchedLesson.id === id)
+      ? fetchedLesson
+      : preview && (preview._id === id || preview.id === id)
+      ? preview
+      : null;
+
   const { favorites, lessonReviews } = useSelector((state) => state.favorite);
   const { userbyid } = useSelector((state) => state.auth);
   const {
@@ -44,11 +56,10 @@ export default function CurriculumLesson() {
     lessonWeeklyAvailability,
     lessonDateAvailability,
     timeZone,
-    loading,
+    loading: availabilityLoading,
     dateUnAvailability,
   } = useSelector((state) => state.availability);
   const dispatch = useDispatch();
-  const { id } = useParams();
   const [date, setDate] = useState(new Date(2024, 1, 21));
   const [time, setTime] = useState("5:00 PM");
 
@@ -68,21 +79,24 @@ export default function CurriculumLesson() {
     dispatch(getUserFavorites());
   }, [dispatch]);
 
-  const teacherId = lesson?.createdBy?._id;
+  const teacherId = lesson?.createdBy?._id || lesson?.teacher?._id;
 
   // Fetch all availability data when lesson and teacherId are loaded
   useEffect(() => {
-    if (lesson && lesson._id === id && teacherId) {
-      dispatch(getTeacherUnAvailability({ id: teacherId }));
-      dispatch(getUserById(teacherId));
+    const activeTeacherId = fetchedLesson?.createdBy?._id || teacherId;
+    if (fetchedLesson && (fetchedLesson._id === id || fetchedLesson.id === id) && activeTeacherId) {
+      // First fetch teacher unavailability
+      dispatch(getTeacherUnAvailability({ id: activeTeacherId }));
+      dispatch(getUserById(activeTeacherId));
 
-      if (lesson.calender === true) {
-        dispatch(getTeacherAvailability({ id: teacherId }));
-      } else if (lesson.calenderId) {
-        dispatch(getLessonAvailability({ id: lesson.calenderId }));
+      // Then fetch availability based on calendar type
+      if (fetchedLesson.calender === true) {
+        dispatch(getTeacherAvailability({ id: activeTeacherId }));
+      } else if (fetchedLesson.calenderId) {
+        dispatch(getLessonAvailability({ id: fetchedLesson.calenderId }));
       }
     }
-  }, [dispatch, lesson, id, teacherId]);
+  }, [dispatch, fetchedLesson, id, teacherId]);
 
   const lessonFavorites = Array.isArray(favorites)
     ? favorites.filter((fav) => fav?.lesson)
@@ -113,12 +127,17 @@ export default function CurriculumLesson() {
     window.scrollTo(0, 0);
   }, [id]);
 
+  if (!lesson) {
+    return (
+      <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
+        <BookingPageSkeleton isCurriculum={false} />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
-      {loading || !lesson ? (
-        <ProfessionalLoader message="Loading lesson..." />
-      ) : (
-        <div className="w-full min-h-screen pb-8">
+      <div className="w-full min-h-screen pb-8">
           <div className="w-full">
             {/* Mobile Header Controls */}
             <div className="flex md:hidden items-center justify-between w-full mx-auto mb-3 pt-3">
@@ -174,7 +193,7 @@ export default function CurriculumLesson() {
 
             <div className="w-full">
               {/* BADGES & ACTIONS ABOVE TITLE: Copy link, Save, Online, Timezone, Duration, Rating */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-4 md:mt-6">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-[32px]">
                 {/* Copy Link Button */}
                 <button
                   type="button"
@@ -189,7 +208,7 @@ export default function CurriculumLesson() {
                   className="inline-flex items-center gap-1.5 bg-white border border-black hover:bg-gray-100 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
                 >
                   <svg width="15" height="12" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-black">
-                    <path d="M9 0.991859C9 1.53317 8.56914 1.9747 8.02843 1.99991C7.48437 2.02527 6.9799 2.05869 6.51172 2.10174C5.04653 2.23649 4.08122 2.45725 3.43848 2.74334C2.8581 3.00171 2.5749 3.29419 2.38965 3.65643C2.17153 4.0832 2.00003 4.78681 2 5.9992C2.00003 7.21149 2.17155 7.91519 2.38965 8.34197C2.57491 8.7042 2.85806 8.99767 3.43848 9.25604C4.08123 9.54208 5.04668 9.7629 6.51172 9.89764C6.97988 9.94069 7.48436 9.97331 8.02841 9.9981C8.56915 10.0227 9 10.4643 9 11.0056C9 11.5686 8.53273 12.022 7.97027 11.9964C2.07978 11.7281 0.00010087 10.5473 0 5.9992L0.00878906 5.50115C0.161499 1.36352 2.30097 0.259187 7.97079 0.00103404C8.53324 -0.024575 9 0.428825 9 0.991859ZM15 0.991859C15 0.428825 15.4668 -0.024575 16.0292 0.00103401C21.699 0.259187 23.8385 1.36352 23.9912 5.50115L24 5.9992C23.9999 10.5473 21.9202 11.7281 16.0297 11.9964C15.4673 12.022 15 11.5686 15 11.0056C15 10.4643 15.4308 10.0227 15.9716 9.9981C16.5156 9.97331 17.0201 9.94069 17.4883 9.89764C18.9533 9.7629 19.9188 9.54208 20.5615 9.25604C21.1419 8.99767 21.4251 8.7042 21.6104 8.34197C21.8284 7.91519 22 7.21149 22 5.9992C22 4.78681 21.8285 4.0832 21.6104 3.65643C21.4251 3.29419 21.1419 3.00171 20.5615 2.74334C19.9188 2.45725 18.9535 2.23649 17.4883 2.10174C17.0201 2.05869 16.5156 2.02527 15.9716 1.99991C15.4309 1.9747 15 1.53317 15 0.991859Z" fill="currentColor"/>
+                    <path d="M9 0.991859C9 1.53317 8.56914 1.9747 8.02843 1.99991C7.48437 2.02527 6.9799 2.05869 6.51172 2.10174C5.04653 2.23649 4.08122 2.45725 3.43848 2.74334C2.8581 3.00171 2.5749 3.29419 2.38965 3.65643C2.17153 4.0832 2.00003 4.78681 2 5.9992C2.00003 7.21149 2.17155 7.91519 2.38965 8.34197C2.57491 8.7042 2.85806 8.99767 3.43848 9.25604C4.08123 9.54208 5.04668 9.7629 6.51172 9.89764C6.97988 9.94069 7.48436 9.97331 8.02841 9.9981C8.56915 10.0227 9 11.0056C9 11.5686 8.53273 12.022 7.97027 11.9964C2.07978 11.7281 0.00010087 10.5473 0 5.9992L0.00878906 5.50115C0.161499 1.36352 2.30097 0.259187 7.97079 0.00103404C8.53324 -0.024575 9 0.428825 9 0.991859ZM15 0.991859C15 0.428825 15.4668 -0.024575 16.0292 0.00103401C21.699 0.259187 23.8385 1.36352 23.9912 5.50115L24 5.9992C23.9999 10.5473 21.9202 11.7281 16.0297 11.9964C15.4673 12.022 15 11.5686 15 11.0056C15 10.4643 15.4308 10.0227 15.9716 9.9981C16.5156 9.97331 17.0201 9.94069 17.4883 9.89764C18.9533 9.7629 19.9188 9.54208 20.5615 9.25604C21.1419 8.99767 21.4251 8.7042 21.6104 8.34197C21.8284 7.91519 22 7.21149 22 5.9992C22 4.78681 21.8285 4.0832 21.6104 3.65643C21.4251 3.29419 21.1419 3.00171 20.5615 2.74334C19.9188 2.45725 18.9535 2.23649 17.4883 2.10174C17.0201 2.05869 16.5156 2.02527 15.9716 1.99991C15.4309 1.9747 15 1.53317 15 0.991859Z" fill="currentColor"/>
                     <path d="M7 6H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <span>Copy link</span>
@@ -248,8 +267,8 @@ export default function CurriculumLesson() {
                 </span>
               </div>
 
-              {/* TOP SECTION: Title (20px gap from bubbles) */}
-              <div className="w-full mt-[20px]">
+              {/* TOP SECTION: Title (32px gap from bubbles) */}
+              <div className="w-full mt-[32px]">
                 <h1 className="text-[20px] sm:text-[24px] font-normal text-left text-black tracking-tight leading-snug">
                   {lesson?.title || "Lesson Title"}
                 </h1>
@@ -275,8 +294,8 @@ export default function CurriculumLesson() {
                 )}
               </div>
 
-              {/* 4 EQUAL COLUMNS LAYOUT: Col 1 (Meet Your Teacher), Col 2 (Images), Col 3 (Description & How It Works), Col 4 (Calendar) (20px gap from title) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mt-[20px] h-fit w-full items-start">
+              {/* 4 EQUAL COLUMNS LAYOUT: Col 1 (Meet Your Teacher), Col 2 (Images), Col 3 (Description & How It Works), Col 4 (Calendar) (32px gap from title) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mt-[32px] h-fit w-full items-start">
                 
                 {/* COLUMN 1: Meet Your Teacher */}
                 <div className="w-full lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto custom-scrollbar pr-0.5">
@@ -398,7 +417,6 @@ export default function CurriculumLesson() {
             </div>
           </div>
         </div>
-      )}
     </MainLayout>
   );
 }

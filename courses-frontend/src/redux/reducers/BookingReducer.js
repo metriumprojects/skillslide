@@ -73,6 +73,17 @@ export const userUpcomingBookings = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const last = book?.lastFetched?.userUpcomingBookings;
+      if (last && Date.now() - last < 60000 && book?.userUpcomingdata?.length >= 0 && !book?.loadingStates?.userUpcomingBookings) {
+        return false;
+      }
+      return true;
+    }
   }
 );
 
@@ -103,6 +114,19 @@ export const userCancelBookings = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const page = arg?.page || 1;
+      const limit = arg?.limit || 10;
+      const last = book?.lastFetched?.[`userCancel_${page}_${limit}`];
+      if (last && Date.now() - last < 60000 && book?.userCanceldata?.length >= 0 && !book?.loadingStates?.userCancelBookings) {
+        return false;
+      }
+      return true;
+    }
   }
 );
 
@@ -118,16 +142,31 @@ export const userUnscheduledBookings = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const last = book?.lastFetched?.userUnscheduledBookings;
+      if (last && Date.now() - last < 60000 && book?.userUnscheduleddata?.length >= 0 && !book?.loadingStates?.userUnscheduledBookings) {
+        return false;
+      }
+      return true;
+    }
   }
 );
 // 7. USER Cancel Lessons
 export const CancelBooking = createAsyncThunk(
   "booking/CancelBooking",
-  async ({bookId, type, lId}, { rejectWithValue }) => {
+  async ({bookId, type, lId, cancelEntireCurriculum}, { rejectWithValue }) => {
     try {
-      const res = await api.post(`/book/cancel-booking/${bookId}`,{type, lId}, {
-        withCredentials: true,
-      });
+      const res = await api.post(
+        `/book/cancel-booking/${bookId}`,
+        { type, lId, cancelEntireCurriculum },
+        {
+          withCredentials: true,
+        }
+      );
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
@@ -188,6 +227,19 @@ export const userMainUpcomingBookings = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const page = arg?.page || 1;
+      const limit = arg?.limit || 10;
+      const last = book?.lastFetched?.[`userMainUpcoming_${page}_${limit}`];
+      if (last && Date.now() - last < 60000 && book?.userMainUpcomingData?.length >= 0 && !book?.loadingStates?.userMainUpcomingBookings) {
+        return false;
+      }
+      return true;
+    }
   }
 );
 
@@ -202,6 +254,19 @@ export const teacherMainUpcomingBookings = createAsyncThunk(
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const page = arg?.page || 1;
+      const limit = arg?.limit || 10;
+      const last = book?.lastFetched?.[`teacherMainUpcoming_${page}_${limit}`];
+      if (last && Date.now() - last < 60000 && book?.teacherMainUpcomingData?.length >= 0 && !book?.loadingStates?.teacherMainUpcomingBookings) {
+        return false;
+      }
+      return true;
     }
   }
 );
@@ -218,6 +283,19 @@ export const teacherPastLessons = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const page = arg?.page || 1;
+      const limit = arg?.limit || 10;
+      const last = book?.lastFetched?.[`teacherPast_${page}_${limit}`];
+      if (last && Date.now() - last < 60000 && book?.teacherPastLessonsData?.length >= 0 && !book?.loadingStates?.teacherPastLessons) {
+        return false;
+      }
+      return true;
+    }
   }
 );
 
@@ -232,6 +310,19 @@ export const userPastLessons = createAsyncThunk(
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { book } = getState();
+      const page = arg?.page || 1;
+      const limit = arg?.limit || 10;
+      const last = book?.lastFetched?.[`userPast_${page}_${limit}`];
+      if (last && Date.now() - last < 60000 && book?.userPastLessonsData?.length >= 0 && !book?.loadingStates?.userPastLessons) {
+        return false;
+      }
+      return true;
     }
   }
 );
@@ -286,6 +377,7 @@ const bookingSlice = createSlice({
     initiatedData: null,
     confirmedData: null,
     teacherId: null,
+    lastFetched: {},
     // Individual loading states for better UX
     loadingStates: {
       userBookings: false,
@@ -314,6 +406,9 @@ const bookingSlice = createSlice({
     setLoadingState: (state, action) => {
       const { key, value } = action.payload;
       state.loadingStates[key] = value;
+    },
+    invalidateBookingCache: (state) => {
+      state.lastFetched = {};
     }
   },
 
@@ -403,6 +498,8 @@ const bookingSlice = createSlice({
         state.loading = false;
         state.loadingStates.userUpcomingBookings = false;
         state.userUpcomingdata = action.payload.bookings;
+        if (!state.lastFetched) state.lastFetched = {};
+        state.lastFetched.userUpcomingBookings = Date.now();
       })
       .addCase(userUpcomingBookings.rejected, (state, action) => {
         state.loading = false;
@@ -439,6 +536,10 @@ const bookingSlice = createSlice({
         state.loading = false;
         state.loadingStates.userCancelBookings = false;
         state.userCanceldata = action.payload.bookings;
+        if (!state.lastFetched) state.lastFetched = {};
+        const page = action.meta?.arg?.page || 1;
+        const limit = action.meta?.arg?.limit || 10;
+        state.lastFetched[`userCancel_${page}_${limit}`] = Date.now();
       })
       .addCase(userCancelBookings.rejected, (state, action) => {
         state.loading = false;
@@ -457,6 +558,8 @@ const bookingSlice = createSlice({
         state.loading = false;
         state.loadingStates.userUnscheduledBookings = false;
         state.userUnscheduleddata = action.payload.bookings;
+        if (!state.lastFetched) state.lastFetched = {};
+        state.lastFetched.userUnscheduledBookings = Date.now();
       })
       .addCase(userUnscheduledBookings.rejected, (state, action) => {
         state.loading = false;
@@ -493,6 +596,10 @@ const bookingSlice = createSlice({
       state.loading = false;
       state.loadingStates.userMainUpcomingBookings = false;
       state.userMainUpcomingData = action.payload.lessons || action.payload.data;
+      if (!state.lastFetched) state.lastFetched = {};
+      const page = action.meta?.arg?.page || 1;
+      const limit = action.meta?.arg?.limit || 10;
+      state.lastFetched[`userMainUpcoming_${page}_${limit}`] = Date.now();
     })
     .addCase(userMainUpcomingBookings.rejected, (state, action) => {
       state.loading = false;
@@ -511,6 +618,10 @@ const bookingSlice = createSlice({
       state.loading = false;
       state.loadingStates.teacherMainUpcomingBookings = false;
       state.teacherMainUpcomingData = action.payload.lessons || action.payload.data;
+      if (!state.lastFetched) state.lastFetched = {};
+      const page = action.meta?.arg?.page || 1;
+      const limit = action.meta?.arg?.limit || 10;
+      state.lastFetched[`teacherMainUpcoming_${page}_${limit}`] = Date.now();
     })
     .addCase(teacherMainUpcomingBookings.rejected, (state, action) => {
       state.loading = false;
@@ -529,6 +640,10 @@ const bookingSlice = createSlice({
       state.loading = false;
       state.loadingStates.teacherPastLessons = false;
       state.teacherPastLessonsData = action.payload.lessons || action.payload.data;
+      if (!state.lastFetched) state.lastFetched = {};
+      const page = action.meta?.arg?.page || 1;
+      const limit = action.meta?.arg?.limit || 10;
+      state.lastFetched[`teacherPast_${page}_${limit}`] = Date.now();
     })
     .addCase(teacherPastLessons.rejected, (state, action) => {
       state.loading = false;
@@ -547,14 +662,33 @@ const bookingSlice = createSlice({
       state.loading = false;
       state.loadingStates.userPastLessons = false;
       state.userPastLessonsData = action.payload.lessons || action.payload.data;
+      if (!state.lastFetched) state.lastFetched = {};
+      const page = action.meta?.arg?.page || 1;
+      const limit = action.meta?.arg?.limit || 10;
+      state.lastFetched[`userPast_${page}_${limit}`] = Date.now();
     })
     .addCase(userPastLessons.rejected, (state, action) => {
       state.loading = false;
       state.loadingStates.userPastLessons = false;
       state.error = action.payload;
     });
+
+  // ----------------------- Mutation Invalidation -------------------------
+  builder
+    .addCase(CancelBooking.fulfilled, (state) => {
+      state.lastFetched = {};
+    })
+    .addCase(ReShaduleLessonBooking.fulfilled, (state) => {
+      state.lastFetched = {};
+    })
+    .addCase(ReShaduleCurriLessonBooking.fulfilled, (state) => {
+      state.lastFetched = {};
+    })
+    .addCase(CompleteLessons.fulfilled, (state) => {
+      state.lastFetched = {};
+    });
   },
 });
 
-export const { clearBookingMessage, clearBookingData, setLoadingState } = bookingSlice.actions;
+export const { clearBookingMessage, clearBookingData, setLoadingState, invalidateBookingCache } = bookingSlice.actions;
 export default bookingSlice.reducer;

@@ -625,7 +625,7 @@ const CreateLesson = () => {
 
       <div className="min-h-screen bg-white pt-[32px] pb-10">
         <div className="w-full mx-auto">
-          <div className="flex items-center gap-[32px] mb-[20px]">
+          <div className="flex items-center gap-3 mb-[32px]">
             <svg
               width="24"
               height="24"

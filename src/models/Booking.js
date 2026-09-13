@@ -71,4 +71,13 @@ const bookingSchema = new mongoose.Schema({
   meta: { type: Object }, // optional extra data
 }, { timestamps: true });
 
+bookingSchema.index({ user: 1, status: 1, scheduledAt: 1 });
+bookingSchema.index({ teacher: 1, status: 1, scheduledAt: 1 });
+bookingSchema.index({ user: 1, paymentStatus: 1 });
+bookingSchema.index({ teacher: 1, paymentStatus: 1 });
+bookingSchema.index({ curriculum: 1, user: 1 });
+bookingSchema.index({ lesson: 1, user: 1 });
+bookingSchema.index({ stripeSessionId: 1 }, { sparse: true });
+bookingSchema.index({ stripePaymentIntentId: 1 }, { sparse: true });
+
 export default mongoose.model("Booking", bookingSchema);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
 import "swiper/css";
@@ -8,15 +8,7 @@ import { FaInstagram, FaStar, FaYoutube } from "react-icons/fa";
 import { SlSocialYoutube } from "react-icons/sl";
 
 import MainLayout from "../../components/MainLayout";
-import Booked from "./components/Booked";
-import Upcoming from "./components/Upcoming";
-import UnShaduled from "./components/UnShaduled";
-import Canceled from "./components/Canceled";
-import BookMark from "./components/BookMark";
 import { useSelector, useDispatch } from "react-redux";
-import TeacherDashboard from "./components/TeacherDashboard";
-import Lessons from "./components/Lesson";
-import Curriculum from "./components/Curriculum";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   becomeTeacher,
@@ -24,13 +16,23 @@ import {
   updateProfileImage,
 } from "../../redux/reducers/AuthReducer";
 import { toast } from "react-toastify";
-import Calender from "./components/Calendar";
-import Request from "./components/Request";
-import StudentDashboard from "./components/StudentDashboard";
-import Revenu from "./TeacherComponents/Revenu";
-import MyProfile from "./components/MyProfile";
-import PayoutHistory from "./TeacherComponents/PayoutHistory";
 import useTeacherPayoutCurrencies from "../../hooks/useTeacherPayoutCurrencies";
+
+// Lazy-load tab components — only downloaded when user switches to that tab
+const Booked = React.lazy(() => import("./components/Booked"));
+const Upcoming = React.lazy(() => import("./components/Upcoming"));
+const UnShaduled = React.lazy(() => import("./components/UnShaduled"));
+const Canceled = React.lazy(() => import("./components/Canceled"));
+const BookMark = React.lazy(() => import("./components/BookMark"));
+const TeacherDashboard = React.lazy(() => import("./components/TeacherDashboard"));
+const Lessons = React.lazy(() => import("./components/Lesson"));
+const Curriculum = React.lazy(() => import("./components/Curriculum"));
+const Calender = React.lazy(() => import("./components/Calendar"));
+const Request = React.lazy(() => import("./components/Request"));
+const StudentDashboard = React.lazy(() => import("./components/StudentDashboard"));
+const Revenu = React.lazy(() => import("./TeacherComponents/Revenu"));
+const MyProfile = React.lazy(() => import("./components/MyProfile"));
+const PayoutHistory = React.lazy(() => import("./TeacherComponents/PayoutHistory"));
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -155,7 +157,7 @@ export default function Profile() {
 
   return (
     <MainLayout className="mx-auto" width="100%">
-      <div className="min-h-screen w-full flex flex-col items-center pt-[20px] pb-10">
+      <div className="min-h-screen w-full flex flex-col items-center pt-[32px] pb-10">
         {/* Bottom Tabs Section */}
         <div className="w-full">
           {/* Desktop Tabs */}
@@ -285,6 +287,7 @@ export default function Profile() {
             )}
           </div>
           {/* {tab === "Booked" && <Booked />} */}
+          <Suspense fallback={<div className="flex items-center justify-center py-20"><span className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black" /></div>}>
           {tab === "Revenue" && <Revenu />}
           {tab === "Upcoming" && <Upcoming />}
           {tab === "Unscheduled" && <UnShaduled />}
@@ -303,6 +306,7 @@ export default function Profile() {
           {tab === "My Requests" && <Request />}
           {tab === "My Profile" && <MyProfile />}
           {tab === "Payout History" && <PayoutHistory />}
+          </Suspense>
         </div>
       </div>
     </MainLayout>

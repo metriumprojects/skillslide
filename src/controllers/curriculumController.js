@@ -479,44 +479,63 @@ export const createFullCurriculum = async (req, res) => {
 
 export const getAllCurriculums = async (req, res) => {
   try {
-    const curriculums = await Curriculum.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
 
-    const formattedCurriculums = await Promise.all(
-      curriculums.map(async (curriculum) => {
-        // Find all units for this curriculum
-        const units = await Unit.find({ curriculum: curriculum._id }).sort({ position: 1 });
+    const curriculums = await Curriculum.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-        const formattedUnits = await Promise.all(
-          units.map(async (unit) => {
-            const lessons = await Lesson.find({ unit: unit._id }).sort({ position: 1 });
+    const curriculumIds = curriculums.map((c) => c._id);
+    const units = curriculumIds.length > 0
+      ? await Unit.find({ curriculum: { $in: curriculumIds } }).sort({ position: 1 }).lean()
+      : [];
 
-            return {
-              title: unit.title,
-              description: unit.description,
-              position: unit.position,
-              isIndependent: unit.isIndependent,
-              unitImages: unit.images.map((img) => img.url),
-              lessons: lessons.map((lesson) => ({
-                title: lesson.title,
-                description: lesson.description,
-                duration: lesson.duration,
-                category: lesson.category,
-                lessonImages: lesson.images.map((img) => img.url),
-              })),
-            };
-          })
-        );
+    const unitIds = units.map((u) => u._id);
+    const lessons = unitIds.length > 0
+      ? await Lesson.find({ unit: { $in: unitIds } }).sort({ position: 1 }).lean()
+      : [];
 
-        return {
-          _id: curriculum._id,
-          title: curriculum.title,
-          description: curriculum.description,
-          price: curriculum.price,
-          curriculumImages: curriculum.images.map((img) => img.url),
-          units: formattedUnits,
-        };
-      })
-    );
+    const lessonsByUnit = new Map();
+    for (const l of lessons) {
+      const uId = l.unit?.toString();
+      if (!lessonsByUnit.has(uId)) lessonsByUnit.set(uId, []);
+      lessonsByUnit.get(uId).push({
+        title: l.title,
+        description: l.description,
+        duration: l.duration,
+        category: l.category,
+        lessonImages: Array.isArray(l.images) ? l.images.map((img) => img.url) : [],
+      });
+    }
+
+    const unitsByCurriculum = new Map();
+    for (const unit of units) {
+      const cId = unit.curriculum?.toString();
+      if (!unitsByCurriculum.has(cId)) unitsByCurriculum.set(cId, []);
+      unitsByCurriculum.get(cId).push({
+        title: unit.title,
+        description: unit.description,
+        position: unit.position,
+        isIndependent: unit.isIndependent,
+        unitImages: Array.isArray(unit.images) ? unit.images.map((img) => img.url) : [],
+        lessons: lessonsByUnit.get(unit._id.toString()) || [],
+      });
+    }
+
+    const formattedCurriculums = curriculums.map((curriculum) => ({
+      _id: curriculum._id,
+      title: curriculum.title,
+      description: curriculum.description,
+      price: curriculum.price,
+      curriculumImages: Array.isArray(curriculum.images)
+        ? curriculum.images.map((img) => img.url)
+        : [],
+      units: unitsByCurriculum.get(curriculum._id.toString()) || [],
+    }));
 
     res.json(formattedCurriculums);
   } catch (error) {
@@ -527,43 +546,54 @@ export const getAllCurriculums = async (req, res) => {
 
 export const getFormattedCurriculum = async (req, res) => {
   try {
-    const curriculum = await Curriculum.findById(req.params.id).populate("createdBy", "name email image averageRating totalRatings");
+    const curriculum = await Curriculum.findById(req.params.id)
+      .populate("createdBy", "name email image averageRating totalRatings")
+      .lean();
 
     if (!curriculum) {
       return res.status(404).json({ message: "Curriculum not found" });
     }
 
     // Fetch all units under this curriculum
-    const units = await Unit.find({ curriculum: curriculum._id }).sort({ position: 1 });
+    const units = await Unit.find({ curriculum: curriculum._id })
+      .sort({ position: 1 })
+      .lean();
 
-    // Build formatted units
-    const formattedUnits = await Promise.all(
-      units.map(async (unit) => {
-        const lessons = await Lesson.find({ unit: unit._id }).sort({ position: 1 });
+    const unitIds = units.map((u) => u._id);
+    const lessons = unitIds.length > 0
+      ? await Lesson.find({ unit: { $in: unitIds } }).sort({ position: 1 }).lean()
+      : [];
 
-        return {
-          title: unit.title,
-          description: unit.description,
-          position: unit.position,
-          isIndependent: unit.isIndependent,
-          unitImages: unit.images.map((img) => img.url),
-          lessons: lessons.map((lesson) => ({
-            title: lesson.title,
-            description: lesson.description,
-            duration: lesson.duration,
-            category: lesson.category,
-            lessonImages: lesson.images.map((img) => img.url),
-          })),
-        };
-      })
-    );
+    const lessonsByUnit = new Map();
+    for (const l of lessons) {
+      const uId = l.unit?.toString();
+      if (!lessonsByUnit.has(uId)) lessonsByUnit.set(uId, []);
+      lessonsByUnit.get(uId).push({
+        title: l.title,
+        description: l.description,
+        duration: l.duration,
+        category: l.category,
+        lessonImages: Array.isArray(l.images) ? l.images.map((img) => img.url) : [],
+      });
+    }
+
+    const formattedUnits = units.map((unit) => ({
+      title: unit.title,
+      description: unit.description,
+      position: unit.position,
+      isIndependent: unit.isIndependent,
+      unitImages: Array.isArray(unit.images) ? unit.images.map((img) => img.url) : [],
+      lessons: lessonsByUnit.get(unit._id.toString()) || [],
+    }));
 
     // Build the final response
     const formattedResponse = {
       title: curriculum.title,
       description: curriculum.description,
       price: curriculum.price,
-      curriculumImages: curriculum.images.map((img) => img.url),
+      curriculumImages: Array.isArray(curriculum.images)
+        ? curriculum.images.map((img) => img.url)
+        : [],
       units: formattedUnits,
     };
 
@@ -656,7 +686,8 @@ export const getTeacherCurriculums = async (req, res) => {
     const curriculums = await Curriculum.find(query).populate("createdBy", "name email image averageRating totalRatings")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     // Total items count
     const total = await Curriculum.countDocuments(query);
@@ -1175,7 +1206,8 @@ export const getAllCurriculumById = async (req, res) => {
       .populate("createdBy", "name email image averageRating totalRatings")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     // ---------------------------
     res.json({

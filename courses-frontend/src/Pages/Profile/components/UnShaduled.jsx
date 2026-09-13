@@ -58,7 +58,8 @@ export default function UnShaduled() {
 
   // Function to get booking details based on type
   const getBookingDetails = (course) => {
-    if (course.type === 'curriculum' && course.curriculum) {
+    const isCurriculum = course.type === 'curriculum' || !!course.curriculum;
+    if (isCurriculum && course.curriculum) {
       const item = course.curriculum;
       const coverUrl =
         item.coverImage?.url ||
@@ -75,7 +76,7 @@ export default function UnShaduled() {
         currency: item.currency,
         type: 'curriculum'
       };
-    } else if (course.type === 'lesson' && course.lesson) {
+    } else if (course.lesson) {
       const item = course.lesson;
       const coverUrl =
         item.coverImage?.url ||
@@ -121,15 +122,26 @@ export default function UnShaduled() {
               ? curriculumFavorites.some((fav) => fav?.curriculum?._id === details.id)
               : lessonFavorites.some((fav) => fav?.lesson?._id === details.id);
 
-            const targetLink = details.type === 'curriculum'
-              ? `/curriculum-booking/${details.id}`
-              : `/lesson-booking/${details.id}`;
+            const unscheduledLessons = Array.isArray(course.lessonPosition)
+              ? course.lessonPosition.filter(
+                  (lp) =>
+                    (!lp.scheduledAt || lp.status === "pending") &&
+                    lp.status !== "cancelled" &&
+                    lp.status !== "completed"
+                )
+              : [];
+            const unscheduledCount = unscheduledLessons.length;
+            const totalCount = Array.isArray(course.lessonPosition) ? course.lessonPosition.length : 0;
 
             return (
               <article key={course._id || index} className="mb-4 min-w-0 group flex flex-col">
                 {/* Image Container matching Home Screen */}
                 <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
-                  <Link to={targetLink}>
+                  <button
+                    type="button"
+                    onClick={() => handleCurriculumClick(course)}
+                    className="w-full h-full text-left cursor-pointer"
+                  >
                     <img
                       src={
                         details.coverImage?.url ||
@@ -137,9 +149,10 @@ export default function UnShaduled() {
                       }
                       alt={details.title}
                       loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                  </Link>
+                  </button>
 
                   {/* Rating Badge */}
                   <span className="absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-base leading-none text-white backdrop-blur-sm">
@@ -165,13 +178,24 @@ export default function UnShaduled() {
 
                 {/* Details Section matching Home Screen */}
                 <div className="pt-2 flex flex-col flex-1">
-                  <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">
+                  <h3 
+                    onClick={() => handleCurriculumClick(course)}
+                    className="line-clamp-3 text-base font-semibold leading-[1.22] text-black cursor-pointer hover:text-primary transition-colors"
+                  >
                     {details.title}
                   </h3>
 
                   <p className="mt-1 text-base text-[#6A6A6A]">
-                    {formatPrice(course.amount || details.price, details.currency || "USD", cardPriceOptions)} &nbsp;·&nbsp; {details.type === 'curriculum' ? 'Curriculum' : `${details.duration || 60} min lesson`}
+                    {formatPrice(course.amount || details.price, details.currency || "USD", cardPriceOptions)} &nbsp;·&nbsp; {details.type === 'curriculum' ? `Curriculum${totalCount > 0 ? ` (${totalCount} lessons)` : ''}` : `${details.duration || 60} min lesson`}
                   </p>
+
+                  {/* Unscheduled badge indicator */}
+                  {details.type === 'curriculum' && unscheduledCount > 0 && (
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium w-fit border border-amber-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      <span>{unscheduledCount} {unscheduledCount === 1 ? 'lesson' : 'lessons'} unscheduled</span>
+                    </div>
+                  )}
 
                   <div className="mt-2">
                     <Link
@@ -184,6 +208,7 @@ export default function UnShaduled() {
                           "https://i.ibb.co/tpV3m2GW/no-image.png"
                         }
                         loading="lazy"
+                        decoding="async"
                         alt={course.teacher?.name}
                         className="h-6 w-6 rounded-full object-cover"
                       />
@@ -199,7 +224,9 @@ export default function UnShaduled() {
                       onClick={() => handleCurriculumClick(course)}
                       className="w-full bg-primary hover:bg-[#e03e00] text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-sm"
                     >
-                      {details.type === 'curriculum' ? 'Manage Curriculum' : 'Schedule Lesson'}
+                      {details.type === 'curriculum'
+                        ? (unscheduledCount > 0 ? `Schedule Lesson (${unscheduledCount} pending)` : 'Manage Curriculum')
+                        : 'Schedule Lesson'}
                       <BiSolidZap className="w-4 h-4" />
                     </button>
                   </div>

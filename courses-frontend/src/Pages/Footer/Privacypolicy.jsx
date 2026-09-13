@@ -7,7 +7,7 @@ export default function Privacypolicy() {
   }, []);
   return (
     <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
-      <div className="w-full min-h-screen text-[#000000] py-8 md:py-12">
+      <div className="w-full min-h-screen text-[#000000] pt-[32px] pb-12">
         <div className="w-full max-w-4xl space-y-8 text-left">
 
         {/* Header */}

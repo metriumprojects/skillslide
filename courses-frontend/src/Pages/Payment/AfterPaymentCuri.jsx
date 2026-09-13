@@ -387,7 +387,7 @@ export default function AfterPaymentCurri() {
 
   return (
     <MainLayout width="100%">
-      <div className="w-full py-8 min-h-[77vh]">
+      <div className="w-full pt-[32px] pb-10 min-h-[77vh]">
         {/* Back to Upcoming link when in manage mode */}
         {isManage && (
           <div className="w-full max-w-[1520px] mb-6">

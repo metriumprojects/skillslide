@@ -30,4 +30,9 @@ const favoriteSchema = new mongoose.Schema(
 );
 
 
+favoriteSchema.index({ user: 1, createdAt: -1 });
+favoriteSchema.index({ user: 1, lesson: 1 }, { sparse: true });
+favoriteSchema.index({ user: 1, curriculum: 1 }, { sparse: true });
+favoriteSchema.index({ user: 1, listing: 1 }, { sparse: true });
+
 export default mongoose.model("Favorite", favoriteSchema);

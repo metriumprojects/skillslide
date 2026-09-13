@@ -54,7 +54,8 @@ export const getApprovedReviews = async (req, res) => {
   try {
     const reviews = await Review.find({ isApproved: true })
       .populate("user", "name image")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.status(200).json({ status: true, reviews });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -66,7 +67,8 @@ export const getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
       .populate("user", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.status(200).json({ status: true, reviews });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -131,9 +131,9 @@ export default function EditProfile() {
 
   return (
     <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
-      <div className="w-full min-h-screen py-6 md:py-8">
+      <div className="w-full min-h-screen pt-[32px] pb-10">
         <div className="w-full max-w-[800px]">
-          <h1 className="text-[20px] sm:text-[24px] font-normal mb-6 text-gray-900 flex items-center gap-2.5">
+          <h1 className="text-[20px] sm:text-[24px] font-normal mb-[32px] text-gray-900 flex items-center gap-2.5">
             <svg
               width="20"
               height="20"

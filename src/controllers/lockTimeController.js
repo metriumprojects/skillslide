@@ -1,5 +1,7 @@
 import moment from "moment-timezone";
 import LockTime from "../models/lockTimeModel.js";
+import Booking from "../models/Booking.js";
+import User from "../models/User.js";
 
 const calculateEndTime = (startDateUTC, durationMinutes) => {
   return moment(startDateUTC).add(durationMinutes, "minutes").toDate();
@@ -189,27 +191,118 @@ const cleanPastDateSpecificHours = async (lockTime) => {
   await lockTime.save();
 };
 
+const activeBookingFilter = {
+  status: { $ne: "cancelled" },
+  $or: [
+    { paymentStatus: "paid" },
+    { payment_status: "paid" },
+    { status: "paid" },
+    { status: "scheduled" },
+  ],
+};
+
 export const getTimeLockByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log(userId);
 
     let lockTime = await LockTime.findOne({ user: userId })
       .populate("user", "name email");
 
-    if (!lockTime) {
-      return res.status(404).json({
-        status: false,
-        message: "No time lock found for this user",
+    const teacher = await User.findById(userId).select("timeZone");
+    const teacherTimezone = lockTime?.timeZone || teacher?.timeZone || "UTC";
+
+    // Query active bookings for this teacher
+    const teacherBookings = await Booking.find({
+      teacher: userId,
+      ...activeBookingFilter,
+    }).populate("lesson", "duration isGroupAvailable");
+
+    // Extract booked slots per date
+    const bookedDateMap = {};
+
+    const addSlotToMap = (scheduledAt, durationStr, isGroup, lessonId) => {
+      if (!scheduledAt) return;
+      const startMoment = moment(scheduledAt).tz(teacherTimezone);
+      const dateStr = startMoment.format("YYYY-MM-DD");
+      const startTime = startMoment.format("HH:mm");
+      const durationMinutes = parseDurationToMinutes(durationStr || "60m");
+      const endTime = moment(scheduledAt).add(durationMinutes, "minutes").tz(teacherTimezone).format("HH:mm");
+
+      if (!bookedDateMap[dateStr]) {
+        bookedDateMap[dateStr] = [];
+      }
+      bookedDateMap[dateStr].push({
+        start: startTime,
+        end: endTime,
+        group: Boolean(isGroup),
+        isBooked: true,
+        lessonId: lessonId || undefined,
       });
+    };
+
+    for (const b of teacherBookings) {
+      if (b.scheduledAt) {
+        const isGroup = b.group || b.lesson?.isGroupAvailable || false;
+        addSlotToMap(b.scheduledAt, b.lesson?.duration || "60m", isGroup, b.lesson?._id || b.lesson);
+      }
+
+      if (Array.isArray(b.lessonPosition)) {
+        for (const pos of b.lessonPosition) {
+          if (!pos.scheduledAt || pos.status === "cancelled") continue;
+          addSlotToMap(pos.scheduledAt, pos.duration || b.lesson?.duration || "60m", pos.group, pos.lId);
+        }
+      }
     }
 
-    // 🧹 AUTO DELETE PAST DATES
-    // await cleanPastDateSpecificHours(lockTime);
+    // Build dateSpecificHours
+    let dateSpecificHours = [];
+    if (lockTime?.dateSpecificHours?.length) {
+      dateSpecificHours = lockTime.dateSpecificHours.map((d) => ({
+        date: d.date,
+        available: d.available,
+        slots: d.slots ? d.slots.map((s) => (s.toObject ? s.toObject() : { ...s })) : [],
+      }));
+    }
+
+    // Merge booked slots into dateSpecificHours
+    for (const [dateStr, bookedSlots] of Object.entries(bookedDateMap)) {
+      let existingDate = dateSpecificHours.find((d) => d.date === dateStr);
+      if (!existingDate) {
+        existingDate = {
+          date: dateStr,
+          available: true,
+          slots: [],
+        };
+        dateSpecificHours.push(existingDate);
+      }
+
+      for (const bSlot of bookedSlots) {
+        const slotExists = existingDate.slots.some(
+          (s) => s.start === bSlot.start && s.end === bSlot.end
+        );
+        if (!slotExists) {
+          existingDate.slots.push(bSlot);
+        } else {
+          const existing = existingDate.slots.find(
+            (s) => s.start === bSlot.start && s.end === bSlot.end
+          );
+          if (existing) {
+            existing.isBooked = true;
+          }
+        }
+      }
+    }
+
+    const responseData = {
+      user: lockTime?.user || userId,
+      timeZone: teacherTimezone,
+      weeklyHours: lockTime?.weeklyHours || [],
+      dateSpecificHours: dateSpecificHours,
+    };
 
     return res.status(200).json({
       status: true,
-      data: lockTime,
+      data: responseData,
     });
 
   } catch (error) {

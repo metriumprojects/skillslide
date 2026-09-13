@@ -19,7 +19,7 @@ export default function Lessons() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-start mt-[20px] mb-[20px]">
+      <div className="flex items-center justify-start mt-[32px] mb-[32px]">
         <Link
           to="/create-lesson"
           className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"

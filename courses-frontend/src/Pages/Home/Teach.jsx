@@ -323,11 +323,11 @@ const Teach = () => {
 
       {/* Search Header */}
       {!showSearchBar && (
-        <div className="mt-[20px]">
+        <div className="mt-[32px]">
           <h3 className="text-2xl font-normal text-black">Requests</h3>
           
           {/* Tabs like bubble: All Requests, My Requests, and Saves */}
-          <div className="w-fit rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black flex items-center mt-[20px]">
+          <div className="w-fit rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black flex items-center mt-[32px]">
             <button
               type="button"
               onClick={() => setActiveTab("All Requests")}
@@ -364,7 +364,7 @@ const Teach = () => {
           </div>
 
           {/* Action buttons on next line */}
-          <div className="flex items-center justify-start gap-3 mt-[20px]">
+          <div className="flex items-center justify-start gap-3 mt-[32px]">
             <button
               onClick={() => setShowCreateRequest(true)}
               className="bg-[#E9EAEE] hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-sm transition-colors cursor-pointer"
@@ -438,7 +438,7 @@ const Teach = () => {
           }}
         />
       ) : activeTab === "My Requests" ? (
-        <div className="w-full mt-[20px] pb-10 space-y-6">
+        <div className="w-full mt-[32px] pb-10 space-y-6">
           {!userInfo ? (
             <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
               <p className="text-gray-700 mb-3">Please log in to view your requests.</p>
@@ -475,7 +475,7 @@ const Teach = () => {
       ) : (
         /* Saved Proposals Tab */
         !userInfo ? (
-          <div className="w-full mt-[20px] pb-10">
+          <div className="w-full mt-[32px] pb-10">
             <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
               <p className="text-gray-700 mb-3">Please log in to view your saved requests.</p>
               <button
@@ -503,7 +503,7 @@ const Teach = () => {
             }}
           />
         ) : (
-          <div className="w-full mt-[20px] pb-10">
+          <div className="w-full mt-[32px] pb-10">
             <div className="w-full bg-[#F5F5F5] p-6 md:p-10 rounded-3xl text-center">
               <p className="text-gray-600">No saved proposals found</p>
             </div>

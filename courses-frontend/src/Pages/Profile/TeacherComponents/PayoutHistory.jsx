@@ -13,7 +13,7 @@ const PayoutHistory = () => {
   }, [dispatch, withdrawalPage, withdrawalLimit]);
 
   return (
-    <div className="w-full mt-[20px]">
+    <div className="w-full mt-[32px]">
       <div className="overflow-x-auto rounded-2xl max-w-5xl">
         <table className="w-full rounded-2xl overflow-hidden">
           <thead className="bg-[#E9EAEE] text-left text-sm">

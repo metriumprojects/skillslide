@@ -49,6 +49,7 @@ const ProfileRequestCard = memo(function ProfileRequestCard({
                   "https://i.ibb.co/tpV3m2GW/no-image.png"
                 }
                 loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
                 alt="profile-img"
               />

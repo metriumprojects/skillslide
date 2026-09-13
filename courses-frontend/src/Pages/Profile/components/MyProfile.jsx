@@ -47,7 +47,7 @@ const MyProfile = () => {
       {/* Profile Section */}
       <div className="flex flex-col">
         {/* Edit Button Bar - Left Aligned */}
-        <div className="flex items-center justify-start mt-[20px] mb-[20px]">
+        <div className="flex items-center justify-start mt-[32px] mb-[32px]">
           <button
             type="button"
             onClick={() => navigate("/edit-profile")}

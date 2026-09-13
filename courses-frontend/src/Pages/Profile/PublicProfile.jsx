@@ -127,7 +127,7 @@ export default function PublicProfile() {
   if (!isTeacher && userbyid?.publicType === false) {
     return (
       <MainLayout width="100%">
-        <div className="min-h-screen w-full py-6 sm:py-8">
+        <div className="min-h-screen w-full pt-[32px] pb-10">
           {/* Profile Section - Left Aligned */}
           <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 pb-6 sm:pb-8">
             {/* Image */}
@@ -266,7 +266,7 @@ export default function PublicProfile() {
 
   return (
     <MainLayout width="100%">
-      <div className="min-h-screen w-full py-6 sm:py-8">
+      <div className="min-h-screen w-full pt-[32px] pb-10">
         {/* Profile Section - Left Aligned */}
         <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
           {/* Image */}

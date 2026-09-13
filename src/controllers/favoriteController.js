@@ -82,7 +82,8 @@ export const getUserFavorites = async (req, res) => {
                     path: "createdBy",
                     select: "name email image averageRating totalRatings"
                 }
-            });
+            })
+            .lean();
 
         res.status(200).json({
             status: true,

@@ -129,7 +129,26 @@ export default function LessonsDashboard() {
 
   const handleCancel = (lesson) => {
     if(lesson){
-      dispatch(CancelBooking({ bookId: lesson?.bookingId, type: lesson?.type, lId:lesson?.lId })).then((res) => {
+      const isCurriculum =
+        lesson?.type === "curriculum" ||
+        !!lesson?.curriculumTitle ||
+        lesson?.isCurriculum === true;
+      const confirmText = isCurriculum
+        ? "Are you sure you want to cancel this entire curriculum? Any remaining sessions will be refunded to the student."
+        : "Are you sure you want to cancel this lesson?";
+
+      if (window.confirm && !window.confirm(confirmText)) {
+        return;
+      }
+
+      dispatch(
+        CancelBooking({
+          bookId: lesson?.bookingId,
+          type: isCurriculum ? "curriculum" : lesson?.type,
+          lId: isCurriculum ? undefined : lesson?.lId,
+          cancelEntireCurriculum: isCurriculum,
+        })
+      ).then((res) => {
         if (res?.payload.status) {
           toast.success(res?.payload?.message);
           // Refresh data after successful cancellation
@@ -245,7 +264,7 @@ export default function LessonsDashboard() {
   return (
     <div className="w-full">
       {/* ✅ Tab Navigation */}
-      <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black mt-[20px] mb-[20px]">
+      <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black mt-[32px] mb-[32px]">
         <Swiper
           modules={[FreeMode]}
           freeMode={{ enabled: true, momentum: true }}
@@ -323,16 +342,19 @@ export default function LessonsDashboard() {
                 {teacherMainUpcomingData.length > 0 ? (
                   teacherMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
-                    const isCurriculum = lesson.type === "curriculum" && !lesson.lId;
+                    const isCurriculum =
+                      lesson.type === "curriculum" ||
+                      !!lesson.curriculumTitle ||
+                      lesson.isCurriculum === true;
                     return (
                       <tr key={index} className="bg-[#F5F5F5]">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
                         <td className="p-3 font-medium">
-                          {lesson.curriculumTitle || (isCurriculum ? "Curriculum" : "-")}
+                          {lesson.curriculumTitle || "-"}
                         </td>
                         <td className="p-3">
-                          {lesson.lessonTitle || (isCurriculum ? "-" : "-")}
+                          {lesson.lessonTitle || "-"}
                         </td>
                         <td className="p-3">{lesson.name || "Unknown Student"}</td>
                         <td className="p-3">{formatPrice(lesson.amount, lesson.currency || "USD")}</td>

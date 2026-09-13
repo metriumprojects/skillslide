@@ -18,4 +18,6 @@ const unitSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+unitSchema.index({ curriculum: 1, position: 1 });
+
 export default mongoose.model("Unit", unitSchema);

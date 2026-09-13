@@ -587,7 +587,6 @@ export const initiateBooking = async (req, res) => {
     booking.stripeSessionId = session.id;
     booking.stripe_session_id = session.id;
     await booking.save();
-    console.log(session, "sessions");
 
     // Return data
     return res.status(201).json({
@@ -759,9 +758,6 @@ export const confirmBooking = async (req, res) => {
       const isListing = booking.type === "listing";
       const item = isLesson ? booking.lesson : isListing ? booking.listing : booking.curriculum;
       const itemTitle = item?.title || "Purchased Content";
-
-
-      console.log(group, usecapacity, "groupvalue");
 
 
       // if(isLesson){
@@ -1659,7 +1655,10 @@ export const cancelBooking = async (req, res) => {
         message: type === "listing" ? "Order cancelled successfully" : "Lesson booking cancelled successfully",
         booking,
       });
-    } else if (type === "curriculum" && !lId) {
+    } else if (
+      (type === "curriculum" && (!lId || req.body.cancelEntireCurriculum)) ||
+      req.body.cancelEntireCurriculum
+    ) {
       // 2. CURRICULUM FULL CANCELLATION (Parent Booking)
       if (booking.status === "cancelled") {
         return res.status(400).json({
@@ -1668,37 +1667,16 @@ export const cancelBooking = async (req, res) => {
         });
       }
 
-      // Release all upcoming/active slots in lessonPosition
       const now = new Date();
-      if (Array.isArray(booking.lessonPosition)) {
-        for (let idx = 0; idx < booking.lessonPosition.length; idx++) {
-          const lp = booking.lessonPosition[idx];
-          if (lp.scheduledAt && lp.status !== "completed" && lp.status !== "cancelled") {
-            const lesson = await Lesson.findById(lp.lId);
-            await releaseBookedSlot({
-              teacher: booking.teacher,
-              scheduledAt: lp.scheduledAt,
-              timezone: lp.timezone,
-              duration: lp.duration || lesson?.duration,
-              group: lp.group || booking.group,
-            });
-            booking.lessonPosition[idx].status = "cancelled";
-            booking.lessonPosition[idx].scheduledAt = null;
-            booking.lessonPosition[idx].timezone = null;
-          }
-        }
-      }
-
-      booking.status = "cancelled";
-      booking.scheduledAt = null;
+      const totalSessions =
+        Array.isArray(booking.lessonPosition) && booking.lessonPosition.length > 0
+          ? booking.lessonPosition.length
+          : 1;
 
       // PRORATED REFUND LOGIC:
-      // Divide price across total sessions. If a session schedule is over/completed, refund the remaining sessions.
-      const totalSessions = Array.isArray(booking.lessonPosition) && booking.lessonPosition.length > 0
-        ? booking.lessonPosition.length
-        : 1;
-
-      // Completed / past sessions
+      // Divide price across total sessions.
+      // A session is completed if explicitly marked "completed" or its scheduled date/time has already passed.
+      // Must be evaluated BEFORE resetting scheduledAt!
       const completedSessionsCount = Array.isArray(booking.lessonPosition)
         ? booking.lessonPosition.filter((lp) => {
             if (lp.status === "completed") return true;
@@ -1709,6 +1687,32 @@ export const cancelBooking = async (req, res) => {
 
       const remainingSessionsCount = Math.max(0, totalSessions - completedSessionsCount);
       const refundFraction = totalSessions > 0 ? remainingSessionsCount / totalSessions : 0;
+
+      // Release future / upcoming slots in lessonPosition
+      if (Array.isArray(booking.lessonPosition)) {
+        for (let idx = 0; idx < booking.lessonPosition.length; idx++) {
+          const lp = booking.lessonPosition[idx];
+          if (lp.scheduledAt && lp.status !== "completed" && lp.status !== "cancelled") {
+            // Only release slot if it is in the future
+            if (new Date(lp.scheduledAt) > now) {
+              const lesson = await Lesson.findById(lp.lId);
+              await releaseBookedSlot({
+                teacher: booking.teacher,
+                scheduledAt: lp.scheduledAt,
+                timezone: lp.timezone,
+                duration: lp.duration || lesson?.duration,
+                group: lp.group || booking.group,
+              });
+            }
+            booking.lessonPosition[idx].status = "cancelled";
+            booking.lessonPosition[idx].scheduledAt = null;
+            booking.lessonPosition[idx].timezone = null;
+          }
+        }
+      }
+
+      booking.status = "cancelled";
+      booking.scheduledAt = null;
 
       const baseChargedAmount = booking.chargedAmount || booking.amount || 0;
       const chargedCurrency = (booking.chargedCurrency || booking.currency || "USD").toUpperCase();
@@ -1962,20 +1966,42 @@ export const userUnscheduledBookings = async (req, res) => {
     // ---------------------------------------
     // FILTER FOR UNSCHEDULED BOOKINGS
     // ---------------------------------------
+    // A booking is unscheduled if:
+    // 1. Single lesson/listing that has no scheduledAt or status is pending
+    // 2. Curriculum that has at least one pending or unscheduled lesson in lessonPosition
     const filter = {
       user: req.user._id,
-      paymentStatus: "paid",
-      $and: [
-        // MAIN booking.scheduledAt must be null or not exist
+      status: { $ne: "cancelled" },
+      paymentStatus: { $in: ["paid", "part", "pending"] },
+      $or: [
+        // Case 1: Non-curriculum booking not scheduled
         {
-          $or: [{ scheduledAt: null }, { scheduledAt: { $exists: false } }],
-        },
-
-        // lessonPosition.scheduledAt must be null or missing
-        {
+          type: { $ne: "curriculum" },
           $or: [
-            { "lessonPosition.scheduledAt": null },
-            { "lessonPosition.scheduledAt": { $exists: false } },
+            { scheduledAt: null },
+            { scheduledAt: { $exists: false } },
+            { status: "pending" },
+          ],
+        },
+        // Case 2: Curriculum booking with at least one lesson pending or without scheduledAt
+        {
+          type: "curriculum",
+          $or: [
+            {
+              lessonPosition: {
+                $elemMatch: {
+                  status: { $nin: ["completed", "cancelled"] },
+                  $or: [
+                    { scheduledAt: null },
+                    { scheduledAt: { $exists: false } },
+                    { status: "pending" },
+                  ],
+                },
+              },
+            },
+            { lessonPosition: { $size: 0 } },
+            { lessonPosition: null },
+            { lessonPosition: { $exists: false } },
           ],
         },
       ],
@@ -1984,13 +2010,17 @@ export const userUnscheduledBookings = async (req, res) => {
     const total = await Booking.countDocuments(filter);
 
     const bookings = await Booking.find(filter)
-      .select("-lessonPosition -stripePaymentIntentId") // REMOVE lessonPosition
+      .select("-stripePaymentIntentId")
       .populate(
         "lesson",
-        "title type duration images totalRatings averageRating"
+        "title type duration images coverImage totalRatings averageRating price currency"
       )
-      .populate("curriculum", "title type images totalRatings averageRating")
+      .populate(
+        "curriculum",
+        "title type images coverImage totalRatings averageRating price currency"
+      )
       .populate("teacher", "name image totalRatings averageRating")
+      .populate("lessonPosition.lId", "title duration price currency")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -2277,6 +2307,7 @@ export const userMainUpcomingBookings = async (req, res) => {
       .populate("lesson", "title price currency")
       .populate("curriculum", "title")
       .populate("teacher", "name _id")
+      .populate("lessonPosition.lId", "title price currency")
       .lean();
 
     let upcomingLessons = [];
@@ -2285,40 +2316,10 @@ export const userMainUpcomingBookings = async (req, res) => {
       if (b.status === "cancelled") continue;
 
       // -------------------------
-      // 1. SINGLE LESSON OR CURRICULUM PARENT BOOKING
+      // 1. SINGLE LESSON OR LISTING BOOKING (Non-curriculum)
       // -------------------------
-      if (b.type === "curriculum") {
-        const upcomingLps = Array.isArray(b.lessonPosition)
-          ? b.lessonPosition.filter(
-              (lp) =>
-                lp.scheduledAt !== null &&
-                lp.scheduledAt >= newDateUTC &&
-                lp.status !== "pending" &&
-                lp.status !== "cancelled"
-            )
-          : [];
-        const effectiveDate =
-          b.scheduledAt && b.scheduledAt >= newDateUTC
-            ? b.scheduledAt
-            : upcomingLps[0]?.scheduledAt || b.scheduledAt;
-
-        if (effectiveDate && effectiveDate >= newDateUTC && b.status !== "pending") {
-          upcomingLessons.push({
-            bookingId: b._id,
-            lId: null,
-            lessonTitle: null,
-            curriculumTitle: b.curriculum?.title || "Curriculum",
-            scheduledAt: effectiveDate,
-            amount: b.amount,
-            currency: b.currency || "USD",
-            status: b.status,
-            type: "curriculum",
-            isCurriculum: true,
-            name: b.teacher?.name || null,
-            userId: b.teacher?._id || null,
-          });
-        }
-      } else if (
+      if (
+        b.type !== "curriculum" &&
         b.scheduledAt &&
         b.scheduledAt >= newDateUTC &&
         b.status !== "pending"
@@ -2340,9 +2341,9 @@ export const userMainUpcomingBookings = async (req, res) => {
       }
 
       // -------------------------
-      // 2. CURRICULUM LESSONS
+      // 2. CURRICULUM LESSONS (Actual scheduled lessons from curriculum)
       // -------------------------
-      if (Array.isArray(b.lessonPosition)) {
+      if (b.type === "curriculum" && Array.isArray(b.lessonPosition)) {
         const validLessons = b.lessonPosition.filter(
           (lp) =>
             lp.scheduledAt !== null &&
@@ -2352,24 +2353,28 @@ export const userMainUpcomingBookings = async (req, res) => {
         );
 
         for (const lp of validLessons) {
-          const lessonData = await Lesson.findById(lp.lId).select(
-            "title price currency"
-          );
+          const lessonData =
+            typeof lp.lId === "object" && lp.lId !== null ? lp.lId : null;
+          const actualLId = (lessonData?._id || lp.lId)?.toString();
 
           upcomingLessons.push({
             bookingId: b._id,
-            lId: lp.lId,
+            lId: actualLId,
             lessonTitle: lessonData?.title || null,
             scheduledAt: lp.scheduledAt,
-            amount: lessonData?.price || 0,
-            currency: lessonData?.currency || "USD",
+            amount:
+              lessonData?.price ||
+              (b.amount && b.lessonPosition.length
+                ? b.amount / b.lessonPosition.length
+                : 0),
+            currency: lessonData?.currency || b.currency || "USD",
             status: lp.status,
-            type: b.type,
-            isCurriculum: false,
+            type: "curriculum",
+            isCurriculum: true,
             name: b.teacher?.name || null,
             teacherId: b.teacher?._id || null,
             userId: b.teacher?._id || null,
-            curriculumTitle: b.curriculum?.title || null,
+            curriculumTitle: b.curriculum?.title || "Curriculum",
           });
         }
       }
@@ -2411,7 +2416,7 @@ export const teacherMainUpcomingBookings = async (req, res) => {
     }
 
     // ============================
-    // TIMEZONE â†’ UTC
+    // TIMEZONE -> UTC
     // ============================
     const newDateUTC = moment.tz(scheduledAt, timezone).utc().toDate();
 
@@ -2428,50 +2433,22 @@ export const teacherMainUpcomingBookings = async (req, res) => {
       .populate("lesson", "title price currency")
       .populate("curriculum", "title")
       .populate("user", "name _id")
+      .populate("lessonPosition.lId", "title price currency")
       .lean();
 
     let upcomingLessons = [];
 
     // ============================
-    // 1ï¸âƒ£ SINGLE LESSONS
+    // 1ï¸ âƒ£ SINGLE LESSONS
     // ============================
     for (const b of bookings) {
       if (b.status === "cancelled") continue;
 
-      if (b.type === "curriculum") {
-        const upcomingLps = Array.isArray(b.lessonPosition)
-          ? b.lessonPosition.filter(
-              (lp) =>
-                lp.lId &&
-                lp.scheduledAt &&
-                lp.scheduledAt >= newDateUTC &&
-                lp.status !== "pending" &&
-                lp.status !== "cancelled"
-            )
-          : [];
-        const effectiveDate =
-          b.scheduledAt && b.scheduledAt >= newDateUTC
-            ? b.scheduledAt
-            : upcomingLps[0]?.scheduledAt || b.scheduledAt;
-
-        if (effectiveDate && effectiveDate >= newDateUTC && b.status !== "pending") {
-          upcomingLessons.push({
-            bookingId: b._id.toString(),
-            lId: null,
-            lessonTitle: null,
-            curriculumTitle: b.curriculum?.title || "Curriculum",
-            scheduledAt: effectiveDate,
-            amount: b.amount,
-            currency: b.currency || "USD",
-            status: b.status,
-            type: "curriculum",
-            isCurriculum: true,
-            group: b.group === true,
-            name: b.user?.name || null,
-            userId: b.user?._id || null,
-          });
-        }
-      } else if (
+      // ============================
+      // 1. SINGLE LESSON (Non-curriculum)
+      // ============================
+      if (
+        b.type !== "curriculum" &&
         b.scheduledAt &&
         b.scheduledAt >= newDateUTC &&
         b.status !== "pending" &&
@@ -2494,35 +2471,41 @@ export const teacherMainUpcomingBookings = async (req, res) => {
       }
 
       // ============================
-      // 2ï¸âƒ£ CURRICULUM LESSONS
+      // 2. CURRICULUM LESSONS (Actual scheduled lessons from curriculum)
       // ============================
-      if (Array.isArray(b.lessonPosition)) {
+      if (b.type === "curriculum" && Array.isArray(b.lessonPosition)) {
         for (const lp of b.lessonPosition) {
           if (
             !lp.lId ||
             !lp.scheduledAt ||
             lp.scheduledAt < newDateUTC ||
-            lp.status === "pending"
+            lp.status === "pending" ||
+            lp.status === "cancelled"
           )
             continue;
 
-          const lessonData = await Lesson.findById(lp.lId).select(
-            "title price currency"
-          );
+          const lessonData =
+            typeof lp.lId === "object" && lp.lId !== null ? lp.lId : null;
+          const actualLId = (lessonData?._id || lp.lId)?.toString();
 
           upcomingLessons.push({
             bookingId: b._id.toString(),
-            lId: lp.lId.toString(),
+            lId: actualLId,
             lessonTitle: lessonData?.title || null,
             scheduledAt: lp.scheduledAt,
-            amount: lessonData?.price || 0,
-            currency: lessonData?.currency || "USD",
+            amount:
+              lessonData?.price ||
+              (b.amount && b.lessonPosition.length
+                ? b.amount / b.lessonPosition.length
+                : 0),
+            currency: lessonData?.currency || b.currency || "USD",
             status: lp.status,
-            type: b.type,
+            type: "curriculum",
+            isCurriculum: true,
             group: lp.group === true,
             name: b.user?.name || null,
             userId: b.user?._id || null,
-            curriculumTitle: b.curriculum?.title || null,
+            curriculumTitle: b.curriculum?.title || "Curriculum",
           });
         }
       }
@@ -2704,11 +2687,26 @@ export const teacherPastLessons = async (req, res) => {
     const groupMap = new Map();
     const finalLessons = [];
 
+    const lessonIds = [...new Set(lessons.map((i) => i.flatLessons?.lId).filter(Boolean))];
+    const userIds = [...new Set(lessons.map((i) => i.user).filter(Boolean))];
+
+    const [lessonDocs, userDocs] = await Promise.all([
+      lessonIds.length > 0
+        ? Lesson.find({ _id: { $in: lessonIds } }).select("title price").lean()
+        : [],
+      userIds.length > 0
+        ? User.find({ _id: { $in: userIds } }).select("name _id").lean()
+        : [],
+    ]);
+
+    const lessonMap = new Map(lessonDocs.map((l) => [l._id.toString(), l]));
+    const userMap = new Map(userDocs.map((u) => [u._id.toString(), u]));
+
     for (let item of lessons) {
-      const lessonInfo = await Lesson.findById(item.flatLessons.lId).select(
-        "title price"
-      );
-      const userInfo = await User.findById(item.user).select("name _id");
+      const lessonInfo = item.flatLessons?.lId
+        ? lessonMap.get(item.flatLessons.lId.toString())
+        : null;
+      const userInfo = item.user ? userMap.get(item.user.toString()) : null;
 
       const lessonObj = {
         bookingId: item.flatLessons.bookingId,
@@ -2865,11 +2863,26 @@ export const userPastLessons = async (req, res) => {
     let lessons = await Booking.aggregate(pipeline);
 
     // 7ï¸âƒ£ Populate selected lessons
+    const lessonIds = [...new Set(lessons.map((i) => i.flatLessons?.lId).filter(Boolean))];
+    const userIds = [...new Set(lessons.map((i) => i.user).filter(Boolean))];
+
+    const [lessonDocs, userDocs] = await Promise.all([
+      lessonIds.length > 0
+        ? Lesson.find({ _id: { $in: lessonIds } }).select("title price").lean()
+        : [],
+      userIds.length > 0
+        ? User.find({ _id: { $in: userIds } }).select("name _id").lean()
+        : [],
+    ]);
+
+    const lessonMap = new Map(lessonDocs.map((l) => [l._id.toString(), l]));
+    const userMap = new Map(userDocs.map((u) => [u._id.toString(), u]));
+
     for (let item of lessons) {
-      let lessonInfo = await Lesson.findById(item.flatLessons.lId).select(
-        "title price"
-      );
-      let userInfo = await User.findById(item.user).select("name _id");
+      let lessonInfo = item.flatLessons?.lId
+        ? lessonMap.get(item.flatLessons.lId.toString())
+        : null;
+      let userInfo = item.user ? userMap.get(item.user.toString()) : null;
 
       item.lId = item.flatLessons.lId;
       item.lessonTitle = lessonInfo?.title || null;

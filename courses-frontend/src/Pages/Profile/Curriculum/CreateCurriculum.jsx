@@ -914,7 +914,7 @@ export default function CurriculumPage() {
   // RENDER LOGIC
   return (
     <MainLayout className="mx-auto" width="100%">
-      <div className={`bg-white ${currentStep === 2 ? "min-h-[calc(100vh-115px)] flex flex-col justify-center py-4" : "min-h-screen py-10"}`}>
+      <div className={`bg-white ${currentStep === 2 ? "min-h-[calc(100vh-115px)] flex flex-col justify-center py-4" : "min-h-screen pt-[32px] pb-10"}`}>
         <div className="w-full mx-auto">
           {/* STEP 1: CURRICULUM DETAILS & CALENDAR */}
           {currentStep === 1 && (

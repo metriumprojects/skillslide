@@ -33,4 +33,7 @@ const proposeSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+proposeSchema.index({ user: 1, status: 1 });
+proposeSchema.index({ recieveBy: 1, status: 1 });
+
 export default mongoose.model("Propose", proposeSchema);

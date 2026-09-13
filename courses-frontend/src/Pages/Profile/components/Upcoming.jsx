@@ -176,7 +176,7 @@ export default function Upcoming() {
               <article key={course._id || index} className="mb-4 min-w-0 group flex flex-col">
                 {/* Image Container matching Home Screen */}
                 <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
-                  <Link to={targetLink}>
+                  <Link to={targetLink} state={{ preview: details }}>
                     <img
                       src={
                         details.coverImage?.url ||
@@ -184,6 +184,7 @@ export default function Upcoming() {
                       }
                       alt={details.title}
                       loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </Link>
@@ -231,6 +232,7 @@ export default function Upcoming() {
                           "https://i.ibb.co/tpV3m2GW/no-image.png"
                         }
                         loading="lazy"
+                        decoding="async"
                         alt={course.teacher?.name}
                         className="h-6 w-6 rounded-full object-cover"
                       />

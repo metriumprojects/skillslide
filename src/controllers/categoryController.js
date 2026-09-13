@@ -50,7 +50,7 @@ export const createCategory = async (req, res) => {
 
 export const getCategories = async (req, res) => {
     try {
-        const categories = await Category.find().sort({ createdAt: -1 });
+        const categories = await Category.find().sort({ createdAt: -1 }).lean();
         res.json(categories);
     } catch (error) {
         res.status(500).json({status:false, message: error.message });

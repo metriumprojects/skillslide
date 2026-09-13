@@ -16,5 +16,6 @@ const curriculumRatingSchema = new mongoose.Schema(
 
 // Prevent duplicate rating by same user
 curriculumRatingSchema.index({ user: 1, curriculum: 1 }, { unique: true });
+curriculumRatingSchema.index({ curriculum: 1, createdAt: -1 });
 
 export default mongoose.model("CurriculumRating", curriculumRatingSchema);

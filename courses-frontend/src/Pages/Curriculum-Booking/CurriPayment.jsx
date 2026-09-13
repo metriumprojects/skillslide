@@ -21,13 +21,14 @@ import { useCurrency } from "../../currency/CurrencyContext";
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
+  Elements,
 } from "@stripe/react-stripe-js";
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
   : null;
 
-export default function CurriPayment() {
+function CurriPayment() {
   const { currency } = useCurrency();
     const { singleCurriculum } = useSelector((state) => state.curriculum);
   const dispatch = useDispatch();
@@ -112,9 +113,9 @@ export default function CurriPayment() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen flex flex-col items-center py-10">
+      <div className="min-h-screen flex flex-col items-center pt-[32px] pb-10">
         {/* Header */}
-        <div className="w-full flex items-center mb-6">
+        <div className="w-full flex items-center mb-[32px]">
 <button 
   onClick={() => navigate(-1)} 
   className="flex items-center text-gray-700 hover:text-gray-900 cursor-pointer"
@@ -252,5 +253,14 @@ export default function CurriPayment() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+// Wrap in Elements so useStripe/useElements hooks work
+export default function CurriPaymentWithElements() {
+  return (
+    <Elements stripe={stripePromise}>
+      <CurriPayment />
+    </Elements>
   );
 }

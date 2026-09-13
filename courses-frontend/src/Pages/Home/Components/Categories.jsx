@@ -109,7 +109,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     <div className="w-full hidden lg:block">
       <div className="flex w-full items-center justify-between gap-8">
         <div className="flex min-w-0 items-center gap-8">
-          <Link to="/" className="flex shrink-0 items-center gap-[32px] select-none" aria-label="SkillSlide home">
+          <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
             {/* S Orange Icon Badge - Official SVG */}
             <LogoIcon className="h-[46px] w-[46px]" />
 
@@ -146,7 +146,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                 aria-label="Open profile menu"
                 type="button"
               >
-                <img loading="lazy" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-9 w-9 rounded-full object-cover" alt="profile" />
+                <img loading="lazy" decoding="async" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-9 w-9 rounded-full object-cover" alt="profile" />
               </button>
               {showProfileMenu && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}

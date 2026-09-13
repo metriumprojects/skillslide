@@ -31,10 +31,12 @@ const uploadImage = async (file, folder) => {
 
 export const getActiveStudentStories = async (req, res) => {
   try {
-    const stories = await StudentStory.find({ isActive: true }).sort({
-      order: 1,
-      createdAt: -1,
-    });
+    const stories = await StudentStory.find({ isActive: true })
+      .sort({
+        order: 1,
+        createdAt: -1,
+      })
+      .lean();
     res.json({ status: true, stories });
   } catch (error) {
     console.error("Get active student stories error:", error);

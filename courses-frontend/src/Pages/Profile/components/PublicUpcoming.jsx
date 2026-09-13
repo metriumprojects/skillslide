@@ -86,6 +86,8 @@ export default function PublicUpcoming({ id }) {
                     <img
                       src={details.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
                       alt={details.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover rounded-[20px]"
                     />
 
@@ -111,6 +113,8 @@ export default function PublicUpcoming({ id }) {
                             "https://i.ibb.co/tpV3m2GW/no-image.png"
                           }
                           alt={course.teacher?.name}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-[40px] object-cover"
                         />
                       </Link>

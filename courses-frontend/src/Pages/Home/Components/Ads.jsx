@@ -25,6 +25,8 @@ const Ads = () => {
           <img
             src="https://i.ibb.co/tpV3m2GW/no-image.png"
             alt="Instructor"
+            loading="lazy"
+            decoding="async"
             className="w-9 h-9 rounded-full object-cover border border-white/40"
           />
           <div>

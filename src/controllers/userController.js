@@ -61,7 +61,6 @@ export const registerUser = async (req, res) => {
       message: "Registration successful! You can log in now.",
     });
   } catch (error) {
-    console.log("err",error)
     res.status(500).json({ status: false, message: error.message });
   }
 };
@@ -745,9 +744,9 @@ export const isOnlineTeacher = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
 
-    const user = await User.findById(req.params.id).select(
-      "-password -resetPasswordToken -resetPasswordExpire"
-    );
+    const user = await User.findById(req.params.id)
+      .select("-password -resetPasswordToken -resetPasswordExpire")
+      .lean();
     if (!user) {
       return res.status(404).json({ status: false, message: "User not found" });
     }

@@ -11,5 +11,6 @@ const teacherRatingSchema = new mongoose.Schema(
 );
 
 teacherRatingSchema.index({ user: 1, teacher: 1 }, { unique: true });
+teacherRatingSchema.index({ teacher: 1, createdAt: -1 });
 
 export default mongoose.model("TeacherRating", teacherRatingSchema);

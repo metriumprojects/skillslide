@@ -35,6 +35,22 @@ export const getUserFavorites = createAsyncThunk(
         error.response?.data || { message: "Something went wrong" }
       );
     }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { favorite } = getState();
+      const last = favorite?.lastFetched;
+      const hasFavorites =
+        favorite?.favorites &&
+        (Array.isArray(favorite.favorites)
+          ? favorite.favorites.length >= 0
+          : (favorite.favorites.curriculums !== undefined || favorite.favorites.lessons !== undefined));
+      if (last && Date.now() - last < 60000 && hasFavorites && !favorite?.loading) {
+        return false;
+      }
+      return true;
+    },
   }
 );
 
@@ -103,6 +119,7 @@ const initialState = {
   lessonReviews:[],
   curriReviews: [],
   loading: false,
+  lastFetched: null,
   error: null,
   successMessage: "",
   errorMessage: "",
@@ -125,6 +142,9 @@ const favoriteSlice = createSlice({
       state.ratings.curriculum = null;
       state.ratings.lesson = null;
     },
+    invalidateFavoritesCache: (state) => {
+      state.lastFetched = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -135,6 +155,7 @@ const favoriteSlice = createSlice({
       })
       .addCase(toggleFavorite.fulfilled, (state, action) => {
         state.loading = false;
+        state.lastFetched = null;
         state.successMessage = action.payload.message || "Favorite toggled";
       })
       .addCase(toggleFavorite.rejected, (state, action) => {
@@ -150,6 +171,7 @@ const favoriteSlice = createSlice({
       .addCase(getUserFavorites.fulfilled, (state, action) => {
         state.loading = false;
         state.favorites = action.payload.data;
+        state.lastFetched = Date.now();
       })
       .addCase(getUserFavorites.rejected, (state, action) => {
         state.loading = false;
@@ -201,6 +223,6 @@ const favoriteSlice = createSlice({
   },
 });
 
-export const { messageClear, clearToggledItem, clearRatings } = favoriteSlice.actions;
+export const { messageClear, clearToggledItem, clearRatings, invalidateFavoritesCache } = favoriteSlice.actions;
 
 export default favoriteSlice.reducer;

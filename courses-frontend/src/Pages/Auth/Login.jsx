@@ -223,8 +223,8 @@ export default function Login() {
   return (
     <MainLayout hideHeader hideFooter hideMobileMenu contentClassName="!min-h-screen">
       <div className="flex min-h-[calc(100vh-32px)] flex-col pt-0 pb-0">
-        {/* Top: Logo with 20px top gap + heading with 20px gap below logo */}
-        <div className="w-full max-w-xl mx-auto px-2 mt-[20px] shrink-0">
+        {/* Top: Logo with 32px top gap + heading with 32px gap below logo */}
+        <div className="w-full max-w-xl mx-auto px-2 mt-[32px] shrink-0">
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
             {/* S Orange Icon Badge - Official SVG */}
             <LogoIcon className="h-[46px] w-[46px]" />
@@ -236,8 +236,8 @@ export default function Login() {
             </span>
           </Link>
 
-          {/* Heading 20px below logo */}
-          <div className="mt-[20px] flex items-center gap-3">
+          {/* Heading 32px below logo */}
+          <div className="mt-[32px] flex items-center gap-3">
             <svg
               width="26"
               height="24"

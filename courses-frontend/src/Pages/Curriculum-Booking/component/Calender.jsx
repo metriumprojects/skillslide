@@ -42,6 +42,7 @@ export function Calendar({
   // Store slot metadata for each time slot
   const [slotMetadata, setSlotMetadata] = useState({});
   const [bookingTab, setBookingTab] = useState("individual"); // "individual" | "group"
+  const [isBooking, setIsBooking] = useState(false);
 
   // Helper to check if a slot has group availability
   const checkSlotIsGroup = (slot) => {
@@ -306,7 +307,10 @@ export function Calendar({
     // Convert blocked slots to user timezone for comparison
     const unavailableSlotsInUserTz = blockedSlots.map(slot => ({
       start: convertTimeWithMoment(slot.start, teacherTimezone, userTimezone),
-      end: convertTimeWithMoment(slot.end, teacherTimezone, userTimezone)
+      end: convertTimeWithMoment(slot.end, teacherTimezone, userTimezone),
+      isBooked: slot.isBooked !== false,
+      group: slot.group || false,
+      lessonId: slot.lessonId || null
     }));
     
     // Find the group price from the first group slot (to apply to all group slots at same time)
@@ -405,45 +409,48 @@ export function Calendar({
         const time12h = formatTime12h(current);
         const currentTime = new Date(current);
         
-        // Check if this time should be filtered out
-        let shouldInclude = true;
-        
         // Check if this time slot overlaps with any unavailable period (in user timezone)
+        let isBooked = false;
         for (const unavailableSlot of unavailableSlotsInUserTz) {
           const unavailableStart = parseTime(unavailableSlot.start);
           const unavailableEnd = parseTime(unavailableSlot.end);
           
-          // Create a 30-minute slot starting at currentTime
+          // Create a slot starting at currentTime
           const slotStart = new Date(currentTime);
           const slotEnd = new Date(currentTime);
           slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration);
           
           // Check for overlap between the time slot and unavailable period
           if (slotStart < unavailableEnd && slotEnd > unavailableStart) {
-            shouldInclude = false;
+            isBooked = true;
             break;
           }
         }
         
-        if (shouldInclude) {
-          allSlots.push(time12h);
-          // Store metadata for this time slot (use lesson-specific group info)
-          if (!metadataMap[time12h] || isGroupForThisLesson) {
-            // Prefer group slots if multiple slots exist for same time
-            // Use groupPrice from groupPriceMap if available (applies to all group slots at this time)
-            const groupPrice = isGroupForThisLesson ? (groupPriceMap[time12h] || slot.discount || discount || 0) : 0;
-            metadataMap[time12h] = {
-              group: isGroupForThisLesson,
-              capacity: lessonCapacity || 0,
-              usecapacity: slot.usecapacity || 0,
-              groupPrice: groupPrice,
-              slotId: slot._id || null,
-              lessonId: slot.lessonId || null,
-              day: dayName,
-              specific: isDateSpecific,
-              slot: slot // Store full slot for reference
-            };
-          }
+        // For group slots that overlap with an unavailable slot, skip if blocked
+        if (isGroupForThisLesson && isBooked) {
+          current.setMinutes(current.getMinutes() + slotDuration);
+          continue;
+        }
+
+        allSlots.push(time12h);
+        // Store metadata for this time slot (use lesson-specific group info)
+        if (!metadataMap[time12h] || isGroupForThisLesson || (!isBooked && metadataMap[time12h]?.isBooked)) {
+          // Prefer group slots if multiple slots exist for same time
+          // Use groupPrice from groupPriceMap if available (applies to all group slots at this time)
+          const groupPrice = isGroupForThisLesson ? (groupPriceMap[time12h] || slot.discount || discount || 0) : 0;
+          metadataMap[time12h] = {
+            group: isGroupForThisLesson,
+            isBooked: isBooked,
+            capacity: lessonCapacity || 0,
+            usecapacity: slot.usecapacity || 0,
+            groupPrice: groupPrice,
+            slotId: slot._id || null,
+            lessonId: slot.lessonId || null,
+            day: dayName,
+            specific: isDateSpecific,
+            slot: slot // Store full slot for reference
+          };
         }
         
         current.setMinutes(current.getMinutes() + slotDuration);
@@ -566,6 +573,9 @@ export function Calendar({
   };
 
   const handleTimeSelect = (time) => {
+    if (slotMetadata[time]?.isBooked) {
+      return;
+    }
     onSelectTime(time);
     
     if (internalSelectedDate) {
@@ -636,6 +646,7 @@ export function Calendar({
     }
 
     try {
+      setIsBooking(true);
       const parsedData = JSON.parse(date);
       
       const response = await dispatch(checkAvailablity({ 
@@ -668,6 +679,7 @@ export function Calendar({
           localStorage.setItem("bookingId", bookingResponse?.bookingId);
           // Redirect directly to checkout
           window.location.href = bookingResponse.url;
+          return;
         } else {
           toast.error("Failed to initiate payment");
         }
@@ -686,6 +698,8 @@ export function Calendar({
       const cleanMsg = String(rawMsg).replace(/stripe\s*/gi, "").trim();
       toast.error(cleanMsg || "An error occurred while confirming booking");
       console.error('Booking error:', error);
+    } finally {
+      setIsBooking(false);
     }
   };
 
@@ -823,7 +837,8 @@ export function Calendar({
                 isPastTime = slotTime < now;
               }
               
-              const isDisabled = isPastTime;
+              const isBooked = Boolean(metadata?.isBooked);
+              const isDisabled = isPastTime || isBooked;
               
               return (
                 <button
@@ -832,7 +847,7 @@ export function Calendar({
                   disabled={isDisabled}
                   className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${
                     isDisabled
-                      ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed opacity-50"
+                      ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 hover:bg-gray-100"
                       : selectedTime === time
                       ? "bg-primary text-white border-primary"
                       : isGroup
@@ -846,17 +861,20 @@ export function Calendar({
                     </span>
                   )}
                   <div className="flex-1 w-full flex flex-col items-center justify-center px-1">
-                    <span className="font-medium text-sm leading-tight">{time}</span>
-                    {isGroup && metadata?.usecapacity !== undefined && (
+                    <span className={`font-medium text-sm leading-tight ${isBooked ? "line-through text-gray-400" : ""}`}>{time}</span>
+                    {isBooked ? (
+                      <span className="text-[10px] font-semibold text-gray-500 bg-gray-200/80 px-2 py-0.5 rounded-full mt-1">
+                        Booked
+                      </span>
+                    ) : isGroup && metadata?.usecapacity !== undefined ? (
                       <span className={`text-[12px] font-medium leading-tight mt-0.5 ${selectedTime === time ? "text-white/90" : "text-gray-600"}`}>
                         {currentUsage}/{maxCapacity} Booked
                       </span>
-                    )}
-                    {isGroup && hasCapacity && groupPrice > 0 && (
+                    ) : isGroup && hasCapacity && groupPrice > 0 ? (
                       <span className={`text-[12px] font-semibold leading-tight mt-0.5 ${selectedTime === time ? "text-white" : "text-green-600"}`}>
                         ${groupPrice}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </button>
               );
@@ -872,7 +890,7 @@ export function Calendar({
               ? bookingTab === "group"
                 ? "No group slots available for this date"
                 : "No individual slots available for this date"
-              : `Pick a time ${availableTimes.length > 0 ? `(${availableTimes.length} available)` : ""}`
+              : `Pick a time ${availableTimes.length > 0 ? `(${availableTimes.filter(t => !slotMetadata[t]?.isBooked).length} available)` : ""}`
             }
           </div>
         )}
@@ -880,42 +898,68 @@ export function Calendar({
 
       <button
         onClick={handleConfirmSchedule}
-        disabled={!internalSelectedDate || !selectedTime}
-        className={`w-full mt-6 py-2.5 rounded-full text-sm ${
-          !internalSelectedDate || !selectedTime
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-primary text-white cursor-pointer"
+        disabled={!internalSelectedDate || !selectedTime || isBooking}
+        className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${
+          !internalSelectedDate || !selectedTime || isBooking
+            ? "bg-gray-400 text-white cursor-not-allowed opacity-80"
+            : "bg-primary hover:bg-primary/90 text-white cursor-pointer active:scale-[0.99]"
         }`}
       >
-        {(() => {
-          if (selectedTime) {
-            const metadata = slotMetadata[selectedTime];
-            const isGroup = metadata?.group;
-            const maxCapacity = lessonCapacity || 10;
-            const currentUsage = metadata?.usecapacity || 0;
-            const hasCapacity = currentUsage < maxCapacity;
-            const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
-            
-            if (isGroup && hasCapacity && groupPrice > 0) {
-              return `Book (${formatPrice(groupPrice, priceCurrency)})`;
+        {isBooking ? (
+          <>
+            <svg
+              className="animate-spin h-4 w-4 text-white shrink-0"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <span>Processing...</span>
+          </>
+        ) : (
+          (() => {
+            if (selectedTime) {
+              const metadata = slotMetadata[selectedTime];
+              const isGroup = metadata?.group;
+              const maxCapacity = lessonCapacity || 10;
+              const currentUsage = metadata?.usecapacity || 0;
+              const hasCapacity = currentUsage < maxCapacity;
+              const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
+              
+              if (isGroup && hasCapacity && groupPrice > 0) {
+                return `Book (${formatPrice(groupPrice, priceCurrency)})`;
+              }
+              if (!price && !groupPrice) return "Book (Free)";
+              return `Book (${formatPrice(price, priceCurrency)})`;
             }
-            if (!price && !groupPrice) return "Book (Free)";
+
+            // Inactive state (no slot selected yet) - show group price if in group tab
+            if (hasAnyGroupSlots && bookingTab === "group") {
+              const defaultGroupPrice = Number(
+                (groupTimes.length > 0 && slotMetadata[groupTimes[0]]?.groupPrice) || discount || 0
+              );
+              if (defaultGroupPrice > 0) {
+                return `Book (${formatPrice(defaultGroupPrice, priceCurrency)})`;
+              }
+            }
+
+            if (!price) return "Book (Free)";
             return `Book (${formatPrice(price, priceCurrency)})`;
-          }
-
-          // Inactive state (no slot selected yet) - show group price if in group tab
-          if (hasAnyGroupSlots && bookingTab === "group") {
-            const defaultGroupPrice = Number(
-              (groupTimes.length > 0 && slotMetadata[groupTimes[0]]?.groupPrice) || discount || 0
-            );
-            if (defaultGroupPrice > 0) {
-              return `Book (${formatPrice(defaultGroupPrice, priceCurrency)})`;
-            }
-          }
-
-          if (!price) return "Book (Free)";
-          return `Book (${formatPrice(price, priceCurrency)})`;
-        })()}
+          })()
+        )}
       </button>
     </div>
   );

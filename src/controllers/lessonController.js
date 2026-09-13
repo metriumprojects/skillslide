@@ -556,7 +556,9 @@ export const getTeacherLessons = async (req, res) => {
     const lessons = await Lesson.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit).populate("createdBy", "name email image averageRating totalRatings");
+      .limit(limit)
+      .populate("createdBy", "name email image averageRating totalRatings")
+      .lean();
 
     // Count total lessons for this teacher
     const total = await Lesson.countDocuments(query);
@@ -571,7 +573,6 @@ export const getTeacherLessons = async (req, res) => {
     });
 
   } catch (error) {
-    console.log("first", error)
     res.status(error.status || 500).json({ status: false, message: error.message });
   }
 };
@@ -579,7 +580,9 @@ export const getTeacherLessons = async (req, res) => {
 /* ------------------------------ GET SINGLE LESSON --------------------------- */
 export const getLessonById = async (req, res) => {
   try {
-    const lesson = await Lesson.findById(req.params.id).populate("createdBy", "name email image averageRating totalRatings");
+    const lesson = await Lesson.findById(req.params.id)
+      .populate("createdBy", "name email image averageRating totalRatings")
+      .lean();
     if (!lesson) return res.status(404).json({ status: false, message: "Lesson not found" });
     res.json(lesson);
   } catch (error) {
@@ -970,7 +973,8 @@ export const getAllLessonsById = async (req, res) => {
       .populate("createdBy", "name email image averageRating totalRatings")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
 
 
@@ -1000,7 +1004,9 @@ export const getTeacherLessonsById = async (req, res) => {
     const lessons = await Lesson.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit).populate("createdBy", "name email image averageRating totalRatings");
+      .limit(limit)
+      .populate("createdBy", "name email image averageRating totalRatings")
+      .lean();
 
     // Count total lessons for this teacher
     const total = await Lesson.countDocuments(query);
@@ -1015,7 +1021,6 @@ export const getTeacherLessonsById = async (req, res) => {
     });
 
   } catch (error) {
-    console.log("first", error)
     res.status(500).json({ status: false, message: error.message });
   }
 };
