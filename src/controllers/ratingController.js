@@ -8,6 +8,67 @@ import cloudinary from "cloudinary";
 import fs from "fs"
 import Booking from "../models/Booking.js";
 import mongoose from "mongoose";
+
+export const checkReviewEligibility = async (req, res) => {
+  try {
+    const { lessonId, curriculumId } = req.query;
+    const userId = req.user._id;
+
+    if (!lessonId && !curriculumId) {
+      return res.status(400).json({ status: false, message: "lessonId or curriculumId is required" });
+    }
+
+    if (lessonId) {
+      const booking = await Booking.findOne({
+        user: userId,
+        paymentStatus: "paid",
+        $or: [
+          { lesson: new mongoose.Types.ObjectId(lessonId) },
+          { "lessonPosition.lId": new mongoose.Types.ObjectId(lessonId) }
+        ]
+      }).sort({ createdAt: -1 });
+
+      const existingReview = await LessonRating.findOne({
+        user: userId,
+        lesson: new mongoose.Types.ObjectId(lessonId)
+      });
+
+      return res.json({
+        status: true,
+        isBooked: !!booking,
+        canReview: !!booking && !existingReview,
+        hasReviewed: !!existingReview,
+        bookingId: booking?._id || null,
+        existingReview: existingReview || null
+      });
+    }
+
+    if (curriculumId) {
+      const booking = await Booking.findOne({
+        user: userId,
+        paymentStatus: "paid",
+        curriculum: new mongoose.Types.ObjectId(curriculumId)
+      }).sort({ createdAt: -1 });
+
+      const existingReview = await CurriculumRating.findOne({
+        user: userId,
+        curriculum: new mongoose.Types.ObjectId(curriculumId)
+      });
+
+      return res.json({
+        status: true,
+        isBooked: !!booking,
+        canReview: !!booking && !existingReview,
+        hasReviewed: !!existingReview,
+        bookingId: booking?._id || null,
+        existingReview: existingReview || null
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 export const addCurriculumRating = async (req, res) => {
   try {
     const { id, rating, review } = req.body;
@@ -16,12 +77,21 @@ export const addCurriculumRating = async (req, res) => {
     if (!rating || rating < 1 || rating > 100)
       return res.status(400).json({ message: "Invalid rating. Rating must be between 1 and 100." });
 
+    // Validate that student has booked this curriculum
+    const booking = await Booking.findOne({
+      user: userId,
+      paymentStatus: "paid",
+      curriculum: new mongoose.Types.ObjectId(id)
+    });
+
+    if (!booking) {
+      return res.status(403).json({ message: "Only students who have booked this curriculum can leave a review." });
+    }
+
     let rate = await CurriculumRating.findOne({ user: userId, curriculum: id });
 
     if (rate) {
-      rate.rating = rating;
-      rate.review = review;
-      await rate.save();
+      return res.status(400).json({ message: "Already submitted your review for this curriculum" });
     } else {
       let uploadedImage = null;
 
@@ -58,15 +128,32 @@ export const addCurriculumRating = async (req, res) => {
 
 export const addLessonRating = async (req, res) => {
   try {
-    const { id, bookingId, rating, review, type } = req.body;   // type = "lesson" or "curriculum"
+    let { id, bookingId, rating, review, type } = req.body;   // type = "lesson" or "curriculum"
     const userId = req.user._id;
 
     if (!rating || rating < 1 || rating > 100)
       return res.status(400).json({ message: "Invalid rating. Rating must be between 1 and 100." });
 
-    if (!bookingId) {
-      return res.status(400).json({ message: "Booking ID is required" });
+    // Validate that student has booked this lesson
+    let booking = null;
+    if (bookingId) {
+      booking = await Booking.findOne({ _id: bookingId, user: userId, paymentStatus: "paid" });
     }
+    if (!booking) {
+      booking = await Booking.findOne({
+        user: userId,
+        paymentStatus: "paid",
+        $or: [
+          { lesson: new mongoose.Types.ObjectId(id) },
+          { "lessonPosition.lId": new mongoose.Types.ObjectId(id) }
+        ]
+      }).sort({ createdAt: -1 });
+    }
+
+    if (!booking) {
+      return res.status(403).json({ message: "Only students who have booked this lesson can leave a review." });
+    }
+    bookingId = booking._id;
 
     console.log('=== Rating Debug Info ===');
     console.log('Type:', type);

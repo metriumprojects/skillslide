@@ -1966,44 +1966,29 @@ export const userUnscheduledBookings = async (req, res) => {
     // ---------------------------------------
     // FILTER FOR UNSCHEDULED BOOKINGS
     // ---------------------------------------
-    // A booking is unscheduled if:
-    // 1. Single lesson/listing that has no scheduledAt or status is pending
-    // 2. Curriculum that has at least one pending or unscheduled lesson in lessonPosition
+    // Only Curriculum bookings can have unscheduled/pending lessons.
+    // Standalone lessons are scheduled directly at purchase and cannot be unscheduled.
     const filter = {
       user: req.user._id,
+      type: "curriculum",
       status: { $ne: "cancelled" },
       paymentStatus: { $in: ["paid", "part", "pending"] },
       $or: [
-        // Case 1: Non-curriculum booking not scheduled
         {
-          type: { $ne: "curriculum" },
-          $or: [
-            { scheduledAt: null },
-            { scheduledAt: { $exists: false } },
-            { status: "pending" },
-          ],
-        },
-        // Case 2: Curriculum booking with at least one lesson pending or without scheduledAt
-        {
-          type: "curriculum",
-          $or: [
-            {
-              lessonPosition: {
-                $elemMatch: {
-                  status: { $nin: ["completed", "cancelled"] },
-                  $or: [
-                    { scheduledAt: null },
-                    { scheduledAt: { $exists: false } },
-                    { status: "pending" },
-                  ],
-                },
-              },
+          lessonPosition: {
+            $elemMatch: {
+              status: { $nin: ["completed", "cancelled"] },
+              $or: [
+                { scheduledAt: null },
+                { scheduledAt: { $exists: false } },
+                { status: "pending" },
+              ],
             },
-            { lessonPosition: { $size: 0 } },
-            { lessonPosition: null },
-            { lessonPosition: { $exists: false } },
-          ],
+          },
         },
+        { lessonPosition: { $size: 0 } },
+        { lessonPosition: null },
+        { lessonPosition: { $exists: false } },
       ],
     };
 

@@ -19,6 +19,7 @@ import ProfessionalLoader from "../../components/ProfessionalLoader";
 import { Calendar } from "./component/Calender";
 import UnitsSection from "./component/UnitsSection";
 import Reviews from "./component/Reviews";
+import ReviewsTabContent from "./component/ReviewsTabContent";
 import ImageGallery from "./component/ImageGallery";
 import { FiDollarSign } from "react-icons/fi";
 import { FaRegStar } from "react-icons/fa";
@@ -75,6 +76,14 @@ export default function LessonBooking() {
   const dispatch = useDispatch();
   const [date, setDate] = useState(new Date(2024, 1, 21));
   const [time, setTime] = useState("5:00 PM");
+  const [activeTab, setActiveTab] = useState("lesson");
+  const [reviewCount, setReviewCount] = useState(0);
+
+  useEffect(() => {
+    if (lessonReviews?.length) {
+      setReviewCount(lessonReviews.length);
+    }
+  }, [lessonReviews]);
 
   // Clear availability data when component mounts or lesson ID changes
   useEffect(() => {
@@ -201,6 +210,42 @@ export default function LessonBooking() {
               </nav>
             </div>
 
+            {/* Top Navigation Pill Tabs (My Profile menu pill style) */}
+            <div className="w-full flex items-center pt-4 sm:pt-6">
+              <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black flex items-center shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("lesson")}
+                  className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
+                    activeTab === "lesson"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-black hover:bg-gray-100"
+                  }`}
+                >
+                  Lesson
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("reviews")}
+                  className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
+                    activeTab === "reviews"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-black hover:bg-gray-100"
+                  }`}
+                >
+                  Reviews {reviewCount > 0 ? `(${reviewCount})` : ""}
+                </button>
+              </div>
+            </div>
+
+            {activeTab === "reviews" ? (
+              <ReviewsTabContent
+                id={id}
+                type="lesson"
+                title={lesson?.title}
+                onReviewCountChange={(cnt) => setReviewCount(cnt)}
+              />
+            ) : (
             <div className="w-full">
               {/* BADGES & ACTIONS ABOVE TITLE: Copy link, Save, Online, Timezone, Duration, Rating */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-[32px]">
@@ -215,9 +260,9 @@ export default function LessonBooking() {
                       toast.error("Failed to copy: ", err);
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 bg-white border border-black hover:bg-gray-100 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
+                  className="inline-flex items-center gap-1.5 bg-[#EFF6FF] border border-[#DBEAFF] hover:bg-[#DBEAFF]/50 text-[#1447E6] px-3 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
                 >
-                  <svg width="15" height="12" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-black">
+                  <svg width="15" height="12" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-[#1447E6]">
                     <path d="M9 0.991859C9 1.53317 8.56914 1.9747 8.02843 1.99991C7.48437 2.02527 6.9799 2.05869 6.51172 2.10174C5.04653 2.23649 4.08122 2.45725 3.43848 2.74334C2.8581 3.00171 2.5749 3.29419 2.38965 3.65643C2.17153 4.0832 2.00003 4.78681 2 5.9992C2.00003 7.21149 2.17155 7.91519 2.38965 8.34197C2.57491 8.7042 2.85806 8.99767 3.43848 9.25604C4.08123 9.54208 5.04668 9.7629 6.51172 9.89764C6.97988 9.94069 7.48436 9.97331 8.02841 9.9981C8.56915 10.0227 9 11.0056C9 11.5686 8.53273 12.022 7.97027 11.9964C2.07978 11.7281 0.00010087 10.5473 0 5.9992L0.00878906 5.50115C0.161499 1.36352 2.30097 0.259187 7.97079 0.00103404C8.53324 -0.024575 9 0.428825 9 0.991859ZM15 0.991859C15 0.428825 15.4668 -0.024575 16.0292 0.00103401C21.699 0.259187 23.8385 1.36352 23.9912 5.50115L24 5.9992C23.9999 10.5473 21.9202 11.7281 16.0297 11.9964C15.4673 12.022 15 11.5686 15 11.0056C15 10.4643 15.4308 10.0227 15.9716 9.9981C16.5156 9.97331 17.0201 9.94069 17.4883 9.89764C18.9533 9.7629 19.9188 9.54208 20.5615 9.25604C21.1419 8.99767 21.4251 8.7042 21.6104 8.34197C21.8284 7.91519 22 7.21149 22 5.9992C22 4.78681 21.8285 4.0832 21.6104 3.65643C21.4251 3.29419 21.1419 3.00171 20.5615 2.74334C19.9188 2.45725 18.9535 2.23649 17.4883 2.10174C17.0201 2.05869 16.5156 2.02527 15.9716 1.99991C15.4309 1.9747 15 1.53317 15 0.991859Z" fill="currentColor"/>
                     <path d="M7 6H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -228,13 +273,13 @@ export default function LessonBooking() {
                 <button
                   type="button"
                   onClick={() => handleSave(lesson?._id)}
-                  className="inline-flex items-center gap-1.5 bg-white border border-black hover:bg-gray-100 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
+                  className="inline-flex items-center gap-1.5 bg-[#FFE4E6] border border-[#FFD5D8] hover:bg-[#FFD5D8]/50 text-[#C70036] px-3 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
                 >
                   <svg width="15" height="13" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
                     <path
                       d="M7.6 1C9.29038 1 10.8323 1.84142 12 2.8C13.1677 1.84142 14.7096 1 16.4 1C20.0451 1 23 3.71049 23 7.05386C23 13.795 15.3274 17.721 12.7981 18.8321C12.2886 19.056 11.7114 19.056 11.2019 18.8321C8.67259 17.721 1 13.7948 1 7.0537C1 3.71033 3.95492 1 7.6 1Z"
-                      stroke={isBookmarked ? "#ef4444" : "currentColor"}
-                      fill={isBookmarked ? "#ef4444" : "none"}
+                      stroke="#C70036"
+                      fill={isBookmarked ? "#C70036" : "none"}
                       strokeWidth="2"
                     />
                   </svg>
@@ -242,36 +287,36 @@ export default function LessonBooking() {
                 </button>
 
                 {/* Online / Location Bubble */}
-                <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
+                <span className="inline-flex items-center gap-1.5 bg-[#FAF5FF] border border-[#E9D5FF] text-[#822AD1] px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                    <path d="M10.9951 22.4248C11.6339 22.7505 12.3661 22.7505 13.0049 22.4248C14.4088 21.709 16.6199 20.4276 18.6113 18.6152C20.6087 16.7975 22.31 14.5151 22.8438 11.8066C23.285 9.56749 22.8142 6.86911 21.1465 4.74219C19.5025 2.64547 16.6113 1 12 1C7.38874 1 4.49752 2.64547 2.85352 4.74219C1.18584 6.86911 0.714933 9.56749 1.15625 11.8066C1.69007 14.5151 3.39134 16.7975 5.38867 18.6152C7.38012 20.4276 9.59123 21.709 10.9951 22.4248Z" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="4" cy="4" r="3" transform="matrix(-1 0 0 1 16 6)" stroke="black" strokeWidth="2"/>
+                    <path d="M10.9951 22.4248C11.6339 22.7505 12.3661 22.7505 13.0049 22.4248C14.4088 21.709 16.6199 20.4276 18.6113 18.6152C20.6087 16.7975 22.31 14.5151 22.8438 11.8066C23.285 9.56749 22.8142 6.86911 21.1465 4.74219C19.5025 2.64547 16.6113 1 12 1C7.38874 1 4.49752 2.64547 2.85352 4.74219C1.18584 6.86911 0.714933 9.56749 1.15625 11.8066C1.69007 14.5151 3.39134 16.7975 5.38867 18.6152C7.38012 20.4276 9.59123 21.709 10.9951 22.4248Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="4" cy="4" r="3" transform="matrix(-1 0 0 1 16 6)" stroke="currentColor" strokeWidth="2"/>
                   </svg>
                   <span>{locationLabel} {lesson?.location ? `(${lesson?.location})` : ""}</span>
                 </span>
 
                 {/* Timezone Bubble */}
-                <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
+                <span className="inline-flex items-center gap-1.5 bg-[#F0F9FF] border border-[#BBE6FD] text-[#036AA2] px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                    <path d="M12 23C14.4477 23 16.3465 22.8672 17.8271 22.5381C19.2964 22.2115 20.2925 21.7056 20.999 20.999C21.7056 20.2925 22.2115 19.2964 22.5381 17.8271C22.8672 16.3465 23 14.4477 23 12C23 9.55232 22.8672 7.65353 22.5381 6.17285C22.2115 4.70364 21.7056 3.70752 20.999 3.00098C20.2925 2.29443 19.2964 1.78846 17.8271 1.46191C16.3465 1.13284 14.4477 1 12 1C9.55232 1 7.65353 1.13284 6.17285 1.46191C4.70364 1.78846 3.70752 2.29443 3.00098 3.00098C2.29443 3.70752 1.78846 4.70364 1.46191 6.17285C1.13284 7.65353 1 9.55232 1 12C1 14.4477 1.13284 16.3465 1.46191 17.8271C1.78846 19.2964 2.29443 20.2925 3.00098 20.999C3.70752 21.7056 4.70364 22.2115 6.17285 22.5381C7.65353 22.8672 9.55232 23 12 23Z" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 6C12 6 12 10 12 11C12 12 12 12 13 12C14 12 18 12 18 12" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 23C14.4477 23 16.3465 22.8672 17.8271 22.5381C19.2964 22.2115 20.2925 21.7056 20.999 20.999C21.7056 20.2925 22.2115 19.2964 22.5381 17.8271C22.8672 16.3465 23 14.4477 23 12C23 9.55232 22.8672 7.65353 22.5381 6.17285C22.2115 4.70364 21.7056 3.70752 20.999 3.00098C20.2925 2.29443 19.2964 1.78846 17.8271 1.46191C16.3465 1.13284 14.4477 1 12 1C9.55232 1 7.65353 1.13284 6.17285 1.46191C4.70364 1.78846 3.70752 2.29443 3.00098 3.00098C2.29443 3.70752 1.78846 4.70364 1.46191 6.17285C1.13284 7.65353 1 9.55232 1 12C1 14.4477 1.13284 16.3465 1.46191 17.8271C1.78846 19.2964 2.29443 20.2925 3.00098 20.999C3.70752 21.7056 4.70364 22.2115 6.17285 22.5381C7.65353 22.8672 9.55232 23 12 23Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 6C12 6 12 10 12 11C12 12 12 12 13 12C14 12 18 12 18 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <span>{timeZone}</span>
                 </span>
 
                 {/* Duration Bubble */}
-                <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200/90 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
+                <span className="inline-flex items-center gap-1.5 bg-[#FFF7ED] border border-[#FEDFBB] text-[#C34511] px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
                   <svg width="13" height="16" viewBox="0 0 20 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                    <path d="M10 0C12.8746 0 14.6892 0.650127 15.7695 1.73047C16.8588 2.81975 16.9984 4.14527 16.999 4.99414C19.2293 6.08989 19.929 8.26342 19.9951 12.3223L20 13C20 17.4969 19.3495 19.8486 16.999 21.0039C16.9986 21.8527 16.8596 23.1794 15.7695 24.2695C14.6892 25.3499 12.8746 26 10 26C7.12543 26 5.31081 25.3499 4.23047 24.2695C3.1391 23.1782 3.0001 21.8497 3 21.001C0.651142 19.8452 0 17.4956 0 13C0 8.50337 0.649857 6.15054 3 4.99512C3.00053 4.14628 3.14077 2.82017 4.23047 1.73047C5.31081 0.65013 7.12543 0 10 0ZM5.05078 21.6514C5.12323 22.0828 5.28897 22.4999 5.64453 22.8555C6.18919 23.4001 7.37457 24 10 24C12.6254 24 13.8108 23.4001 14.3555 22.8555C14.7107 22.5002 14.8757 22.0833 14.9482 21.6523C13.8068 21.8719 12.4237 21.9731 10.7529 21.9951L10 22C7.98616 22 6.35958 21.9033 5.05078 21.6514ZM10 6C7.98189 6 6.48373 6.09952 5.35547 6.3252C4.23949 6.54843 3.62662 6.86817 3.25 7.20703C2.50661 7.87608 2 9.24522 2 13C2 16.7548 2.50661 18.1239 3.25 18.793C3.62662 19.1318 4.23949 19.4516 5.35547 19.6748C6.48373 19.9005 7.98189 20 10 20C12.0181 20 13.5163 19.9005 14.6445 19.6748C15.7605 19.4516 16.3734 19.1318 16.75 18.793C17.4934 18.1239 18 16.7548 18 13C18 9.24522 17.4934 7.87608 16.75 7.20703C16.3734 6.86817 15.7605 6.54843 14.6445 6.3252C13.5163 6.09952 12.0181 6 10 6ZM10 2C7.37457 2 6.18919 2.59987 5.64453 3.14453C5.2895 3.49957 5.12341 3.91597 5.05078 4.34668C6.19232 4.127 7.5759 4.02693 9.24707 4.00488L10 4C12.0131 4 13.6396 4.09496 14.9482 4.34668C14.8756 3.91602 14.7105 3.49952 14.3555 3.14453C13.8108 2.59987 12.6254 2 10 2Z" fill="black"/>
-                    <path d="M10 9C10 9 10 11 10 12C10 13 9.99999 13 11 13C12 13 15 13 15 13" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10 0C12.8746 0 14.6892 0.650127 15.7695 1.73047C16.8588 2.81975 16.9984 4.14527 16.999 4.99414C19.2293 6.08989 19.929 8.26342 19.9951 12.3223L20 13C20 17.4969 19.3495 19.8486 16.999 21.0039C16.9986 21.8527 16.8596 23.1794 15.7695 24.2695C14.6892 25.3499 12.8746 26 10 26C7.12543 26 5.31081 25.3499 4.23047 24.2695C3.1391 23.1782 3.0001 21.8497 3 21.001C0.651142 19.8452 0 17.4956 0 13C0 8.50337 0.649857 6.15054 3 4.99512C3.00053 4.14628 3.14077 2.82017 4.23047 1.73047C5.31081 0.65013 7.12543 0 10 0ZM5.05078 21.6514C5.12323 22.0828 5.28897 22.4999 5.64453 22.8555C6.18919 23.4001 7.37457 24 10 24C12.6254 24 13.8108 23.4001 14.3555 22.8555C14.7107 22.5002 14.8757 22.0833 14.9482 21.6523C13.8068 21.8719 12.4237 21.9731 10.7529 21.9951L10 22C7.98616 22 6.35958 21.9033 5.05078 21.6514ZM10 6C7.98189 6 6.48373 6.09952 5.35547 6.3252C4.23949 6.54843 3.62662 6.86817 3.25 7.20703C2.50661 7.87608 2 9.24522 2 13C2 16.7548 2.50661 18.1239 3.25 18.793C3.62662 19.1318 4.23949 19.4516 5.35547 19.6748C6.48373 19.9005 7.98189 20 10 20C12.0181 20 13.5163 19.9005 14.6445 19.6748C15.7605 19.4516 16.3734 19.1318 16.75 18.793C17.4934 18.1239 18 16.7548 18 13C18 9.24522 17.4934 7.87608 16.75 7.20703C16.3734 6.86817 15.7605 6.54843 14.6445 6.3252C13.5163 6.09952 12.0181 6 10 6ZM10 2C7.37457 2 6.18919 2.59987 5.64453 3.14453C5.2895 3.49957 5.12341 3.91597 5.05078 4.34668C6.19232 4.127 7.5759 4.02693 9.24707 4.00488L10 4C12.0131 4 13.6396 4.09496 14.9482 4.34668C14.8756 3.91602 14.7105 3.49952 14.3555 3.14453C13.8108 2.59987 12.6254 2 10 2Z" fill="currentColor"/>
+                    <path d="M10 9C10 9 10 11 10 12C10 13 9.99999 13 11 13C12 13 15 13 15 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <span>{lesson?.duration || "30mins"}</span>
                 </span>
 
                 {/* Rating Bubble */}
-                <span className="inline-flex items-center gap-1.5 bg-[#fff6f0] border border-orange-100 text-black px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
+                <span className="inline-flex items-center gap-1.5 bg-[#FFFBEA] border border-[#FFF7D8] text-[#A76000] px-3 py-1.5 rounded-full text-xs font-normal shadow-sm shrink-0">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                    <path d="M12.0312 1C13.0666 1 14.6926 5.69969 15.2795 7.50668C15.4141 7.92126 15.7943 8.20684 16.23 8.22162C18.1151 8.28556 23 8.55772 23 9.66144C23 10.7495 19.5188 13.4853 18.0955 14.5583C17.7427 14.8243 17.5982 15.2836 17.734 15.704C18.3132 17.4975 19.7048 22.1483 18.8117 22.8815C17.9323 23.6034 14.1749 20.7486 12.6485 19.5286C12.2692 19.2254 11.7305 19.2251 11.3511 19.528C9.82346 20.7477 6.06764 23.6035 5.25065 22.8815C4.41962 22.1471 5.73815 17.4816 6.28237 15.6949C6.40915 15.2786 6.26319 14.8287 5.91569 14.5668C4.4996 13.4997 1 10.7523 1 9.66144C1 8.55659 5.89498 8.285 7.77586 8.22142C8.20861 8.2068 8.58723 7.92462 8.72415 7.51385C9.32468 5.71216 10.9944 1 12.0312 1Z" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12.0312 1C13.0666 1 14.6926 5.69969 15.2795 7.50668C15.4141 7.92126 15.7943 8.20684 16.23 8.22162C18.1151 8.28556 23 8.55772 23 9.66144C23 10.7495 19.5188 13.4853 18.0955 14.5583C17.7427 14.8243 17.5982 15.2836 17.734 15.704C18.3132 17.4975 19.7048 22.1483 18.8117 22.8815C17.9323 23.6034 14.1749 20.7486 12.6485 19.5286C12.2692 19.2254 11.7305 19.2251 11.3511 19.528C9.82346 20.7477 6.06764 23.6035 5.25065 22.8815C4.41962 22.1471 5.73815 17.4816 6.28237 15.6949C6.40915 15.2786 6.26319 14.8287 5.91569 14.5668C4.4996 13.4997 1 10.7523 1 9.66144C1 8.55659 5.89498 8.285 7.77586 8.22142C8.20861 8.2068 8.58723 7.92462 8.72415 7.51385C9.32468 5.71216 10.9944 1 12.0312 1Z" stroke="#F2BE2F" fill="#F2BE2F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <span>{lesson?.averageRating === 0 ? 100 : lesson?.averageRating || 100}%</span>
                 </span>
@@ -405,6 +450,7 @@ export default function LessonBooking() {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
     </MainLayout>
