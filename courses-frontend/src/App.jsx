@@ -11,12 +11,9 @@ const NoToastAnimation = cssTransition({
   collapse: false,
 });
 
-// Loading component
-const Loading = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-  </div>
-);
+// Suspense fallback (no loader)
+const Loading = () => null;
+
 
 // Lazy load all components
 const Home = lazy(() => import("./Pages/Home/Home"));

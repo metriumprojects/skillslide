@@ -287,7 +287,7 @@ export default function Profile() {
             )}
           </div>
           {/* {tab === "Booked" && <Booked />} */}
-          <Suspense fallback={<div className="flex items-center justify-center py-20"><span className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black" /></div>}>
+          <Suspense fallback={null}>
           {tab === "Revenue" && <Revenu />}
           {tab === "Upcoming" && <Upcoming />}
           {tab === "Unscheduled" && <UnShaduled />}
