@@ -7,11 +7,11 @@ import moment from "moment-timezone";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 import { useCurrency } from "../../../currency/CurrencyContext";
 
-export function Calendar({ 
-  selectedDate, 
-  onSelect, 
-  selectedTime, 
-  onSelectTime, 
+export function Calendar({
+  selectedDate,
+  onSelect,
+  selectedTime,
+  onSelectTime,
   id,
   weeklyAvailability = {},
   dateAvailability = [],
@@ -152,23 +152,23 @@ export function Calendar({
 
   const simpleConvertTime = (timeStr, fromTimezone, toTimezone) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
-    
+
     // Create a date with the specific time
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
-    
+
     // Format in from timezone to get the base time
     const fromDateStr = date.toLocaleString("en-US", { timeZone: fromTimezone });
     const fromDate = new Date(fromDateStr);
-    
+
     // Format in to timezone to get converted time
-    const toDateStr = fromDate.toLocaleString("en-US", { 
+    const toDateStr = fromDate.toLocaleString("en-US", {
       timeZone: toTimezone,
       hour12: false,
       hour: '2-digit',
       minute: '2-digit'
     });
-    
+
     // Extract time
     const timePart = toDateStr.includes(',') ? toDateStr.split(', ')[1] : toDateStr;
     return timePart.replace(' AM', '').replace(' PM', '');
@@ -181,10 +181,10 @@ export function Calendar({
       // Use a fixed reference date to avoid date-line issues
       const referenceDate = '2024-01-15'; // Use fixed date for consistent conversion
       const momentTime = moment.tz(`${referenceDate} ${timeStr}`, 'YYYY-MM-DD HH:mm', fromTimezone);
-      
+
       // Convert to the TO timezone (user's timezone)
       const convertedTime = momentTime.tz(toTimezone);
-      
+
       // Return in HH:mm format
       return convertedTime.format('HH:mm');
     } catch (error) {
@@ -196,29 +196,29 @@ export function Calendar({
   // Helper to parse duration string to minutes
   const parseDurationToMinutes = (durationStr) => {
     if (!durationStr) return 30; // Default to 30 minutes
-    
+
     // If it's already a number
     if (typeof durationStr === 'number') return durationStr;
-    
+
     // Try to match "X hours Y mins" or similar patterns
     const hoursMatch = durationStr.match(/(\d+)\s*(?:h|hr|hour|hours)/i);
     const minsMatch = durationStr.match(/(\d+)\s*(?:m|min|mins|minutes)/i);
-    
+
     let totalMinutes = 0;
-    
+
     if (hoursMatch) {
       totalMinutes += parseInt(hoursMatch[1]) * 60;
     }
-    
+
     if (minsMatch) {
       totalMinutes += parseInt(minsMatch[1]);
     }
-    
+
     // If no match found but it's a string number like "45"
     if (totalMinutes === 0 && !isNaN(parseInt(durationStr))) {
-        // Check if it's just a number string
-        const val = parseInt(durationStr);
-        if (val > 0) totalMinutes = val;
+      // Check if it's just a number string
+      const val = parseInt(durationStr);
+      if (val > 0) totalMinutes = val;
     }
 
     return totalMinutes > 0 ? totalMinutes : 30;
@@ -227,7 +227,7 @@ export function Calendar({
   const updateAvailableTimes = (date) => {
     const dayOfWeek = date.getDay().toString();
     const dateStr = getDateString(date);
-    
+
 
     let times = [];
     let isDateSpecific = false;
@@ -236,32 +236,32 @@ export function Calendar({
     // Some group slots appear in dateUnAvailability but should be shown if they have capacity
     const unavailableData = dateUnAvailability.find(d => d.date === dateStr);
     const unavailableSlots = unavailableData ? unavailableData.slots || [] : [];
-    
+
     const revivedGroupSlots = [];
     const blockedSlots = [];
-    
+
     unavailableSlots.forEach(slot => {
       // Check if this lesson has group booking by looking in the lessons array
       let isGroupForThisLesson = false;
-      
+
       if (slot.lessons && Array.isArray(slot.lessons)) {
         const lessonEntry = slot.lessons.find(l => l.lesson === myid);
         if (lessonEntry) {
           isGroupForThisLesson = lessonEntry.lessonGroup || false;
         }
       }
-      
+
       // If no lessons array exists, fall back to slot.group
       if (!slot.lessons || !Array.isArray(slot.lessons)) {
         isGroupForThisLesson = slot.group || false;
       }
-      
+
       // Check if this is a group slot that should be revived
       // NEW: For Curriculum Booking (type === "curri"), do NOT revive group slots
       if (isGroupForThisLesson === true && type !== "curri") {
         const maxCapacity = lessonCapacity || 10;
         const currentUsage = slot.usecapacity || 0;
-        
+
         // Only revive if it matches our lesson AND has space
         if (slot.lessonId === myid && currentUsage < maxCapacity) {
           revivedGroupSlots.push(slot);
@@ -279,7 +279,7 @@ export function Calendar({
       // Merge revived slots with date specific slots
       const allSlots = [...dateSpecific.slots, ...revivedGroupSlots];
       times = generateTimeSlots(allSlots, dateStr, true, date, blockedSlots);
-    } 
+    }
     // Check weekly availability (skip available field check as requested)
     else if (weeklyAvailability[dayOfWeek] && weeklyAvailability[dayOfWeek].slots && weeklyAvailability[dayOfWeek].slots.length > 0) {
       const weeklySlots = weeklyAvailability[dayOfWeek].slots || [];
@@ -289,7 +289,7 @@ export function Calendar({
     }
     // If no standard availability but we have revived group slots, show them
     else if (revivedGroupSlots.length > 0) {
-        times = generateTimeSlots(revivedGroupSlots, dateStr, true, date, blockedSlots);
+      times = generateTimeSlots(revivedGroupSlots, dateStr, true, date, blockedSlots);
     }
 
     setAvailableTimes(times);
@@ -299,11 +299,11 @@ export function Calendar({
     const slotDuration = parseDurationToMinutes(duration);
     const allSlots = [];
     const metadataMap = {};
-    
+
     // Get day name from selected date
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayName = selectedDate ? dayNames[selectedDate.getDay()] : '';
-    
+
     // Convert blocked slots to user timezone for comparison
     const unavailableSlotsInUserTz = blockedSlots.map(slot => ({
       start: convertTimeWithMoment(slot.start, teacherTimezone, userTimezone),
@@ -312,72 +312,72 @@ export function Calendar({
       group: slot.group || false,
       lessonId: slot.lessonId || null
     }));
-    
+
     // Find the group price from the first group slot (to apply to all group slots at same time)
     let groupPriceMap = {}; // Map of time -> groupPrice for group slots
     slots.forEach(slot => {
       // Check if this lesson has group booking by looking in the lessons array
       let isGroupForThisLesson = false;
-      
+
       if (slot.lessons && Array.isArray(slot.lessons)) {
         const lessonEntry = slot.lessons.find(l => l.lesson === myid);
         if (lessonEntry) {
           isGroupForThisLesson = lessonEntry.lessonGroup || false;
         }
       }
-      
+
       // If no lessons array exists, fall back to slot.group
       if (!slot.lessons || !Array.isArray(slot.lessons)) {
         isGroupForThisLesson = slot.group || false;
       }
-      
+
       if (isGroupForThisLesson === true) {
         const effectiveGroupPrice = discount;
         if (effectiveGroupPrice > 0) {
-        const userStartTime = convertTimeWithMoment(slot.start, teacherTimezone, userTimezone);
-        const start = parseTime(userStartTime);
-        let current = new Date(start);
-        const userEndTime = convertTimeWithMoment(slot.end, teacherTimezone, userTimezone);
-        const end = parseTime(userEndTime);
-        
-        while (current < end) {
-          const time12h = formatTime12h(current);
-          if (!groupPriceMap[time12h]) {
-            groupPriceMap[time12h] = effectiveGroupPrice;
+          const userStartTime = convertTimeWithMoment(slot.start, teacherTimezone, userTimezone);
+          const start = parseTime(userStartTime);
+          let current = new Date(start);
+          const userEndTime = convertTimeWithMoment(slot.end, teacherTimezone, userTimezone);
+          const end = parseTime(userEndTime);
+
+          while (current < end) {
+            const time12h = formatTime12h(current);
+            if (!groupPriceMap[time12h]) {
+              groupPriceMap[time12h] = effectiveGroupPrice;
+            }
+            current.setMinutes(current.getMinutes() + slotDuration);
           }
-          current.setMinutes(current.getMinutes() + slotDuration);
-        }
         }
       }
     });
-    
+
     slots.forEach(slot => {
       // NEW: Check if this lesson has group booking by looking in the lessons array
       let isGroupForThisLesson = false;
-      
+
       if (slot.lessons && Array.isArray(slot.lessons)) {
         const lessonEntry = slot.lessons.find(l => l.lesson === myid);
         if (lessonEntry) {
           isGroupForThisLesson = lessonEntry.lessonGroup || false;
         }
       }
-      
+
       // If no lessons array exists, fall back to slot.group
       if (!slot.lessons || !Array.isArray(slot.lessons)) {
         isGroupForThisLesson = slot.group || false;
       }
-      
+
       // Filter group slots: Only show if usecapacity < capacity AND lessonId matches
       if (isGroupForThisLesson === true) {
         // NEW: For Curriculum Booking (type === "curri"), skip ALL group slots
         if (type === "curri") {
-             return;
+          return;
         }
 
         // Determine the max capacity for this slot — always use lesson-level capacity
         const maxCapacity = lessonCapacity || 10;
         const currentUsage = slot.usecapacity || 0;
-        
+
         // Check if there's available capacity
         if (currentUsage >= maxCapacity) {
           return; // Skip this slot, it's at full capacity - HIDE IT
@@ -387,46 +387,46 @@ export function Calendar({
         if (slot.lessonId && slot.lessonId !== myid) {
           return; // Skip this slot, it's for a different lesson
         }
-        
+
       }
-      
-      
+
+
       // Convert to user timezone using moment-timezone
       const userStartTime = convertTimeWithMoment(slot.start, teacherTimezone, userTimezone);
       const userEndTime = convertTimeWithMoment(slot.end, teacherTimezone, userTimezone);
-      
-      
+
+
       const start = parseTime(userStartTime);
       const end = parseTime(userEndTime);
-      
+
       if (start >= end) {
         return;
       }
-      
+
       let current = new Date(start);
-      
+
       while (current < end) {
         const time12h = formatTime12h(current);
         const currentTime = new Date(current);
-        
+
         // Check if this time slot overlaps with any unavailable period (in user timezone)
         let isBooked = false;
         for (const unavailableSlot of unavailableSlotsInUserTz) {
           const unavailableStart = parseTime(unavailableSlot.start);
           const unavailableEnd = parseTime(unavailableSlot.end);
-          
+
           // Create a slot starting at currentTime
           const slotStart = new Date(currentTime);
           const slotEnd = new Date(currentTime);
           slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration);
-          
+
           // Check for overlap between the time slot and unavailable period
           if (slotStart < unavailableEnd && slotEnd > unavailableStart) {
             isBooked = true;
             break;
           }
         }
-        
+
         // For group slots that overlap with an unavailable slot, skip if blocked
         if (isGroupForThisLesson && isBooked) {
           current.setMinutes(current.getMinutes() + slotDuration);
@@ -452,14 +452,14 @@ export function Calendar({
             slot: slot // Store full slot for reference
           };
         }
-        
+
         current.setMinutes(current.getMinutes() + slotDuration);
       }
     });
-    
+
     // Update slot metadata state
     setSlotMetadata(metadataMap);
-    
+
     return [...new Set(allSlots)].sort((a, b) => parseTime12h(a) - parseTime12h(b));
   };
 
@@ -473,10 +473,10 @@ export function Calendar({
   const parseTime12h = (timeStr) => {
     const [time, modifier] = timeStr.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
-    
+
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
-    
+
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date;
@@ -500,10 +500,10 @@ export function Calendar({
     const dateStr = getDateString(date);
 
     // Check if date is in dateUnAvailability (completely unavailable)
-    const isUnavailableDate = dateUnAvailability.find(d => 
+    const isUnavailableDate = dateUnAvailability.find(d =>
       d.date === dateStr && d.unavailable === true
     );
-    
+
     if (isUnavailableDate) {
       return false;
     }
@@ -529,43 +529,43 @@ export function Calendar({
   // NEW: Helper function to filter out unavailable slots
   const filterUnavailableSlots = (availableSlots, unavailableSlots) => {
     const filtered = [];
-    
+
     availableSlots.forEach(availableSlot => {
       const availableStart = parseTime(availableSlot.start);
       const availableEnd = parseTime(availableSlot.end);
-      
+
       // Check if this available slot overlaps with any unavailable slot
       let isBlocked = false;
-      
+
       for (const unavailableSlot of unavailableSlots) {
         const unavailableStart = parseTime(unavailableSlot.start);
         const unavailableEnd = parseTime(unavailableSlot.end);
-        
+
         // Check for overlap
         if (availableStart < unavailableEnd && availableEnd > unavailableStart) {
           isBlocked = true;
           break;
         }
       }
-      
+
       if (!isBlocked) {
         filtered.push(availableSlot);
       }
     });
-    
+
     return filtered;
   };
 
   const handleSelectDate = (day) => {
     // FIXED: Create date properly at start of day
     const date = createDateAtStartOfDay(year, currentMonth.getMonth(), day);
-    
+
     // Double-check date is not in past and is available
     if (isPastDate(date) || !isDateAvailable(date)) return;
-    
+
     setInternalSelectedDate(date);
     setSlotMetadata({}); // Clear metadata when date changes
-    
+
     // FIXED: Pass the correct date string to parent
     const dateStr = getDateString(date);
     onSelect(dateStr);
@@ -577,20 +577,20 @@ export function Calendar({
       return;
     }
     onSelectTime(time);
-    
+
     if (internalSelectedDate) {
       const dateStr = getDateString(internalSelectedDate);
       const time24h = convert12to24(time);
       const metadata = slotMetadata[time];
-      
+
       // Calculate if slot has available capacity
       const maxCapacity = lessonCapacity || 10;
       const currentUsage = metadata?.usecapacity || 0;
       const hasCapacity = currentUsage < maxCapacity;
-      
+
       // Only use groupPrice if it's a group slot AND it has available capacity
       const groupPrice = metadata?.group && hasCapacity ? (metadata.groupPrice || 0) : 0;
-      
+
       const bookingData = {
         newDate: `${dateStr} ${time24h}:00`,
         timezone: userTimezone,
@@ -605,12 +605,12 @@ export function Calendar({
         specific: metadata?.specific || false,
         calenderId: lessonCalendarId || null
       };
-      
+
       // Add usecapacity only if it's a group lesson with capacity
       if (metadata?.group && hasCapacity && metadata?.usecapacity !== undefined) {
         bookingData.usecapacity = metadata.usecapacity;
       }
-      
+
       localStorage.setItem('bookingDateTime', JSON.stringify(bookingData));
     }
   };
@@ -618,14 +618,14 @@ export function Calendar({
   const convert12to24 = (time12h) => {
     const [time, modifier] = time12h.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
-    
+
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
-    
+
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  const handleConfirmSchedule = async() => {
+  const handleConfirmSchedule = async () => {
     // Check if user is logged in first
     if (!userInfo?._id) {
       toast.info('Please log in to book.');
@@ -648,16 +648,16 @@ export function Calendar({
     try {
       setIsBooking(true);
       const parsedData = JSON.parse(date);
-      
-      const response = await dispatch(checkAvailablity({ 
-        lId: myid, 
-        newDate: parsedData?.newDate, 
-        timezone: userTimezone 
+
+      const response = await dispatch(checkAvailablity({
+        lId: myid,
+        newDate: parsedData?.newDate,
+        timezone: userTimezone
       })).unwrap();
-      
+
       if (response?.status) {
         toast.success(response?.message);
-        
+
         // Prepare booking data
         const bookingPayload = {
           id: id,
@@ -673,7 +673,7 @@ export function Calendar({
 
         // Initiate booking and redirect to checkout
         const bookingResponse = await dispatch(initiateBooking(bookingPayload)).unwrap();
-        
+
         if (bookingResponse?.status && bookingResponse?.url) {
           // Save booking ID for later confirmation
           localStorage.setItem("bookingId", bookingResponse?.bookingId);
@@ -691,9 +691,9 @@ export function Calendar({
         typeof error === "string"
           ? error
           : error?.message ||
-            error?.data?.message ||
-            error?.response?.data?.message ||
-            "An error occurred while confirming booking";
+          error?.data?.message ||
+          error?.response?.data?.message ||
+          "An error occurred while confirming booking";
       // Remove the word 'Stripe' as requested by user
       const cleanMsg = String(rawMsg).replace(/stripe\s*/gi, "").trim();
       toast.error(cleanMsg || "An error occurred while confirming booking");
@@ -714,7 +714,7 @@ export function Calendar({
     // if (prevMonth.getMonth() < today.getMonth() && prevMonth.getFullYear() <= today.getFullYear()) return;
     setCurrentMonth(prevMonth);
   };
-  
+
   const handleNextMonth = () => {
     setCurrentMonth(new Date(year, currentMonth.getMonth() + 1, 1));
   };
@@ -745,8 +745,8 @@ export function Calendar({
       <div className="flex justify-between items-center mb-3">
         <p className="font-semibold text-xl">{monthName} {year}</p>
         <div>
-        <button onClick={handlePrevMonth} className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"><ChevronLeft /></button>
-        <button onClick={handleNextMonth} className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"><ChevronRight /></button>
+          <button onClick={handlePrevMonth} className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"><ChevronLeft /></button>
+          <button onClick={handleNextMonth} className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"><ChevronRight /></button>
         </div>
       </div>
 
@@ -769,15 +769,14 @@ export function Calendar({
             <div
               key={i}
               onClick={() => !isPast && isAvailable && handleSelectDate(day)}
-              className={`py-2 text-sm border border-gray-300 ${
-                isPast
+              className={`py-2 text-sm border border-gray-300 ${isPast
                   ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
                   : !isAvailable
-                  ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
-                  : isSelected
-                  ? "bg-primary text-white"
-                  : "text-black hover:bg-blue-100 cursor-pointer bg-white"
-              }`}
+                    ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
+                    : isSelected
+                      ? "bg-primary text-white"
+                      : "text-black hover:bg-blue-100 cursor-pointer bg-white"
+                }`}
               title={isPast ? "Past date" : !isAvailable ? "Not available" : ""}
             >
               {day}
@@ -792,22 +791,20 @@ export function Calendar({
           <button
             type="button"
             onClick={() => handleTabChange("individual")}
-            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${
-              bookingTab === "individual"
+            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${bookingTab === "individual"
                 ? "bg-white text-black shadow-sm font-semibold"
                 : "text-gray-500 hover:text-black font-medium"
-            }`}
+              }`}
           >
             Individual {internalSelectedDate ? `(${individualTimes.length})` : ""}
           </button>
           <button
             type="button"
             onClick={() => handleTabChange("group")}
-            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${
-              bookingTab === "group"
+            className={`flex-1 py-2 px-3 text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer ${bookingTab === "group"
                 ? "bg-white text-black shadow-sm font-semibold"
                 : "text-gray-500 hover:text-black font-medium"
-            }`}
+              }`}
           >
             Group {internalSelectedDate ? `(${groupTimes.length})` : ""}
           </button>
@@ -824,7 +821,7 @@ export function Calendar({
               const currentUsage = metadata?.usecapacity || 0;
               const hasCapacity = currentUsage < maxCapacity;
               const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
-              
+
               // Check if time is in the past on today's date
               const isToday = internalSelectedDate && getDateString(internalSelectedDate) === getDateString(today);
               let isPastTime = false;
@@ -836,24 +833,23 @@ export function Calendar({
                 const now = new Date();
                 isPastTime = slotTime < now;
               }
-              
+
               const isBooked = Boolean(metadata?.isBooked);
               const isDisabled = isPastTime || isBooked;
-              
+
               return (
                 <button
                   key={time}
                   onClick={() => !isDisabled && handleTimeSelect(time)}
                   disabled={isDisabled}
-                  className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${
-                    isDisabled
+                  className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${isDisabled
                       ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 hover:bg-gray-100"
                       : selectedTime === time
-                      ? "bg-primary text-white border-primary"
-                      : isGroup
-                      ? "bg-[#FFF5F2] hover:bg-[#FFEAE3] text-gray-800 border-primary/30 hover:border-primary/60"
-                      : "hover:bg-blue-50 text-gray-700 border-gray-300 bg-white"
-                  }`}
+                        ? "bg-primary text-white border-primary"
+                        : isGroup
+                          ? "bg-[#FFF5F2] hover:bg-[#FFEAE3] text-gray-800 border-primary/30 hover:border-primary/60"
+                          : "hover:bg-blue-50 text-gray-700 border-gray-300 bg-white"
+                    }`}
                 >
                   {isGroup && (
                     <span className="w-full text-[9px] font-semibold text-white bg-primary py-0.5 text-center shrink-0">
@@ -882,15 +878,15 @@ export function Calendar({
           </div>
         ) : (
           <div className="text-center py-4 text-gray-500 text-sm">
-            {!internalSelectedDate 
-              ? hasAnyAvailableDatesInMonth() 
-                ? "Pick a date" 
+            {!internalSelectedDate
+              ? hasAnyAvailableDatesInMonth()
+                ? "Pick a date"
                 : "Sorry, this teacher is currently fully booked."
               : hasAnyGroupSlots
-              ? bookingTab === "group"
-                ? "No group slots available for this date"
-                : "No individual slots available for this date"
-              : `Pick a time ${availableTimes.length > 0 ? `(${availableTimes.filter(t => !slotMetadata[t]?.isBooked).length} available)` : ""}`
+                ? bookingTab === "group"
+                  ? "No group slots available for this date"
+                  : "No individual slots available for this date"
+                : `Pick a time ${availableTimes.length > 0 ? `(${availableTimes.filter(t => !slotMetadata[t]?.isBooked).length} available)` : ""}`
             }
           </div>
         )}
@@ -899,11 +895,10 @@ export function Calendar({
       <button
         onClick={handleConfirmSchedule}
         disabled={!internalSelectedDate || !selectedTime || isBooking}
-        className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${
-          !internalSelectedDate || !selectedTime || isBooking
+        className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${!internalSelectedDate || !selectedTime || isBooking
             ? "bg-gray-400 text-white cursor-not-allowed opacity-80"
             : "bg-primary hover:bg-primary/90 text-white cursor-pointer active:scale-[0.99]"
-        }`}
+          }`}
       >
         {isBooking ? (
           <>
@@ -938,7 +933,7 @@ export function Calendar({
               const currentUsage = metadata?.usecapacity || 0;
               const hasCapacity = currentUsage < maxCapacity;
               const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
-              
+
               if (isGroup && hasCapacity && groupPrice > 0) {
                 return `Book (${formatPrice(groupPrice, priceCurrency)})`;
               }

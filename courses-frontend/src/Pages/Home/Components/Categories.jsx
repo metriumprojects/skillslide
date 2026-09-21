@@ -114,7 +114,10 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
             <LogoIcon className="h-[46px] w-[46px]" />
 
             {/* Skill (italic) + Slide (simple) + Learn anything (italic, slightly smaller) */}
-            <div className="flex items-baseline gap-[14px] font-['Roboto'] font-black tracking-tight leading-none">
+            <div
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+              className="flex items-baseline gap-[14px] font-black tracking-tight leading-none"
+            >
               <span className="text-2xl sm:text-[28px] text-[#FA4602]">
                 <span className="italic">Skill</span>
                 <span className="not-italic">Slide</span>

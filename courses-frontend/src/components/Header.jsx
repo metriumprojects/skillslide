@@ -163,7 +163,10 @@ useEffect(() => {
         aria-label="SkillSlide home"
       >
         <LogoIcon className="h-[40px] w-[40px]" />
-        <span className="font-['Roboto'] text-xl font-black tracking-tight text-[#FA4602] leading-none">
+        <span
+          style={{ fontFamily: "'DM Sans', sans-serif" }}
+          className="text-xl font-black tracking-tight text-[#FA4602] leading-none"
+        >
           <span className="italic">Skill</span>
           <span className="not-italic">Slide</span>
         </span>

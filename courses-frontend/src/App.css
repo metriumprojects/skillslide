@@ -3,11 +3,13 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
+  color: #1A2B49;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Chrome, Edge, Safari */
@@ -15,29 +17,26 @@ body {
   display: none;
 }
 
-/* Subtle, sleek custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
-  border-radius: 9999px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
-}
+/* Hide scrollbar completely while keeping elements scrollable */
 .custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera, Edge */
+  width: 0px;
+  height: 0px;
 }
 
 @keyframes toast-no-animation {
   from {
     opacity: 1;
   }
+
   to {
     opacity: 1;
   }

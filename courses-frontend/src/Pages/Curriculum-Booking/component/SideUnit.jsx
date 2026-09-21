@@ -68,17 +68,17 @@ export default function Curriculum({ Data, onExpand }) {
                   setOpenUnits([...openUnits, index]);
                 }
               }}
-              className="w-full bg-[#E9EAEE] rounded-[18px] sm:rounded-[20px] px-4 sm:px-5 py-3 flex justify-between items-center text-left font-normal text-black shadow-none hover:bg-[#dfe1e6] transition-colors cursor-pointer"
+              className="w-full bg-[#E9EAEE] rounded-[18px] sm:rounded-[20px] px-4 sm:px-5 py-3 flex justify-between items-center text-left text-[#1A2B49] shadow-none hover:bg-[#dfe1e6] transition-colors cursor-pointer"
             >
-              <span className="text-sm sm:text-[15px] font-normal">
-                Unit {index + 1} {u.title && !u.title.startsWith("unit-") ? <span className="text-black">: {u.title}</span> : ""}
+              <span className="text-base sm:text-lg md:text-xl font-semibold text-[#1A2B49]">
+                Unit {index + 1} {u.title && !u.title.startsWith("unit-") ? <span>: {u.title}</span> : ""}
               </span>
               <div className="flex items-center gap-2">
                 <ChevronDown
                   className={`transition-transform duration-200 text-gray-700 ${
                     openUnits.includes(index) ? "rotate-180" : ""
                   }`}
-                  size={18}
+                  size={20}
                 />
               </div>
             </button>
@@ -90,27 +90,29 @@ export default function Curriculum({ Data, onExpand }) {
               {u?.lessons?.map((lesson, i) => (
                 <div
                   key={i}
-                  className="w-full bg-[#E9EAEE] rounded-[24px] p-2 sm:p-2.5 flex items-center gap-3 sm:gap-3.5 shadow-none transition-all"
+                  className="w-full bg-[#E9EAEE] rounded-[20px] overflow-hidden flex flex-col shadow-none transition-all"
                 >
+                  {/* Lesson Image on Top (Full Width - Edge to Edge, No side border) */}
                   <img
                     src={lesson.image}
-                    className="w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-[18px] object-cover shrink-0"
+                    className="w-full h-36 sm:h-44 object-cover shrink-0 block"
                     alt={lesson?.title || "Lesson thumbnail"}
                   />
 
-                  <div className="flex flex-col justify-between py-1 pr-1.5 flex-1 min-w-0">
+                  {/* Info below image */}
+                  <div className="flex flex-col justify-between flex-1 min-w-0 p-3.5 sm:p-4">
                     <div>
-                      <h3 className="text-black text-sm sm:text-[15px] font-semibold leading-snug break-words">
+                      <h3 className="text-[#1A2B49] text-sm sm:text-[15px] font-semibold leading-snug break-words">
                         Lesson {i + 1}: {lesson?.title}
                       </h3>
                       {lesson.description && (
-                        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-1">
+                        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-1.5">
                           {lesson.description}
                         </p>
                       )}
                     </div>
                     
-                    <div className="flex items-center flex-wrap gap-2 mt-2">
+                    <div className="flex items-center flex-wrap gap-2 mt-2.5">
                       {lesson.independent ? (
                         <Link 
                           to={`/curriculum-lesson/${lesson.id}`}

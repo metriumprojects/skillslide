@@ -80,7 +80,7 @@ const TeacherCard = ({
             <span className="text-[11px] font-medium uppercase tracking-wider text-gray-500 leading-tight">
               Meet your teacher
             </span>
-            <h2 className="text-base sm:text-lg font-normal text-black leading-snug truncate mt-0.5">
+            <h2 className="text-base sm:text-lg font-normal text-[#1A2B49] leading-snug truncate mt-0.5">
               {displayName}
             </h2>
           </div>
@@ -90,7 +90,7 @@ const TeacherCard = ({
             type="button"
             onClick={handleStartChat}
             title="Message Teacher"
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-black px-3.5 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-[#1A2B49] px-3.5 py-1.5 rounded-full text-xs font-normal shadow-sm cursor-pointer transition-colors shrink-0"
           >
             <svg
               width="14"
@@ -209,7 +209,7 @@ const TeacherCard = ({
             </span>
 
             <div className="flex items-center gap-2">
-              <h4 className="text-sm sm:text-base font-bold text-black truncate leading-snug">
+              <h4 className="text-sm sm:text-base font-bold text-[#1A2B49] truncate leading-snug">
                 {displayName}
               </h4>
               {displayRating > 0 && (

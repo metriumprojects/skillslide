@@ -3,19 +3,78 @@
 
 @theme {
     --color-primary: #FA4602;
-    --font-sans: 'Roboto', sans-serif;
+    --font-sans: 'DM Sans', sans-serif;
+    --font-dmsans: 'DM Sans', sans-serif;
+    --font-outfit: 'Outfit', sans-serif;
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
+    color: #1A2B49;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Globally map black text to title color (#1A2B49) */
+.text-black,
+.text-\[\#000000\],
+.text-\[\#000\] {
+    color: #1A2B49 !important;
+}
+
+.hover\:text-black:hover,
+.hover\:text-\[\#000000\]:hover {
+    color: #1A2B49 !important;
+}
+
+.group:hover .group-hover\:text-black {
+    color: #1A2B49 !important;
+}
+
+/* Globally map black borders (bubbles, tabs, inputs) to title color (#1A2B49) */
+.border-black,
+.border-\[\#000000\],
+.border-\[\#000\] {
+    border-color: #1A2B49 !important;
+}
+
+.hover\:border-black:hover {
+    border-color: #1A2B49 !important;
+}
+
+.focus\:border-black:focus {
+    border-color: #1A2B49 !important;
+}
+
+/* Globally map solid black buttons and active bubble pills to title color (#1A2B49) */
+button.bg-black,
+a.bg-black,
+span.bg-black,
+div.bg-black,
+.bg-black:not([class*="/"]),
+.bg-\[\#000000\],
+.bg-\[\#000\] {
+    background-color: #1A2B49 !important;
+}
+
+button.bg-black:hover,
+a.bg-black:hover,
+.hover\:bg-black:hover,
+.hover\:bg-neutral-800:hover,
+.hover\:bg-gray-800:hover,
+.hover\:bg-black\/90:hover {
+    background-color: #132038 !important;
+}
+
+.focus\:ring-black:focus {
+    --tw-ring-color: #1A2B49 !important;
 }
 
 @theme {
-  --breakpoint-3xl: 100rem;
-  --breakpoint-4xl: 120rem;
+    --breakpoint-3xl: 100rem;
+    --breakpoint-4xl: 120rem;
 }
 
-.fAlnEc .gNJDp a:not(.TrZEUc):not(.WpHeLc), .fAlnEc .gNJDp button:not(.TrZEUc) {
+.fAlnEc .gNJDp a:not(.TrZEUc):not(.WpHeLc),
+.fAlnEc .gNJDp button:not(.TrZEUc) {
     font-weight: 500;
     font-weight: var(--c-stfwt, 500);
     display: none !important;

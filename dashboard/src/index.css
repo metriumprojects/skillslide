@@ -4,3 +4,16 @@
 @theme {
     --color-primary: #008CFF;
 }
+
+/* Hide scrollbar for Chrome, Safari, Opera and Edge */
+.no-scrollbar::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar,
+.overflow-x-auto {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}

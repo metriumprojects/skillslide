@@ -150,12 +150,11 @@ export default function ImageGallery({ images = [], layout = "grid" }) {
         ) : (
           <div className="relative">
             {/* Dynamic Grid - Show up to 4 images */}
-            <div className={`grid gap-1.5 mb-4 ${
-              images.length === 1 ? 'grid-cols-1 aspect-[2/1]' :
-              images.length === 2 ? 'grid-cols-2 aspect-[2/1]' :
-              images.length === 3 ? 'grid-cols-2 grid-rows-2 aspect-[4/3]' :
-              'grid-cols-2 aspect-square'
-            }`}>
+            <div className={`grid gap-1.5 mb-4 ${images.length === 1 ? 'grid-cols-1 aspect-[2/1]' :
+                images.length === 2 ? 'grid-cols-2 aspect-[2/1]' :
+                  images.length === 3 ? 'grid-cols-2 grid-rows-2 aspect-[4/3]' :
+                    'grid-cols-2 aspect-square'
+              }`}>
               {images.slice(0, 4).map((img, index) => (
                 <div
                   key={index}
@@ -175,12 +174,12 @@ export default function ImageGallery({ images = [], layout = "grid" }) {
 
             {/* View More Button - Only show if more than 5 images */}
             {images.length > 1 && (
-                <button
-                  onClick={() => openFullscreen(1)}
-                  className="absolute right-4 bottom-4 w-11.5 h-11.5 rounded-full bg-black/55  text-white flex items-center justify-center transition-all text-lg font-semibold"
-                >
-                  <GalleryHorizontalEnd />
-                </button>
+              <button
+                onClick={() => openFullscreen(1)}
+                className="absolute right-4 bottom-4 w-11.5 h-11.5 rounded-full bg-black/55  text-white flex items-center justify-center transition-all text-lg font-semibold"
+              >
+                <GalleryHorizontalEnd />
+              </button>
             )}
           </div>
         )}
@@ -239,11 +238,10 @@ export default function ImageGallery({ images = [], layout = "grid" }) {
                 alt={`Thumbnail ${index + 1}`}
                 loading="lazy"
                 decoding="async"
-                className={`h-16 w-16 object-cover rounded cursor-pointer border-2 ${
-                  index === selectedImageIndex
+                className={`h-16 w-16 object-cover rounded cursor-pointer border-2 ${index === selectedImageIndex
                     ? "border-white"
                     : "border-transparent"
-                }`}
+                  }`}
                 onClick={() => setSelectedImageIndex(index)}
               />
             ))}
