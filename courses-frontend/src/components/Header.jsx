@@ -57,7 +57,7 @@ const Header = ({
       ? (location.pathname === path && currentTab === searchTab)
       : (location.pathname === path && !currentTab);
     return `px-4 py-2 rounded-full transition-colors ${
-      isActive ? "border border-white bg-[#008CFF] text-white" : "hover:text-[#1dbf73]"
+      isActive ? "border-[1.5px] border-white bg-[#008CFF] text-white" : "hover:text-[#1dbf73]"
     }`;
   };
 

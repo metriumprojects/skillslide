@@ -48,7 +48,7 @@ export default function StudentStorySlider() {
   if (loading || stories.length === 0) return null;
 
   return (
-    <section className="mb-[32px] w-full">
+    <section className="mb-[60px] w-full">
       <Swiper
         slidesPerView={1}
         loop={stories.length > 1}

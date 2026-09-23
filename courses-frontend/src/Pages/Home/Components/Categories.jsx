@@ -101,8 +101,8 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     const isActive = searchTab
       ? (location.pathname === path && currentTab === searchTab)
       : (location.pathname === path && !currentTab);
-    return `w-full px-4 py-2 text-left flex items-center gap-2 text-sm transition-colors ${
-      isActive ? "border border-white bg-primary text-white" : "hover:bg-gray-50"
+    return `w-full px-4 py-2 text-left flex items-center gap-2 text-sm transition-colors hover:bg-gray-50 ${
+      isActive ? "font-bold text-black" : "text-black"
     }`;
   };
 
@@ -165,7 +165,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                 <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -40, scale: 0.95 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden border border-gray-100">
+                            transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 left-0 mt-2 w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
                   <Link
                     to="/profile?tab=My Profile"
                     className={menuLinkClass("/profile", "My Profile")}
@@ -206,7 +206,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                   </Link>
                   <button
                     onClick={() => { handleLogout(); setShowProfileMenu?.(false); }}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 text-sm"
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-[#1A2B49] text-sm"
                   >
                     Logout
                   </button>

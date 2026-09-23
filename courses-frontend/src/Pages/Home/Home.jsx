@@ -95,7 +95,7 @@ const Home = () => {
   // Calculate limit based on screen resolution
   const calculateLimit = useCallback(() => {
     if (typeof window === "undefined") return 20;
-    
+
     const width = window.innerWidth;
     if (width >= 1920) {
       return 49; // 7 columns
@@ -437,8 +437,8 @@ const Home = () => {
   ]);
 
   return (
-    <MainLayout 
-      className="mx-auto" 
+    <MainLayout
+      className="mx-auto"
       width="3080px"
       categories={categories}
       selectedCategory={selectedCategory}
@@ -450,7 +450,7 @@ const Home = () => {
       }}
       onSearchToggle={() => setShowFilter(true)}
     >
-    
+
 
       <SearchCategoryToolbar
         categories={categories}
@@ -461,78 +461,74 @@ const Home = () => {
       <StudentStorySlider />
 
       {/* Legacy desktop category row retained for state compatibility. */}
-        <div className="hidden">
-     <div className="hidden lg:flex items-center flex-nowrap min-w-0 gap-4">
-       <div
-          onClick={() => handleSelect("")}
-          className={`cursor-pointer flex items-center gap-1 whitespace-nowrap ${
-            !selectedCategory
-              ? "text-black py-2 border-b-2 border-black"
-              : "text-black py-2 border-b-2 border-transparent"
-          }`}
-        >
-          <span className="text-sm font-semibold">Trending</span>
-        </div>
-
-        {/* First 7 Categories */}
-        {visibleCategories.map((cat, index) => (
+      <div className="hidden">
+        <div className="hidden lg:flex items-center flex-nowrap min-w-0 gap-4">
           <div
-            key={index}
-            onClick={() => handleSelect(cat.name)}
-            className={`cursor-pointer flex font-semibold items-center gap-1 whitespace-nowrap ${
-              selectedCategory === cat.name
-                ? "text-black  py-2 border-b-2 border-black"
-                : "text-black  py-2 border-b-2 border-transparent"
-            }`}
-          >
-            <span className="text-sm">{cat.name}</span>
-          </div>
-        ))}
-
-        {/* More Button - Only show if there are hidden categories */}
-        {hiddenCategories.length > 0 && (
-          <div className="relative" ref={moreMenuRef}>
-            <button
-              onClick={() => setShowMore(!showMore)}
-              className={`cursor-pointer flex items-center gap-1 whitespace-nowrap ${
-                showMore
-                  ? "text-black  px-2 py-3 rounded-4xl"
-                  : "text-black  px-2 py-3"
+            onClick={() => handleSelect("")}
+            className={`cursor-pointer flex items-center gap-1 whitespace-nowrap ${!selectedCategory
+                ? "text-black py-2 border-b-2 border-black"
+                : "text-black py-2 border-b-2 border-transparent"
               }`}
-            >
-              <span className="text-sm font-semibold">More</span>
-              <IoIosArrowDown className={`transition-transform ${showMore ? "rotate-180" : ""}`} />
-            </button>
-
-            {/* Dropdown Menu */}
-            {showMore && (
-              <div className="absolute top-full left-0 mt-2 bg-white rounded-md shadow-lg z-50 min-w-max">
-                {hiddenCategories.map((cat, index) => (
-                  <div
-                    key={index}
-                    onClick={() => {
-                      handleSelect(cat.name);
-                      setShowMore(false);
-                    }}
-                    className={`px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm ${
-                      selectedCategory === cat.name ? "underline underline-offset-4 decoration-2" : ""
-                    }`}
-                  >
-                    {cat.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-     </div>
-          <button
-            onClick={() => setShowFilter(true)}
-            className="hidden lg:flex items-center justify-center p-2 hover:bg-gray-100 rounded-md transition-colors"
           >
-            <ListFilter size={20} className="" />
-          </button>
+            <span className="text-sm font-semibold">Trending</span>
+          </div>
+
+          {/* First 7 Categories */}
+          {visibleCategories.map((cat, index) => (
+            <div
+              key={index}
+              onClick={() => handleSelect(cat.name)}
+              className={`cursor-pointer flex font-semibold items-center gap-1 whitespace-nowrap ${selectedCategory === cat.name
+                  ? "text-black  py-2 border-b-2 border-black"
+                  : "text-black  py-2 border-b-2 border-transparent"
+                }`}
+            >
+              <span className="text-sm">{cat.name}</span>
+            </div>
+          ))}
+
+          {/* More Button - Only show if there are hidden categories */}
+          {hiddenCategories.length > 0 && (
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                onClick={() => setShowMore(!showMore)}
+                className={`cursor-pointer flex items-center gap-1 whitespace-nowrap ${showMore
+                    ? "text-black  px-2 py-3 rounded-4xl"
+                    : "text-black  px-2 py-3"
+                  }`}
+              >
+                <span className="text-sm font-semibold">More</span>
+                <IoIosArrowDown className={`transition-transform ${showMore ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showMore && (
+                <div className="absolute top-full left-0 mt-2 bg-white rounded-md shadow-lg z-50 min-w-max">
+                  {hiddenCategories.map((cat, index) => (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        handleSelect(cat.name);
+                        setShowMore(false);
+                      }}
+                      className={`px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm ${selectedCategory === cat.name ? "underline underline-offset-4 decoration-2" : ""
+                        }`}
+                    >
+                      {cat.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
+        <button
+          onClick={() => setShowFilter(true)}
+          className="hidden lg:flex items-center justify-center p-2 hover:bg-gray-100 rounded-md transition-colors"
+        >
+          <ListFilter size={20} className="" />
+        </button>
+      </div>
 
       {/* Search Bar Popup */}
       {showSearchBar && (
@@ -567,8 +563,8 @@ const Home = () => {
 
 
       {/* Categories Swiper */}
-     <div className="hidden"><CategoryMobile
-        categories={categories} 
+      <div className="hidden"><CategoryMobile
+        categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={(categoryName) => {
           setSelectedCategory(categoryName);
@@ -578,6 +574,11 @@ const Home = () => {
         setShowFilter={() => setShowFilter(true)}
       /></div>
 
+
+      {/* Category Heading */}
+      <h2 className="mb-[20px] text-[28px] font-bold tracking-tight italic">
+        {selectedCategory ? selectedCategory : "Trending"}
+      </h2>
 
       {/* Lessons Grid */}
       <div className="md:pb-4 w-full m-auto">
@@ -650,7 +651,7 @@ const Home = () => {
           >
             <div className="flex justify-end items-center mb-6 w-full">
               <div className="flex items-center gap-4">
-               
+
                 <button
                   onClick={() => setShowFilter(false)}
                   className="text-gray-500 hover:text-gray-700 flex items-center cursor-pointer ml-2"
@@ -659,7 +660,7 @@ const Home = () => {
                 </button>
               </div>
             </div>
-            
+
 
             {/* Search Bar */}
             <div className="mb-6">
@@ -675,41 +676,41 @@ const Home = () => {
                 locationFilter={locationFilter}
                 onLocationChange={handleLocationChange}
                 onLocationSelect={handleLocationSelect}
-                onClose={() => {}}
-                onFilterOpen={() => {}}
+                onClose={() => { }}
+                onFilterOpen={() => { }}
                 showMobileLocation={true}
               />
             </div>
-              <div className="flex items-center gap-4 mb-6"  >
-                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isOnlineSelected}
-                    onChange={() => handleModeChange("online")}
-                    className="w-4 h-4 accent-black border border-gray-400 rounded bg-white cursor-pointer"
-                  />
-                  <span className="text-base text-black font-semibold">Online</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isInPersonSelected}
-                    onChange={() => handleModeChange("in-person")}
-                    className="w-4 h-4 accent-black border border-gray-400 rounded bg-white cursor-pointer"
-                  />
-                  <span className="text-base text-black font-semibold">Offline</span>
-                </label>
-                          <div className="flex items-center gap-1 border-l border-gray-300 px-2 w-full md:w-auto relative">
-                            <CiLocationOn className="h-4 w-4 shrink-0 hidden md:block" />
-                            <LocationAutocomplete
-                              placeholder="Enter a location"
-                              value={locationFilter}
-                              onChange={handleLocationChange}
-                              onSelectDetails={handleLocationSelect}
-                              className="px-0 text-sm hidden md:block w-full min-w-[300px]"
-                            />
-                          </div>
+            <div className="flex items-center gap-4 mb-6"  >
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isOnlineSelected}
+                  onChange={() => handleModeChange("online")}
+                  className="w-4 h-4 accent-black border border-gray-400 rounded bg-white cursor-pointer"
+                />
+                <span className="text-base text-black font-semibold">Online</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isInPersonSelected}
+                  onChange={() => handleModeChange("in-person")}
+                  className="w-4 h-4 accent-black border border-gray-400 rounded bg-white cursor-pointer"
+                />
+                <span className="text-base text-black font-semibold">Offline</span>
+              </label>
+              <div className="flex items-center gap-1 border-l border-gray-300 px-2 w-full md:w-auto relative">
+                <CiLocationOn className="h-4 w-4 shrink-0 hidden md:block" />
+                <LocationAutocomplete
+                  placeholder="Enter a location"
+                  value={locationFilter}
+                  onChange={handleLocationChange}
+                  onSelectDetails={handleLocationSelect}
+                  className="px-0 text-sm hidden md:block w-full min-w-[300px]"
+                />
               </div>
+            </div>
 
             {/* Price Slider */}
             <p className="text-base font-semibold mb-2">Price range:</p>
@@ -744,20 +745,20 @@ const Home = () => {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-black font-semibold pointer-events-none">
                     $
                   </span>
-                <input
-                  type="number"
-                  min="1"
-                  max="100000"
-                  value={max}
-                  onChange={(e) => {
-                    const val = Math.max(
-                      Math.min(100000, Number(e.target.value)),
-                      min + 1,
-                    );
-                    setMax(val);
-                  }}
-                  className="border border-[#ddd] rounded-lg pl-7 pr-3 py-2 w-full text-center font-semibold"
-                />
+                  <input
+                    type="number"
+                    min="1"
+                    max="100000"
+                    value={max}
+                    onChange={(e) => {
+                      const val = Math.max(
+                        Math.min(100000, Number(e.target.value)),
+                        min + 1,
+                      );
+                      setMax(val);
+                    }}
+                    className="border border-[#ddd] rounded-lg pl-7 pr-3 py-2 w-full text-center font-semibold"
+                  />
                 </div>
               </div>
             </div>

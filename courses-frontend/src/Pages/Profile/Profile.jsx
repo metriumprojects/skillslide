@@ -162,7 +162,7 @@ export default function Profile() {
         <div className="w-full">
           {/* Desktop Tabs */}
           <div className="hidden md:flex items-center gap-3 w-full max-w-full">
-            <div className="w-fit max-w-full rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black">
+            <div className="w-fit max-w-full rounded-full overflow-hidden border-[1.5px] border-black bg-white p-1 font-medium text-black">
               <Swiper
                 modules={[FreeMode]}
                 freeMode={{ enabled: true, momentum: true }}
@@ -266,7 +266,7 @@ export default function Profile() {
               </div>
             )}
             {showDropdown && (
-              <div className="absolute left-0 right-0 z-10 mt-2 space-y-1 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
+              <div className="absolute left-0 right-0 z-10 mt-2 space-y-1 rounded-2xl border-[1.5px] border-gray-200 bg-white p-1.5 shadow-lg">
                 {tabsToShow.map((s, index) => (
                   <button
                     key={index}
