@@ -26,7 +26,7 @@ export default function TeacherCreated() {
             <LogoIcon className="h-[46px] w-[46px]" />
 
             {/* Skill (italic) + Slide (simple) */}
-            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#D96B27] leading-none">
+            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4F2E] leading-none">
               <span className="italic">Skill</span>
               <span className="not-italic">Slide</span>
             </span>
@@ -81,7 +81,7 @@ export default function TeacherCreated() {
               <button
                 type="button"
                 onClick={() => navigate("/profile")}
-                className="inline-flex items-center rounded-full bg-[#D96B27] hover:bg-[#D96B27]/90 px-6 py-3 text-sm font-medium text-white transition-colors cursor-pointer"
+                className="inline-flex items-center rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 px-6 py-3 text-sm font-medium text-white transition-colors cursor-pointer"
               >
                 Continue
               </button>

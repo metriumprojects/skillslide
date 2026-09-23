@@ -847,7 +847,7 @@ export function Calendar({
                       : selectedTime === time
                         ? "bg-white text-[#1A2B49] border-[#1A2B49] ring-1 ring-inset ring-[#1A2B49] shadow-sm font-semibold"
                         : isGroup
-                          ? "bg-[#D96B27]/10 hover:bg-[#D96B27]/15 text-gray-800 border-primary/30 hover:border-primary/60"
+                          ? "bg-[#FA4F2E]/10 hover:bg-[#FA4F2E]/15 text-gray-800 border-primary/30 hover:border-primary/60"
                           : "hover:bg-[#1A2B49]/10 text-gray-700 border-gray-300 bg-white"
                     }`}
                 >
@@ -897,7 +897,7 @@ export function Calendar({
         disabled={!internalSelectedDate || !selectedTime || isBooking}
         className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${!internalSelectedDate || !selectedTime || isBooking
             ? "bg-gray-400 text-white cursor-not-allowed opacity-80"
-            : "bg-[#D96B27] hover:bg-[#D96B27]/90 text-white cursor-pointer active:scale-[0.99]"
+            : "bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 text-white cursor-pointer active:scale-[0.99]"
           }`}
       >
         {isBooking ? (

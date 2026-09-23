@@ -847,7 +847,7 @@ export function ManageCal({
         disabled={!internalSelectedDate || !selectedTime}
         className={`w-full mt-6 py-2.5 rounded text-sm ${!internalSelectedDate || !selectedTime
             ? "bg-gray-400 cursor-not-allowed"
-            : "bg-[#D96B27] hover:bg-[#D96B27]/90 text-white cursor-pointer"
+            : "bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 text-white cursor-pointer"
           }`}
       >
         {(() => {

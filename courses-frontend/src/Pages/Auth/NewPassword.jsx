@@ -59,7 +59,7 @@ export default function NewPassword() {
         >
           <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
             <LogoIcon className="h-[46px] w-[46px]" />
-            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#D96B27] leading-none">
+            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4F2E] leading-none">
               <span className="italic">Skill</span>
               <span className="not-italic">Slide</span>
             </span>

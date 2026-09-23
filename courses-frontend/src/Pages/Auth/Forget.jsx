@@ -49,7 +49,7 @@ export default function Forget() {
             <LogoIcon className="h-[46px] w-[46px]" />
 
             {/* Skill (italic) + Slide (simple) */}
-            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#D96B27] leading-none">
+            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#FA4F2E] leading-none">
               <span className="italic">Skill</span>
               <span className="not-italic">Slide</span>
             </span>
@@ -112,7 +112,7 @@ export default function Forget() {
               <button
                 type="submit"
                 disabled={loading}
-                className="block w-fit rounded-full bg-[#D96B27] hover:bg-[#D96B27]/90 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+                className="block w-fit rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
               >
                 {loading ? "Sending..." : "Continue"}
               </button>
