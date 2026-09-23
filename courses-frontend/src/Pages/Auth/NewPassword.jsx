@@ -6,8 +6,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { ResetPassword } from "../../redux/reducers/AuthReducer";
 
-const LOGO_URL =
-  "https://res.cloudinary.com/dinwxxnzm/image/upload/v1784044801/Logo_1_jldcf8.png";
+import LogoIcon from "../../components/LogoIcon";
 
 const inputClass =
   "w-full rounded border-[1.5px] border-black px-4 py-[12px] text-[16px] outline-none transition-all duration-200 focus:outline-none focus:ring-0";
@@ -58,8 +57,12 @@ export default function NewPassword() {
           onSubmit={handleSubmit}
           className="flex w-full max-w-xl flex-col gap-6 px-2 text-left text-sm text-[#000000]"
         >
-          <Link to="/" className="inline-flex" aria-label="Skillslide home">
-            <img src={LOGO_URL} alt="Skillslide" className="h-11 w-auto object-contain" />
+          <Link to="/" className="inline-flex items-center gap-3 select-none" aria-label="Skillslide home">
+            <LogoIcon className="h-[46px] w-[46px]" />
+            <span className="font-['Roboto'] text-[28px] font-black tracking-tight text-[#D96B27] leading-none">
+              <span className="italic">Skill</span>
+              <span className="not-italic">Slide</span>
+            </span>
           </Link>
 
           <h1 className="text-[32px] font-bold">Create new password</h1>

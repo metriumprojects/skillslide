@@ -128,7 +128,7 @@ const MyProfile = () => {
               )}
 
               {/* Rating / Review Thing (Outline Star) */}
-              <span className="inline-flex items-center gap-2 bg-[#fff6f0] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+              <span className="inline-flex items-center gap-2 bg-[#E9EAEE] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-black">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
@@ -149,8 +149,8 @@ const MyProfile = () => {
 
               {/* Classes Hosted (Not bold) */}
               {!userInfo?.classHosted && (
-                <span className="inline-flex items-center gap-2 bg-[#006fed] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-white">
+                <span className="inline-flex items-center gap-2 bg-[#E9EAEE] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-black">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>

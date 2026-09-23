@@ -16,7 +16,6 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
   const [eligibility, setEligibility] = useState(null);
   const [eligibilityLoading, setEligibilityLoading] = useState(false);
   const [isColumnOpen, setIsColumnOpen] = useState(true);
-  const [collapsedReviewIds, setCollapsedReviewIds] = useState(new Set());
 
   // Review Modal state
   const [showModal, setShowModal] = useState(false);
@@ -178,22 +177,12 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
     }
   };
 
-  const toggleReviewCollapse = (revId) => {
-    setCollapsedReviewIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(revId)) {
-        next.delete(revId);
-      } else {
-        next.add(revId);
-      }
-      return next;
-    });
-  };
+  const hasStatusBadge = !userInfo?._id || eligibilityLoading || !!eligibility?.hasReviewed;
 
   return (
     <>
       {/* 6th COLUMN WRAPPER: Unit-style separate bubble layout */}
-      <div className="w-full space-y-3 xl:max-h-[calc(100vh-190px)] xl:overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
+      <div className="w-full space-y-3 xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
         {/* Unit-style Collapsible Header Bubble */}
         <button
           type="button"
@@ -223,9 +212,8 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
               </span>
             )}
             <ChevronDown
-              className={`transition-transform duration-200 text-gray-700 ${
-                isColumnOpen ? "rotate-180" : ""
-              }`}
+              className={`transition-transform duration-200 text-gray-700 ${isColumnOpen ? "rotate-180" : ""
+                }`}
               size={20}
             />
           </div>
@@ -233,23 +221,33 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
 
         {/* User status badges */}
         {!userInfo?._id ? (
-          <Link
-            to="/login"
-            className="text-[11px] text-gray-600 hover:text-black underline flex items-center gap-1 px-1"
-          >
-            <Lock size={11} /> Log in to review after booking
-          </Link>
+          <div className="w-full px-1 flex items-center" style={{ marginTop: "10px", marginBottom: "0px" }}>
+            <Link
+              to="/login"
+              className="text-[11px] text-gray-600 hover:text-black underline inline-flex items-center gap-1 leading-none"
+            >
+              <Lock size={11} /> Log in to review after booking
+            </Link>
+          </div>
         ) : eligibilityLoading ? (
-          <span className="text-[11px] text-gray-400 animate-pulse px-1">Checking status...</span>
+          <div className="w-full px-1 flex items-center" style={{ marginTop: "10px", marginBottom: "0px" }}>
+            <span className="text-[11px] text-gray-400 animate-pulse leading-none">Checking status...</span>
+          </div>
         ) : eligibility?.hasReviewed ? (
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-medium px-1">
-            <CheckCircle2 size={12} /> You reviewed this curriculum
-          </span>
+          <div className="w-full px-1 flex items-center" style={{ marginTop: "10px", marginBottom: "0px" }}>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#008494] font-medium leading-none">
+              <CheckCircle2 size={13} className="shrink-0" />
+              <span>You reviewed this {type === "lesson" ? "lesson" : "curriculum"}</span>
+            </span>
+          </div>
         ) : null}
 
         {/* Reviews List: Displayed when isColumnOpen is true */}
         {isColumnOpen && (
-          <>
+          <div
+            className="space-y-3"
+            style={hasStatusBadge ? { marginTop: "10px" } : {}}
+          >
             {loading ? (
               <div className="space-y-3">
                 {[1, 2].map((i) => (
@@ -273,96 +271,80 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {reviews.map((rev, index) => {
-                  const revId = rev._id || rev.id || `rev-${index}`;
-                  const isCollapsed = collapsedReviewIds.has(revId);
-                  const userName = rev.user?.name || "Student";
-                  const userAvatar = rev.user?.image?.url;
-                  const dateStr = rev.createdAt
-                    ? new Date(rev.createdAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })
-                    : "";
+              reviews.map((rev, index) => {
+                const revId = rev._id || rev.id || `rev-${index}`;
+                const userName = rev.user?.name || "Student";
+                const userAvatar = rev.user?.image?.url;
+                const dateStr = rev.createdAt
+                  ? new Date(rev.createdAt).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                  : "";
 
-                  return (
-                    <div
-                      key={revId}
-                      className="w-full bg-[#E9EAEE] rounded-[20px] p-3.5 sm:p-4 shadow-none flex flex-col space-y-2.5 transition-all"
-                    >
-                      {/* Top user row - clickable to collapse/expand review details */}
-                      <div
-                        onClick={() => toggleReviewCollapse(revId)}
-                        className="flex items-center justify-between gap-2 cursor-pointer select-none"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {userAvatar ? (
-                            <img
-                              src={userAvatar}
-                              alt={userName}
-                              className="w-8 h-8 rounded-full object-cover shrink-0 border border-white/80"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-[#1A2B49] text-white font-medium text-xs flex items-center justify-center uppercase shrink-0">
-                              {userName.charAt(0)}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-[#1A2B49] truncate">{userName}</p>
-                            {dateStr && <span className="text-[10px] text-gray-500 block">{dateStr}</span>}
+                return (
+                  <div
+                    key={revId}
+                    className="w-full bg-[#E9EAEE] rounded-[20px] p-3.5 sm:p-4 shadow-none flex flex-col space-y-2.5 transition-all overflow-hidden"
+                  >
+                    {/* Top user row */}
+                    <div className="flex items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {userAvatar ? (
+                          <img
+                            src={userAvatar}
+                            alt={userName}
+                            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover shrink-0 border border-white/80"
+                          />
+                        ) : (
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#1A2B49] text-white font-semibold text-sm sm:text-base flex items-center justify-center uppercase shrink-0">
+                            {userName.charAt(0)}
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {/* Rating badge */}
+                        )}
+                        <div className="min-w-0 flex flex-col justify-center space-y-0.5">
+                          <p className="text-xs sm:text-sm font-semibold text-[#1A2B49] truncate leading-tight">{userName}</p>
                           {rev.rating !== undefined && (
-                            <span className="inline-flex items-center gap-1 bg-[#FFFBEA] border border-[#FFF7D8] text-[#A76000] px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0">
-                              <Star size={10} className="fill-[#F2BE2F] text-[#F2BE2F]" />
+                            <span className="inline-flex items-center gap-1 text-[#1A2B49] text-[10px] sm:text-[11px] font-semibold shrink-0 leading-tight">
+                              <Star size={11} className="text-[#1A2B49] shrink-0" strokeWidth={2.5} />
                               <span>{rev.rating}%</span>
                             </span>
                           )}
-                          <ChevronDown
-                            size={16}
-                            className={`text-gray-700 transition-transform duration-200 ${
-                              isCollapsed ? "" : "rotate-180"
-                            }`}
-                          />
+                          {dateStr && <span className="text-[10px] sm:text-[11px] font-semibold text-[#1A2B49] block leading-tight">{dateStr}</span>}
                         </div>
                       </div>
-
-                      {/* Review Details (collapsible) */}
-                      {!isCollapsed && (
-                        <div className="space-y-2 pt-0.5">
-                          {rev.review && (
-                            <p className="text-xs text-[#1A2B49] leading-relaxed break-words [overflow-wrap:anywhere]">
-                              {rev.review}
-                            </p>
-                          )}
-
-                          {/* Optional Image */}
-                          {rev.image?.url && (
-                            <div className="mt-1">
-                              <img
-                                src={rev.image.url}
-                                alt="Review attachment"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setPreviewImageModal(rev.image.url);
-                                }}
-                                className="w-full max-h-36 object-cover rounded-xl cursor-pointer hover:opacity-90 transition border border-black/5"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* Review Details: Image first (edge-to-edge), then review text */}
+                    {(rev.review || rev.image?.url) && (
+                      <div className="space-y-2 pt-0.5">
+                        {/* Image Attachment - edge to edge with no grey side borders */}
+                        {rev.image?.url && (
+                          <div className="-mx-3.5 sm:-mx-4 overflow-hidden">
+                            <img
+                              src={rev.image.url}
+                              alt="Review attachment"
+                              onClick={() => {
+                                setPreviewImageModal(rev.image.url);
+                              }}
+                              className="w-full max-h-56 object-cover cursor-pointer hover:opacity-95 transition"
+                            />
+                          </div>
+                        )}
+
+                        {/* Review Text */}
+                        {rev.review && (
+                          <p className="text-xs text-[#1A2B49] leading-relaxed break-words [overflow-wrap:anywhere]">
+                            {rev.review}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
-          </>
+          </div>
         )}
       </div>
 

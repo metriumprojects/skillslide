@@ -750,7 +750,7 @@ export function ManageCal({
                   : !isAvailable
                     ? "text-gray-400 cursor-not-allowed bg-gray-100"
                     : isSelected
-                      ? "bg-primary text-white"
+                      ? "bg-[#1A2B49] text-white"
                       : "text-primary hover:bg-blue-100 cursor-pointer"
                 }`}
               title={isPast ? "Past date" : !isAvailable ? "Not available" : ""}
@@ -789,7 +789,7 @@ export function ManageCal({
 
       <div className="h-[185px] overflow-y-auto flex items-center justify-center w-full">
         {displayedTimes.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2.5 w-full h-[185px] overflow-y-auto py-0.5">
+          <div className="grid grid-cols-3 gap-2.5 w-full h-[185px] overflow-y-auto px-1 py-1">
             {displayedTimes.map((time) => {
               const metadata = slotMetadata[time];
               const isGroup = metadata?.group;
@@ -800,7 +800,7 @@ export function ManageCal({
                   className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${selectedTime === time
                       ? isGroup
                         ? "bg-yellow-400 text-gray-900 border-yellow-500"
-                        : "bg-primary text-white border-primary"
+                        : "bg-white text-[#1A2B49] border-[#1A2B49] ring-1 ring-inset ring-[#1A2B49] shadow-sm font-semibold"
                       : isGroup
                         ? "bg-yellow-100 hover:bg-yellow-200 text-gray-800 border-yellow-300"
                         : "hover:bg-blue-100 text-gray-700 border-gray-300"
@@ -812,7 +812,7 @@ export function ManageCal({
                     </span>
                   )}
                   <div className="flex-1 w-full flex flex-col items-center justify-center px-1">
-                    <span className="font-medium text-sm leading-tight">{time}</span>
+                    <span className={`text-sm leading-tight ${selectedTime === time ? "font-semibold text-[#1A2B49]" : "font-medium"}`}>{time}</span>
                     {isGroup && metadata?.usecapacity !== undefined && (
                       <span className="text-[12px] text-gray-600 font-medium leading-tight mt-0.5">
                         Booked: {metadata.usecapacity}
@@ -847,7 +847,7 @@ export function ManageCal({
         disabled={!internalSelectedDate || !selectedTime}
         className={`w-full mt-6 py-2.5 rounded text-sm ${!internalSelectedDate || !selectedTime
             ? "bg-gray-400 cursor-not-allowed"
-            : "bg-primary text-white cursor-pointer"
+            : "bg-[#D96B27] hover:bg-[#D96B27]/90 text-white cursor-pointer"
           }`}
       >
         {(() => {

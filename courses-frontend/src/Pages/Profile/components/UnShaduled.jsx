@@ -186,7 +186,7 @@ export default function UnShaduled() {
                   <div className="mt-3">
                     <button
                       onClick={() => handleCurriculumClick(course)}
-                      className="w-full bg-primary hover:bg-[#e03e00] text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-sm"
+                      className="w-full bg-primary hover:bg-primary/90 text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-sm"
                     >
                       {unscheduledCount > 0 ? `Schedule Lesson (${unscheduledCount} pending)` : 'Manage Curriculum'}
                       <BiSolidZap className="w-4 h-4" />

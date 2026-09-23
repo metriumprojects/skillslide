@@ -165,7 +165,7 @@ useEffect(() => {
         <LogoIcon className="h-[40px] w-[40px]" />
         <span
           style={{ fontFamily: "'DM Sans', sans-serif" }}
-          className="text-xl font-black tracking-tight text-[#FA4602] leading-none"
+          className="text-xl font-black tracking-tight text-[#D96B27] leading-none"
         >
           <span className="italic">Skill</span>
           <span className="not-italic">Slide</span>

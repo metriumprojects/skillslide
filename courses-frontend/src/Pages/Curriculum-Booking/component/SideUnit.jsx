@@ -105,6 +105,11 @@ export default function Curriculum({ Data, onExpand }) {
                       <h3 className="text-[#1A2B49] text-sm sm:text-[15px] font-semibold leading-snug break-words">
                         Lesson {i + 1}: {lesson?.title}
                       </h3>
+                      {lesson.duration && (
+                        <p className="text-[10px] sm:text-[11px] font-semibold text-[#1A2B49] mt-0.5">
+                          {lesson.duration}
+                        </p>
+                      )}
                       {lesson.description && (
                         <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-1.5">
                           {lesson.description}
@@ -116,18 +121,13 @@ export default function Curriculum({ Data, onExpand }) {
                       {lesson.independent ? (
                         <Link 
                           to={`/curriculum-lesson/${lesson.id}`}
-                          className="inline-flex w-fit bg-primary text-white text-[11px] font-medium px-2.5 py-0.5 rounded-full hover:bg-primary/90 transition-colors"
+                          className="inline-flex items-center w-fit bg-transparent hover:bg-[#008494] hover:border-[#008494] hover:text-white border border-[#1A2B49] text-[#1A2B49] text-xs font-semibold px-3.5 py-1 rounded-full transition-colors cursor-pointer shadow-none"
                         >
                           {lesson.label}
                         </Link>
                       ) : (
-                        <span className="inline-flex w-fit bg-primary text-white text-[11px] font-medium px-2.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center w-fit bg-transparent border border-[#1A2B49] text-[#1A2B49] text-xs font-semibold px-3.5 py-1 rounded-full shadow-none">
                           {lesson.label}
-                        </span>
-                      )}
-                      {lesson.duration && (
-                        <span className="text-xs text-gray-500 font-normal">
-                          · {lesson.duration}
                         </span>
                       )}
                     </div>

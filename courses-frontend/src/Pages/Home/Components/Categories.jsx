@@ -118,7 +118,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
               style={{ fontFamily: "'DM Sans', sans-serif" }}
               className="flex items-baseline gap-[14px] font-black tracking-tight leading-none"
             >
-              <span className="text-2xl sm:text-[28px] text-[#FA4602]">
+              <span className="text-2xl sm:text-[28px] text-[#D96B27]">
                 <span className="italic">Skill</span>
                 <span className="not-italic">Slide</span>
               </span>

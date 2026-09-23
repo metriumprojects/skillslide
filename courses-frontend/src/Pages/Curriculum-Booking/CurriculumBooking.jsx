@@ -3,6 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { Copy, Expand, Heart, X, ChevronLeft, ChevronRight, ChevronDown, Maximize2, MapPin, Clock, Timer, Link2, Home } from "lucide-react";
 import { FaRegStar } from "react-icons/fa";
+import { FaCircleCheck } from "react-icons/fa6";
 import { IoMdLink } from "react-icons/io";
 import MainLayout from "../../components/MainLayout";
 import ProfessionalLoader from "../../components/ProfessionalLoader";
@@ -28,7 +29,6 @@ import ReviewsColumn from "./component/ReviewsColumn";
 import { getTeacherAvailability, getTeacherUnAvailability, getLessonAvailability, clearAvailabilityData } from "../../redux/reducers/AvailabilityReducer";
 import TeacherCard from "./component/TeacherCard";
 import { getUserById } from "../../redux/reducers/AuthReducer";
-import { FaCircleCheck } from "react-icons/fa6";
 import BookingPageSkeleton from "./component/BookingPageSkeleton";
 
 export default function CurriculumBooking() {
@@ -67,6 +67,7 @@ export default function CurriculumBooking() {
   const [reviewCount, setReviewCount] = useState(0);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(true);
+  const [isPictureOpen, setIsPictureOpen] = useState(true);
 
   useEffect(() => {
     if (curriReviews?.length) {
@@ -292,7 +293,7 @@ export default function CurriculumBooking() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-5 mt-[30px] h-fit w-full items-start">
 
               {/* COLUMN 1: Meet Your Teacher */}
-              <div className="w-full xl:max-h-[calc(100vh-190px)] xl:overflow-y-auto custom-scrollbar pr-0.5">
+              <div className="w-full xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto custom-scrollbar pr-0.5">
                 <TeacherCard
                   layout="column"
                   teacher={singleCurriculum?.createdBy || userbyid}
@@ -311,13 +312,31 @@ export default function CurriculumBooking() {
                 />
               </div>
 
-              {/* COLUMN 2: Image Gallery (Vertical Stack) */}
-              <div className="w-full xl:max-h-[calc(100vh-190px)] xl:overflow-y-auto custom-scrollbar pr-1">
-                <ImageGallery images={singleCurriculum?.images || []} layout="stack" />
+              {/* COLUMN 2: Image Gallery (Vertical Stack with Collapsible Picture Bubble) */}
+              <div className="w-full space-y-3 xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto custom-scrollbar pr-1">
+                <button
+                  type="button"
+                  onClick={() => setIsPictureOpen(!isPictureOpen)}
+                  className="w-full bg-[#E9EAEE] rounded-[18px] sm:rounded-[20px] px-4 sm:px-5 py-3 flex justify-between items-center text-left text-[#1A2B49] shadow-none hover:bg-[#dfe1e6] transition-colors cursor-pointer"
+                >
+                  <span className="text-base sm:text-lg md:text-xl font-semibold text-[#1A2B49]">
+                    Photos & Media
+                  </span>
+                  <ChevronDown
+                    className={`transition-transform duration-200 text-gray-700 ${
+                      isPictureOpen ? "rotate-180" : ""
+                    }`}
+                    size={20}
+                  />
+                </button>
+
+                {isPictureOpen && (
+                  <ImageGallery images={singleCurriculum?.images || []} layout="stack" />
+                )}
               </div>
 
               {/* COLUMN 3: Description & How It Works (Collapsible Unit-Style Bubbles) */}
-              <div className="w-full space-y-4 xl:max-h-[calc(100vh-190px)] xl:overflow-y-auto custom-scrollbar pr-1">
+              <div className="w-full space-y-4 xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto custom-scrollbar pr-1">
                 {/* 1. Description Section */}
                 <div className="space-y-3">
                   <button
@@ -375,20 +394,26 @@ export default function CurriculumBooking() {
                   {isHowItWorksOpen && (
                     <div className="w-full bg-[#E9EAEE] rounded-[20px] p-4 sm:p-5 shadow-none transition-all space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <FaCircleCheck className="text-primary shrink-0 mt-[3px]" size={15} />
-                        <p className="text-[#1A2B49] text-sm leading-relaxed">
+                        <div className="h-[22px] flex items-center shrink-0">
+                          <FaCircleCheck className="text-[#1A2B49]" size={15} />
+                        </div>
+                        <p className="text-[#1A2B49] text-sm leading-[22px]">
                           Book your lesson and you’ll be instantly connected with your teacher.
                         </p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <FaCircleCheck className="text-primary shrink-0 mt-[3px]" size={15} />
-                        <p className="text-[#1A2B49] text-sm leading-relaxed">
+                        <div className="h-[22px] flex items-center shrink-0">
+                          <FaCircleCheck className="text-[#1A2B49]" size={15} />
+                        </div>
+                        <p className="text-[#1A2B49] text-sm leading-[22px]">
                           Your teacher will let you know where the lesson will take place and share a meeting link with you.
                         </p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <FaCircleCheck className="text-primary shrink-0 mt-[3px]" size={15} />
-                        <p className="text-[#1A2B49] text-sm leading-relaxed">
+                        <div className="h-[22px] flex items-center shrink-0">
+                          <FaCircleCheck className="text-[#1A2B49]" size={15} />
+                        </div>
+                        <p className="text-[#1A2B49] text-sm leading-[22px]">
                           You can message them anytime, ask questions, and get support. Your learning journey starts the moment you book.
                         </p>
                       </div>
@@ -398,11 +423,21 @@ export default function CurriculumBooking() {
               </div>
 
               {/* COLUMN 4: Units & Lessons */}
-              <div className="w-full xl:max-h-[calc(100vh-190px)] xl:overflow-y-auto custom-scrollbar pr-1">
+              <div className="w-full xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto custom-scrollbar pr-1">
                 <SideUnit Data={singleCurriculum} onExpand={() => setShowUnit(true)} />
               </div>
 
-              {/* COLUMN 5: Calendar Section */}
+              {/* COLUMN 5: Reviews Section */}
+              <div className="w-full">
+                <ReviewsColumn
+                  id={id}
+                  title={singleCurriculum?.title}
+                  type="curriculum"
+                  onReviewCountChange={(cnt) => setReviewCount(cnt)}
+                />
+              </div>
+
+              {/* COLUMN 6: Calendar Section */}
               <div className="w-full xl:sticky xl:top-6 xl:self-start xl:h-fit">
                 {singleCurriculum?.lessonPosition && singleCurriculum?.lessonPosition.length > 0 && singleCurriculum?.lessonPosition[0]?.lId ? (
                   <Calendar
@@ -456,16 +491,6 @@ export default function CurriculumBooking() {
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* COLUMN 6: Reviews Section */}
-              <div className="w-full">
-                <ReviewsColumn
-                  id={id}
-                  title={singleCurriculum?.title}
-                  type="curriculum"
-                  onReviewCountChange={(cnt) => setReviewCount(cnt)}
-                />
               </div>
             </div>
           </div>

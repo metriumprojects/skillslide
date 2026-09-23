@@ -740,13 +740,13 @@ export function Calendar({
 
 
   return (
-    <div className="w-full rounded-2xl p-5 shadow-[0_4px_16px_rgba(0,0,0,0.1)]">
+    <div className="w-full rounded-2xl px-4 sm:px-5 pt-3 pb-5 shadow-[0_4px_16px_rgba(0,0,0,0.1)] bg-white">
 
       <div className="flex justify-between items-center mb-3">
-        <p className="font-semibold text-xl">{monthName} {year}</p>
-        <div>
-          <button onClick={handlePrevMonth} className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"><ChevronLeft /></button>
-          <button onClick={handleNextMonth} className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"><ChevronRight /></button>
+        <p className="font-semibold text-base sm:text-lg md:text-xl text-[#1A2B49] leading-normal">{monthName} {year}</p>
+        <div className="flex items-center gap-0.5">
+          <button onClick={handlePrevMonth} className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors" title="Previous month"><ChevronLeft size={20} /></button>
+          <button onClick={handleNextMonth} className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors" title="Next month"><ChevronRight size={20} /></button>
         </div>
       </div>
 
@@ -774,8 +774,8 @@ export function Calendar({
                   : !isAvailable
                     ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
                     : isSelected
-                      ? "bg-primary text-white"
-                      : "text-black hover:bg-blue-100 cursor-pointer bg-white"
+                      ? "bg-[#1A2B49] text-white"
+                      : "text-black hover:bg-[#1A2B49]/10 cursor-pointer bg-white"
                 }`}
               title={isPast ? "Past date" : !isAvailable ? "Not available" : ""}
             >
@@ -813,7 +813,7 @@ export function Calendar({
 
       <div className="h-[185px] overflow-y-auto hide-scrollbar flex items-center justify-center w-full">
         {displayedTimes.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2.5 w-full h-[185px] overflow-y-auto hide-scrollbar py-0.5">
+          <div className="grid grid-cols-3 gap-2.5 w-full h-[185px] overflow-y-auto hide-scrollbar px-1 py-1">
             {displayedTimes.map((time) => {
               const metadata = slotMetadata[time];
               const isGroup = metadata?.group;
@@ -845,10 +845,10 @@ export function Calendar({
                   className={`border rounded-2xl text-sm h-20 relative overflow-hidden transition-all flex flex-col ${isDisabled
                       ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 hover:bg-gray-100"
                       : selectedTime === time
-                        ? "bg-primary text-white border-primary"
+                        ? "bg-white text-[#1A2B49] border-[#1A2B49] ring-1 ring-inset ring-[#1A2B49] shadow-sm font-semibold"
                         : isGroup
-                          ? "bg-[#FFF5F2] hover:bg-[#FFEAE3] text-gray-800 border-primary/30 hover:border-primary/60"
-                          : "hover:bg-blue-50 text-gray-700 border-gray-300 bg-white"
+                          ? "bg-[#D96B27]/10 hover:bg-[#D96B27]/15 text-gray-800 border-primary/30 hover:border-primary/60"
+                          : "hover:bg-[#1A2B49]/10 text-gray-700 border-gray-300 bg-white"
                     }`}
                 >
                   {isGroup && (
@@ -857,17 +857,17 @@ export function Calendar({
                     </span>
                   )}
                   <div className="flex-1 w-full flex flex-col items-center justify-center px-1">
-                    <span className={`font-medium text-sm leading-tight ${isBooked ? "line-through text-gray-400" : ""}`}>{time}</span>
+                    <span className={`text-sm leading-tight ${isBooked ? "line-through text-gray-400 font-medium" : selectedTime === time ? "font-semibold text-[#1A2B49]" : "font-medium"}`}>{time}</span>
                     {isBooked ? (
                       <span className="text-[10px] font-semibold text-gray-500 bg-gray-200/80 px-2 py-0.5 rounded-full mt-1">
                         Booked
                       </span>
                     ) : isGroup && metadata?.usecapacity !== undefined ? (
-                      <span className={`text-[12px] font-medium leading-tight mt-0.5 ${selectedTime === time ? "text-white/90" : "text-gray-600"}`}>
+                      <span className={`text-[12px] font-medium leading-tight mt-0.5 ${selectedTime === time ? "text-[#1A2B49]" : "text-gray-600"}`}>
                         {currentUsage}/{maxCapacity} Booked
                       </span>
                     ) : isGroup && hasCapacity && groupPrice > 0 ? (
-                      <span className={`text-[12px] font-semibold leading-tight mt-0.5 ${selectedTime === time ? "text-white" : "text-green-600"}`}>
+                      <span className={`text-[12px] font-semibold leading-tight mt-0.5 ${selectedTime === time ? "text-[#1A2B49]" : "text-green-600"}`}>
                         ${groupPrice}
                       </span>
                     ) : null}
@@ -897,7 +897,7 @@ export function Calendar({
         disabled={!internalSelectedDate || !selectedTime || isBooking}
         className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${!internalSelectedDate || !selectedTime || isBooking
             ? "bg-gray-400 text-white cursor-not-allowed opacity-80"
-            : "bg-primary hover:bg-primary/90 text-white cursor-pointer active:scale-[0.99]"
+            : "bg-[#D96B27] hover:bg-[#D96B27]/90 text-white cursor-pointer active:scale-[0.99]"
           }`}
       >
         {isBooking ? (

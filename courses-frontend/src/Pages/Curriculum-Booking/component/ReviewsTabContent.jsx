@@ -208,7 +208,7 @@ export default function ReviewsTabContent({ id, type = "lesson", title, onReview
           ) : eligibilityLoading ? (
             <span className="text-xs text-gray-400 animate-pulse">Checking eligibility...</span>
           ) : eligibility?.hasReviewed ? (
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#008494]/10 border border-[#008494]/25 text-[#008494] text-xs font-medium shadow-sm">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
@@ -277,46 +277,58 @@ export default function ReviewsTabContent({ id, type = "lesson", title, onReview
               const userAvatar = rev.user?.image?.url;
               const dateStr = rev.createdAt
                 ? new Date(rev.createdAt).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
                 : "";
 
               return (
                 <div
                   key={rev._id}
-                  className="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                  className="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between overflow-hidden"
                 >
                   <div>
-                    {/* Top row: Avatar + Name + Rating Badge */}
+                    {/* Top row: Avatar + (Name, Rating, Date) */}
                     <div className="flex items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         {userAvatar ? (
                           <img
                             src={userAvatar}
                             alt={userName}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border border-gray-100 shrink-0"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-neutral-900 text-white font-medium text-sm flex items-center justify-center uppercase">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-neutral-900 text-white font-semibold text-sm sm:text-base flex items-center justify-center uppercase shrink-0">
                             {userName.charAt(0)}
                           </div>
                         )}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 leading-snug">{userName}</p>
-                          <span className="text-xs text-gray-400">{dateStr}</span>
+                        <div className="min-w-0 flex flex-col justify-center space-y-0.5">
+                          <p className="text-sm font-semibold text-[#1A2B49] leading-tight truncate">{userName}</p>
+                          {rev.rating !== undefined && (
+                            <span className="inline-flex items-center gap-1 text-[#1A2B49] text-[11px] font-semibold shrink-0 leading-tight">
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#1A2B49] shrink-0">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                              </svg>
+                              <span>{rev.rating}%</span>
+                            </span>
+                          )}
+                          {dateStr && <span className="text-[11px] font-semibold text-[#1A2B49] block leading-tight">{dateStr}</span>}
                         </div>
                       </div>
-
-                      {/* Rating Badge */}
-                      <span className="inline-flex items-center gap-1.5 bg-[#FFFBEA] border border-[#FFF7D8] text-[#A76000] px-2.5 py-1 rounded-full text-xs font-medium shrink-0">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#F2BE2F" stroke="#F2BE2F" strokeWidth="2">
-                          <path d="M12.0312 1C13.0666 1 14.6926 5.69969 15.2795 7.50668C15.4141 7.92126 15.7943 8.20684 16.23 8.22162C18.1151 8.28556 23 8.55772 23 9.66144C23 10.7495 19.5188 13.4853 18.0955 14.5583C17.7427 14.8243 17.5982 15.2836 17.734 15.704C18.3132 17.4975 19.7048 22.1483 18.8117 22.8815C17.9323 23.6034 14.1749 20.7486 12.6485 19.5286C12.2692 19.2254 11.7305 19.2251 11.3511 19.528C9.82346 20.7477 6.06764 23.6035 5.25065 22.8815C4.41962 22.1471 5.73815 17.4816 6.28237 15.6949C6.40915 15.2786 6.26319 14.8287 5.91569 14.5668C4.4996 13.4997 1 10.7523 1 9.66144C1 8.55659 5.89498 8.285 7.77586 8.22142C8.20861 8.2068 8.58723 7.92462 8.72415 7.51385C9.32468 5.71216 10.9944 1 12.0312 1Z" />
-                        </svg>
-                        <span>{rev.rating}%</span>
-                      </span>
                     </div>
+
+                    {/* Attached photo thumbnail above text if available */}
+                    {rev.image?.url && (
+                      <div className="-mx-5 mb-3 overflow-hidden">
+                        <img
+                          src={rev.image.url}
+                          alt="Student review attachment"
+                          onClick={() => setPreviewImageModal(rev.image.url)}
+                          className="w-full max-h-56 object-cover cursor-pointer hover:opacity-90 transition"
+                        />
+                      </div>
+                    )}
 
                     {/* Review text */}
                     {rev.review && (
@@ -325,18 +337,6 @@ export default function ReviewsTabContent({ id, type = "lesson", title, onReview
                       </p>
                     )}
                   </div>
-
-                  {/* Attached photo thumbnail if available */}
-                  {rev.image?.url && (
-                    <div className="mt-3">
-                      <img
-                        src={rev.image.url}
-                        alt="Student review attachment"
-                        onClick={() => setPreviewImageModal(rev.image.url)}
-                        className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition"
-                      />
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -388,9 +388,8 @@ export default function ReviewsTabContent({ id, type = "lesson", title, onReview
                   ref={sliderRef}
                   onMouseDown={() => setIsDragging(true)}
                   onTouchStart={() => setIsDragging(true)}
-                  className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-2 border-gray-900 shadow-md cursor-grab active:cursor-grabbing ${
-                    submitting ? "opacity-50 pointer-events-none" : ""
-                  }`}
+                  className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-2 border-gray-900 shadow-md cursor-grab active:cursor-grabbing ${submitting ? "opacity-50 pointer-events-none" : ""
+                    }`}
                   style={{ left: `${rating}%`, transform: "translate(-50%, -50%)" }}
                 ></div>
               </div>
