@@ -33,6 +33,7 @@ import SearchBar from "./Components/SearchBar";
 import SearchCategoryToolbar from "./Components/SearchCategoryToolbar";
 import StudentStorySlider from "./Components/StudentStorySlider";
 import { useCurrency } from "../../currency/CurrencyContext";
+import { useSearch } from "../../context/SearchContext";
 
 
 const Home = () => {
@@ -54,24 +55,37 @@ const Home = () => {
   const { favorites } = useSelector((state) => state.favorite);
   const { userInfo } = useSelector((state) => state.auth);
 
-  const [showFilter, setShowFilter] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchFilter, setSearchFilter] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [min, setMin] = useState(0);
-  const [max, setMax] = useState(100000); // Default to 100000
+  const {
+    searchInput,
+    setSearchInput,
+    searchFilter,
+    setSearchFilter,
+    debouncedSearch,
+    selectedCategory,
+    setSelectedCategory,
+    minPrice: min,
+    setMinPrice: setMin,
+    maxPrice: max,
+    setMaxPrice: setMax,
+    locationFilter,
+    setLocationFilter,
+    debouncedLocation,
+    debouncedMin,
+    debouncedMax,
+    selectedSearchLocation,
+    setSelectedSearchLocation,
+    selectedType,
+    setSelectedType,
+    isOnlineSelected,
+    setIsOnlineSelected,
+    isInPersonSelected,
+    setIsInPersonSelected,
+  } = useSearch();
+
   const [page, setPage] = useState(1);
-  const [locationFilter, setLocationFilter] = useState("");
-  const [debouncedLocation, setDebouncedLocation] = useState("");
-  const [debouncedMin, setDebouncedMin] = useState(min);
-  const [debouncedMax, setDebouncedMax] = useState(max);
-  const [selectedSearchLocation, setSelectedSearchLocation] = useState(null); // User's searched location for distance calc
+  const [showFilter, setShowFilter] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
-  const [isOnlineSelected, setIsOnlineSelected] = useState(true);
-  const [isInPersonSelected, setIsInPersonSelected] = useState(true);
   const [showMore, setShowMore] = useState(false);
-  const [selectedType, setSelectedType] = useState("");
   const moreMenuRef = useRef(null);
   const loadMoreRef = useRef(null);
   const currentSection = searchParams.get("section");
@@ -194,45 +208,10 @@ const Home = () => {
     setPage(1);
   }, [currentSection]);
 
-  // Debounce search input/filter
+  // Reset page when search or filters change
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchFilter);
-      setPage(1); // Reset page
-    }, 500);
-
-    return () => clearTimeout(handler);
-  }, [searchFilter]);
-
-  // Debounce location input (lat/lng provided by autocomplete selection)
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedLocation(locationFilter);
-      setPage(1);
-      // Only clear selectedSearchLocation if in-person is NOT selected
-      if (!isInPersonSelected) {
-        setSelectedSearchLocation(null);
-      }
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [locationFilter, isInPersonSelected]);
-
-  // Debounce price range
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedMin(min);
-      setPage(1);
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [min]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedMax(max);
-      setPage(1);
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [max]);
+    setPage(1);
+  }, [debouncedSearch, debouncedLocation, debouncedMin, debouncedMax, selectedCategory, selectedType]);
 
   const handleModeChange = (value) => {
     setPage(1);
@@ -477,21 +456,6 @@ const Home = () => {
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelect}
-        searchInput={searchInput}
-        onSearchChange={(value) => { setSearchInput(value); setSearchFilter(value); }}
-        locationFilter={locationFilter}
-        onLocationChange={handleLocationChange}
-        onLocationSelect={handleLocationSelect}
-        minPrice={min}
-        maxPrice={max}
-        onMinPriceChange={setMin}
-        onMaxPriceChange={setMax}
-        showTypeFilter
-        selectedType={selectedType}
-        onTypeChange={(value) => {
-          setSelectedType(value);
-          setPage(1);
-        }}
       />
 
       <StudentStorySlider />

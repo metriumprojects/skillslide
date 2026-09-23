@@ -7,6 +7,7 @@ import { IoIosArrowDown } from "react-icons/io";
 import { motion } from "framer-motion";
 import CurrencySelector from "../../../components/CurrencySelector";
 import LogoIcon from "../../../components/LogoIcon";
+import HeaderSearchBar from "../../../components/HeaderSearchBar";
 
 export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, setShowProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
   const navigate = useNavigate();
@@ -88,10 +89,10 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     }`;
   };
 
-  const iconButtonClass = (path) => {
+  const messageButtonClass = (path) => {
     const isActive = location.pathname === path;
-    return `relative cursor-pointer border p-2 font-medium rounded-full text-sm flex items-center justify-center h-9 w-9 transition-colors ${
-      isActive ? "border-white bg-primary text-white" : "border-black bg-white text-black"
+    return `relative cursor-pointer border-[1.5px] px-4 font-medium rounded-full text-sm flex items-center justify-center gap-2 h-11.5 shrink-0 transition-colors ${
+      isActive ? "border-primary bg-primary text-white" : "border-black bg-white text-black hover:bg-gray-50"
     }`;
   };
 
@@ -107,119 +108,127 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
 
   return (
     <div className="w-full hidden lg:block">
-      <div className="flex w-full items-center justify-between gap-8">
-        <div className="flex min-w-0 items-center gap-8">
-          <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
-            {/* S Orange Icon Badge - Official SVG */}
-            <LogoIcon className="h-[46px] w-[46px]" />
+      {/* Top Row: Logo */}
+      <div className="flex w-full items-center justify-between">
+        <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
+          {/* S Orange Icon Badge - Official SVG */}
+          <LogoIcon className="h-[46px] w-[46px]" />
 
-            {/* Skill (italic) + Slide (simple) + Learn anything (italic, slightly smaller) */}
-            <div
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-              className="flex items-baseline gap-[14px] font-black tracking-tight leading-none"
-            >
-              <span className="text-2xl sm:text-[28px] text-[#FA4F2E]">
-                <span className="italic">Skill</span>
-                <span className="not-italic">Slide</span>
-              </span>
-              <span className="text-lg sm:text-[21px] italic text-black">
-                Learn anything
-              </span>
-            </div>
-          </Link>
-        </div>
-      
+          {/* Skill (italic) + Slide (simple) + Learn anything, from anywhere */}
+          <div
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
+            className="flex flex-col tracking-tight leading-none"
+          >
+            <span className="text-2xl sm:text-[26px] font-black text-[#FA4F2E] leading-none">
+              <span className="italic">Skill</span>
+              <span className="not-italic">Slide</span>
+            </span>
+            <span className="text-[16px] sm:text-[18px] font-bold italic tracking-wide text-gray-500 leading-none mt-1 whitespace-nowrap">
+              Learn anything, from anywhere
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Row 2: Profile Icon, Search Bar, USD, and Messages (All Left-Aligned) */}
+      <div className="flex w-full items-center justify-start gap-2.5 xl:gap-3.5 mt-6">
         {userInfo ? (
-          <div className="flex shrink-0 items-center justify-end gap-4">
-
-            <CurrencySelector hideIcon />
-
-            <Link to={`/chat`} className={iconButtonClass("/chat")}>
-              <MessageCircle strokeWidth={2.5} size={16} />
-              {chatUnread > 0 && (
-                <span className="absolute -top-1 -left-1 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[9px] flex items-center justify-center">
-                  {chatUnread > 99 ? "99+" : chatUnread}
-                </span>
-              )}
-            </Link>
-            <div className="relative flex items-center" ref={menuRef}>
-              <button
-                onClick={handleProfileClick}
-                className="rounded-full "
-                aria-label="Open profile menu"
-                type="button"
-              >
-                <img loading="lazy" decoding="async" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-9 w-9 rounded-full object-cover" alt="profile" />
-              </button>
-              {showProfileMenu && (
-                <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -40, scale: 0.95 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden">
-                  <Link
-                    to="/profile?tab=My Profile"
-                    className={menuLinkClass("/profile", "My Profile")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                    My Profile
-                  </Link>
-                  {userInfo?.role === "user" && (
-                    <button onClick={() => { handleTeacher("teacher"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
-                      {Teacherlessons.length > 0 ? "Teacher profile" : "Become a Teacher"}
-                    </button>
-                  )}
-                  {userInfo?.role === "teacher" && (
-                    <button onClick={() => { handleTeacher("user"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
-                      Student profile
-                    </button>
-                  )}
-                  <Link
-                    to="/"
-                    className={menuLinkClass("/")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                    Discover
-                  </Link>
-                  <Link
-                    to="/teach"
-                    className={menuLinkClass("/teach")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                  {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
-                  </Link>
-                  <Link
-                    to="/profile?tab=My Schedule"
-                    className={menuLinkClass("/profile", "My Schedule")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                    My Schedule
-                  </Link>
-                  <button
-                    onClick={() => { handleLogout(); setShowProfileMenu?.(false); }}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 text-sm"
-                  >
-                    Logout
+          /* 1. Profile Icon */
+          <div className="relative flex items-center" ref={menuRef}>
+            <button
+              onClick={handleProfileClick}
+              className="rounded-full focus:outline-none flex items-center justify-center"
+              aria-label="Open profile menu"
+              type="button"
+            >
+              <img loading="lazy" decoding="async" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-11.5 w-11.5 rounded-full object-cover border-[1.5px] border-gray-200" alt="profile" />
+            </button>
+            {showProfileMenu && (
+              <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -40, scale: 0.95 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 left-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 overflow-hidden border border-gray-100">
+                <Link
+                  to="/profile?tab=My Profile"
+                  className={menuLinkClass("/profile", "My Profile")}
+                  onClick={() => setShowProfileMenu?.(false)}
+                >
+                  My Profile
+                </Link>
+                {userInfo?.role === "user" && (
+                  <button onClick={() => { handleTeacher("teacher"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    {Teacherlessons.length > 0 ? "Teacher profile" : "Become a Teacher"}
                   </button>
-                </motion.div>
-              )}
-            </div>
+                )}
+                {userInfo?.role === "teacher" && (
+                  <button onClick={() => { handleTeacher("user"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    Student profile
+                  </button>
+                )}
+                <Link
+                  to="/"
+                  className={menuLinkClass("/")}
+                  onClick={() => setShowProfileMenu?.(false)}
+                >
+                  Discover
+                </Link>
+                <Link
+                  to="/teach"
+                  className={menuLinkClass("/teach")}
+                  onClick={() => setShowProfileMenu?.(false)}
+                >
+                {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
+                </Link>
+                <Link
+                  to="/profile?tab=My Schedule"
+                  className={menuLinkClass("/profile", "My Schedule")}
+                  onClick={() => setShowProfileMenu?.(false)}
+                >
+                  My Schedule
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setShowProfileMenu?.(false); }}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 text-sm"
+                >
+                  Logout
+                </button>
+              </motion.div>
+            )}
           </div>
         ) : (
-          <div className="flex shrink-0 items-center justify-end gap-4">
-            <CurrencySelector hideIcon />
+          <div className="flex shrink-0 items-center gap-2.5 xl:gap-3.5">
             <Link
               to="/login"
-              className="flex h-9 items-center rounded-full border border-black bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
+              className="flex h-11.5 items-center rounded-full border-[1.5px] border-black bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
             >
               Log in
             </Link>
             <Link
               to={`/register`}
-              className="flex h-9 items-center rounded-full bg-primary px-7 text-sm font-semibold text-white transition-colors hover:bg-black"
+              className="flex h-11.5 items-center rounded-full bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-black"
             >
               Create an account
             </Link>
           </div>
+        )}
+
+        {/* 2. Search Bar (Search, Location, Lesson type, Price Range) */}
+        <HeaderSearchBar />
+
+        {/* 3. USD (on the right side of Price Range) */}
+        <CurrencySelector className="shrink-0" buttonClassName="h-11.5" />
+
+        {/* 4. Messages (on the right side of USD) */}
+        {userInfo && (
+          <Link to={`/chat`} className={messageButtonClass("/chat")}>
+            <MessageCircle strokeWidth={1.8} size={18} />
+            <span>Messages</span>
+            {chatUnread > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                {chatUnread > 99 ? "99+" : chatUnread}
+              </span>
+            )}
+          </Link>
         )}
       </div>
     </div>

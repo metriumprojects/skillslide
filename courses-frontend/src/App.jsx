@@ -4,6 +4,7 @@ import { ToastContainer, cssTransition } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { getUser } from "./redux/reducers/AuthReducer";
 import PrivateRoute from "./redux/PrivateRoute";
+import { SearchProvider } from "./context/SearchContext";
 
 const NoToastAnimation = cssTransition({
   enter: "toast-no-animation",
@@ -60,60 +61,62 @@ const App = () => {
   return (
     <>
       <Router>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/teach" element={<Teach />} />
-            <Route path="/curriculum-booking/:id" element={<CurriculumBooking />} />
-            <Route path="/lesson-booking/:id" element={<LessonBooking />} />
-            <Route path="/curriculum-lesson/:id" element={<CurriculumLesson />} />
+        <SearchProvider>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/teach" element={<Teach />} />
+              <Route path="/curriculum-booking/:id" element={<CurriculumBooking />} />
+              <Route path="/lesson-booking/:id" element={<LessonBooking />} />
+              <Route path="/curriculum-lesson/:id" element={<CurriculumLesson />} />
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/mail-verify/:token" element={<MailVerify />} />
-            <Route path="/forget" element={<Forget />} />
-            <Route path="/send-message" element={<SendMessage />} />
-            <Route path="/new-password/:token" element={<NewPassword />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/mail-verify/:token" element={<MailVerify />} />
+              <Route path="/forget" element={<Forget />} />
+              <Route path="/send-message" element={<SendMessage />} />
+              <Route path="/new-password/:token" element={<NewPassword />} />
 
-            {/* Footer pages - Public, no login required */}
-            <Route path="/privacy-policy" element={<Privacypolicy />} />
-            <Route path="/terms-of-service" element={<Termsofservice />} />
-            <Route path="/cookie-policy" element={<Cookiepolicy />} />
-            <Route path="/legal-notice" element={<Legalnotice />} />
-              <Route path="/user-profile/:id" element={<PublicProfile />} />
+              {/* Footer pages - Public, no login required */}
+              <Route path="/privacy-policy" element={<Privacypolicy />} />
+              <Route path="/terms-of-service" element={<Termsofservice />} />
+              <Route path="/cookie-policy" element={<Cookiepolicy />} />
+              <Route path="/legal-notice" element={<Legalnotice />} />
+                <Route path="/user-profile/:id" element={<PublicProfile />} />
 
-            <Route path="/" element={<PrivateRoute />}>
-              {/* profile */}
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/edit-profile" element={<EditProfile />} />
-              <Route path="/create-teacher-profile" element={<CreateTeacherProfile />} />
-              <Route path="/teacher-created" element={<TeacherCreated />} />
-              <Route path="/update-lesson/:id" element={<UpdateLesson />} />
+              <Route path="/" element={<PrivateRoute />}>
+                {/* profile */}
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/create-teacher-profile" element={<CreateTeacherProfile />} />
+                <Route path="/teacher-created" element={<TeacherCreated />} />
+                <Route path="/update-lesson/:id" element={<UpdateLesson />} />
 
-              {/* lesson */}
-              <Route path="/create-lesson" element={<CreateLesson />} />
-              <Route path="/lesson-payment/:id" element={<LessonPayment />} />
-              <Route path="/curriculum-payment/:id" element={<CurriPayment />} />
+                {/* lesson */}
+                <Route path="/create-lesson" element={<CreateLesson />} />
+                <Route path="/lesson-payment/:id" element={<LessonPayment />} />
+                <Route path="/curriculum-payment/:id" element={<CurriPayment />} />
 
-              {/* Curriculums */}
-              <Route path="/create-curriculum" element={<CreateCurriculum />} />
-              <Route path="/edit-curriculum/:id" element={<EditCurriculum />} />
-              <Route path="/manage-lesson/:id" element={<ManageLesson />} />
+                {/* Curriculums */}
+                <Route path="/create-curriculum" element={<CreateCurriculum />} />
+                <Route path="/edit-curriculum/:id" element={<EditCurriculum />} />
+                <Route path="/manage-lesson/:id" element={<ManageLesson />} />
 
-              {/* chat */}
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/chat/:id" element={<Chat />} />
+                {/* chat */}
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/chat/:id" element={<Chat />} />
 
-              {/* Payment */}
-              <Route path="/after-payment" element={<AfterPayment />} />
-              <Route path="/after-payment-curri/:bookId" element={<AfterPaymentCurri />} />
-              <Route path="/payment-cancel/:bookId" element={<PaymentCancel />} />
-              <Route path="/withdraw-request" element={<Withdrawal />} />
-              
-            </Route>
-          </Routes>
-        </Suspense>
+                {/* Payment */}
+                <Route path="/after-payment" element={<AfterPayment />} />
+                <Route path="/after-payment-curri/:bookId" element={<AfterPaymentCurri />} />
+                <Route path="/payment-cancel/:bookId" element={<PaymentCancel />} />
+                <Route path="/withdraw-request" element={<Withdrawal />} />
+                
+              </Route>
+            </Routes>
+          </Suspense>
+        </SearchProvider>
       </Router>
       <ToastContainer
         position="top-right"

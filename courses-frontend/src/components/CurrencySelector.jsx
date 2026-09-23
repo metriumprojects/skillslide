@@ -1,9 +1,38 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  Coins,
+  DollarSign,
+  Euro,
+  IndianRupee,
+  JapaneseYen,
+  PoundSterling,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { useCurrency } from "../currency/CurrencyContext";
 
-export default function CurrencySelector({ className = "w-[88px]", hideIcon = false }) {
+export function getCurrencyIcon(code, { size = 16, strokeWidth = 1.8, className = "" } = {}) {
+  switch (code) {
+    case "USD":
+    case "AUD":
+    case "CAD":
+    case "NZD":
+    case "SGD":
+      return <DollarSign size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
+    case "EUR":
+      return <Euro size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
+    case "GBP":
+      return <PoundSterling size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
+    case "INR":
+      return <IndianRupee size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
+    case "JPY":
+      return <JapaneseYen size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
+    default:
+      return <Coins size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
+  }
+}
+
+export default function CurrencySelector({ className = "", buttonClassName = "", hideIcon = false }) {
   const { currency, setCurrency, supportedCurrencies, rateMeta } = useCurrency();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,21 +63,20 @@ export default function CurrencySelector({ className = "w-[88px]", hideIcon = fa
   };
 
   return (
-    <div ref={wrapperRef} className={`relative ${className}`}>
+    <div ref={wrapperRef} className={`relative shrink-0 ${className}`}>
       <button
         type="button"
         aria-label="Currency"
         aria-expanded={open}
         disabled={saving || rateMeta.loading}
         onClick={() => setOpen((current) => !current)}
-        className={`flex h-9 w-full items-center rounded-full border border-black bg-white px-3 text-sm font-medium text-black disabled:opacity-60 ${
-          hideIcon ? "justify-center text-center" : "justify-between gap-1"
-        }`}
+        className={`flex ${buttonClassName || "h-9"} items-center justify-center gap-1.5 rounded-full border-[1.5px] border-black bg-white px-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50 disabled:opacity-60`}
       >
-        <span className={hideIcon ? "w-full text-center" : ""}>{currency}</span>
+        {getCurrencyIcon(currency, { size: 16, strokeWidth: 1.8 })}
+        <span className="font-medium uppercase">{currency}</span>
         {!hideIcon && (
           <ChevronDown
-            size={16}
+            size={14}
             className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
             aria-hidden="true"
           />
@@ -56,19 +84,23 @@ export default function CurrencySelector({ className = "w-[88px]", hideIcon = fa
       </button>
 
       {open && (
-        <ul className="absolute inset-x-0 top-full z-50 mt-2 flex max-h-60 w-full flex-col gap-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg hide-scrollbar">
+        <ul className="absolute left-0 top-full z-50 mt-2 flex max-h-60 w-36 flex-col gap-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg hide-scrollbar">
           {supportedCurrencies.map((code) => (
             <li key={code}>
               <button
                 type="button"
                 onClick={() => handleSelect(code)}
-                className={`block w-full rounded-xl px-4 py-2.5 text-center text-sm font-medium ${
+                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                   currency === code
                     ? "bg-primary text-white"
                     : "text-black hover:bg-gray-100"
                 }`}
               >
-                {code}
+                <span className="flex items-center gap-2">
+                  {getCurrencyIcon(code, { size: 14, strokeWidth: 1.8 })}
+                  <span>{code}</span>
+                </span>
+                {currency === code && <span className="text-xs">✓</span>}
               </button>
             </li>
           ))}
