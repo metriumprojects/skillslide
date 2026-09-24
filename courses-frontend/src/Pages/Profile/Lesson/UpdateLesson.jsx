@@ -624,7 +624,7 @@ const UpdateLesson = () => {
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50 resize-none"
                 />
                 <div className="flex justify-between text-xs mt-2">
-                  <span className={formData.description.length >= 50 ? "text-green-600" : "text-amber-600"}>
+                  <span className={formData.description.length >= 50 ? "text-green-600" : "text-[#008494]"}>
                     {formData.description.length >= 50 ? "✓ Long enough" : `Minimum 50 characters (${formData.description.length}/50)`}
                   </span>
                   <span className={formData.description.length >= MAX_DESCRIPTION_LENGTH ? "text-red-600 font-medium" : "text-gray-500"}>

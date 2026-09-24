@@ -205,7 +205,7 @@ export default function LessonBooking() {
 
             {/* Grey Bar with Breadcrumb Navigation */}
             {lesson?.category && (
-              <div className="-mx-3 md:-mx-10 px-3 md:px-10 bg-[#F5F5F5] border-y border-[#E5E7EB] py-2.5 mb-[30px]">
+              <div className="-mx-3 md:-mx-10 px-3 md:px-10 bg-[#F5F5F5] py-2.5 mb-[30px]">
                 <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
                   <Link to="/" className="hover:text-[#1A2B49] hover:underline transition-colors flex items-center gap-1.5">
                     <Home size={14} className="text-gray-500 shrink-0" />

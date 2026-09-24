@@ -826,7 +826,7 @@ function EditStep1Details({
             className="w-full bg-white border border-[#DDDDDD] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black resize-none"
           />
           <div className="flex justify-between text-xs mt-2">
-            <div className={curriculumData.description.length >= 50 ? "text-green-600" : "text-amber-600"}>
+            <div className={curriculumData.description.length >= 50 ? "text-green-600" : "text-[#008494]"}>
               {curriculumData.description.length >= 50 ? "✓ Long enough" : `Minimum 50 characters (${curriculumData.description.length}/50)`}
             </div>
             <div className={curriculumData.description.length >= MAX_DESCRIPTION_LENGTH ? "text-red-600 font-medium" : "text-gray-500"}>

@@ -264,7 +264,7 @@ export default function LessonsDashboard() {
   return (
     <div className="w-full">
       {/* ✅ Tab Navigation */}
-      <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black mt-[32px] mb-[32px]">
+      <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black mt-[32px] mb-[16px]">
         <Swiper
           modules={[FreeMode]}
           freeMode={{ enabled: true, momentum: true }}

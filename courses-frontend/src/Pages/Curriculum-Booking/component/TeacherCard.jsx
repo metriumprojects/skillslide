@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { startChat } from '../../../redux/reducers/ChatReducer';
 import { toast } from 'react-toastify';
+import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 
 
 const TeacherCard = ({
@@ -113,8 +114,8 @@ const TeacherCard = ({
                 className="w-full aspect-square object-cover block"
               />
             ) : (
-              <div className="w-full aspect-square bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-4xl">
-                {displayName?.charAt(0)?.toUpperCase() || "T"}
+              <div className="w-full aspect-square bg-[#E9EAEE] flex items-center justify-center p-12">
+                <UserAvatarPlaceholder className="w-24 h-24 text-[#1A2B49]" />
               </div>
             )}
           </Link>
@@ -197,8 +198,8 @@ const TeacherCard = ({
                 className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
-                {displayName?.charAt(0)?.toUpperCase() || "T"}
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center p-2.5 shrink-0">
+                <UserAvatarPlaceholder className="w-full h-full text-[#1A2B49]" />
               </div>
             )}
           </Link>

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from "react"
 import {
   Search,
   ChevronRight,
+  Home,
   X,
   SlidersHorizontal,
   DollarSign,
@@ -16,7 +17,7 @@ import { Navigation } from "swiper/modules";
 import MainLayout from "../../components/MainLayout";
 import { CiLocationOn } from "react-icons/ci";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   getAllLessons,
@@ -293,8 +294,24 @@ const Teach = () => {
       }}
       onSearchToggle={() => setShowSearchBar(!showSearchBar)}
     >
+      {/* Grey Bar with Breadcrumb Navigation */}
+      <div className="w-full pt-[20px] sm:pt-[24px]">
+        <div className="-mx-3 md:-mx-10 px-3 md:px-10 bg-[#F5F5F5] py-2.5 mb-[30px]">
+          <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+            <Link to="/" className="hover:text-[#1A2B49] hover:underline transition-colors flex items-center gap-1.5">
+              <Home size={14} className="text-gray-500 shrink-0" />
+              <span>Home</span>
+            </Link>
+            <ChevronRight size={14} className="text-gray-400 shrink-0" />
+            <span className="text-[#1A2B49] font-medium truncate">
+              Requests
+            </span>
+          </nav>
+        </div>
+      </div>
+
       {/* Mode Tabs */}
-      <div className="flex md:hidden items-center justify-center gap-4 font-medium mb-4 mt-2">
+      <div className="flex md:hidden items-center justify-center gap-4 font-medium mb-4">
        <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -313,70 +330,50 @@ const Teach = () => {
           />
           <span className="text-sm">In-Person</span>
         </label>
-                <button
-            onClick={() => setShowFilter(true)}
-            className="md:hidden flex items-center gap-1 "
-          >
-            <SlidersHorizontal size={16} className="rotate-90" /> Filter
-          </button>
+        <button
+          onClick={() => setShowFilter(true)}
+          className="md:hidden flex items-center gap-1"
+        >
+          <SlidersHorizontal size={16} className="rotate-90" /> Filter
+        </button>
       </div>
 
       {/* Search Header */}
       {!showSearchBar && (
-        <div className="mt-[32px]">
-          <h3 className="text-2xl font-normal text-black">Requests</h3>
-          
-          {/* Tabs like bubble: All Requests, My Requests, and Saves */}
-          <div className="w-fit rounded-full overflow-hidden border border-black bg-white p-1 font-medium text-black flex items-center mt-[32px]">
-            <button
-              type="button"
-              onClick={() => setActiveTab("All Requests")}
-              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
-                activeTab === "All Requests"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-black hover:bg-gray-100"
-              }`}
-            >
-              All Requests
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("My Requests")}
-              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
-                activeTab === "My Requests"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-black hover:bg-gray-100"
-              }`}
-            >
-              My Requests
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("Saves")}
-              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm transition-colors duration-200 cursor-pointer ${
-                activeTab === "Saves"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-black hover:bg-gray-100"
-              }`}
-            >
-              Saves
-            </button>
+        <div>
+          {/* Sub-Tabs Underline Navigation */}
+          <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mb-[24px]">
+            {["All Requests", "My Requests", "Saves"].map((tab) => (
+              <button
+                type="button"
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-3 transition-colors cursor-pointer ${
+                  activeTab === tab
+                    ? "border-b-2 border-black text-black font-semibold"
+                    : "text-gray-500 hover:text-black"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
           {/* Action buttons on next line */}
-          <div className="flex items-center justify-start gap-3 mt-[32px]">
+          <div className="flex items-center justify-start gap-3 mb-[32px]">
             <button
               onClick={() => setShowCreateRequest(true)}
-              className="bg-[#E9EAEE] hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-sm transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 border-[1.5px] border-[#051842] text-[#051842] hover:bg-[#051842] hover:text-white bg-transparent px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
             >
+              <Plus size={16} strokeWidth={2} />
               <span>Place a Request</span>
             </button>
             <button
               onClick={() => setShowFilter(true)}
-              className="flex items-center justify-center p-2 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors cursor-pointer"
+              className="flex items-center justify-center p-2 rounded-full border-[1.5px] border-[#051842] text-[#051842] hover:bg-[#051842] hover:text-white bg-transparent transition-colors cursor-pointer"
               title="Filter"
             >
-              <ListFilter size={20} />
+              <ListFilter size={18} />
             </button>
           </div>
         </div>

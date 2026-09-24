@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Star, MessageSquarePlus, CheckCircle2, Lock, ChevronDown } from "lucide-react";
+import { Star, CheckCircle2, Lock, ChevronDown, Plus } from "lucide-react";
 import api from "../../../redux/api";
 import { getCurriculumRating } from "../../../redux/reducers/FavoriteReducer";
 
@@ -177,7 +177,8 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
     }
   };
 
-  const hasStatusBadge = !userInfo?._id || eligibilityLoading || !!eligibility?.hasReviewed;
+  const hasStatusBadge =
+    !userInfo?._id || eligibilityLoading || !!eligibility?.canReview || !!eligibility?.hasReviewed;
 
   return (
     <>
@@ -189,34 +190,15 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
           onClick={() => setIsColumnOpen(!isColumnOpen)}
           className="w-full bg-[#E9EAEE] rounded-[18px] sm:rounded-[20px] px-4 sm:px-5 py-3 flex justify-between items-center text-left text-[#1A2B49] shadow-none hover:bg-[#dfe1e6] transition-colors cursor-pointer"
         >
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg md:text-xl font-semibold text-[#1A2B49]">
-              Reviews
-            </span>
-            <span className="text-xs font-semibold text-[#1A2B49] bg-white/70 px-2.5 py-0.5 rounded-full">
-              {reviews.length}
-            </span>
-          </div>
+          <span className="text-base sm:text-lg md:text-xl font-semibold text-[#1A2B49]">
+            {reviews.length === 0 ? "No Reviews yet" : `${reviews.length} ${reviews.length === 1 ? "Review" : "Reviews"}`}
+          </span>
 
-          <div className="flex items-center gap-2">
-            {eligibility?.canReview && (
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowModal(true);
-                }}
-                className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white text-xs font-medium px-3 py-1 rounded-full transition-colors cursor-pointer shadow-sm"
-              >
-                <MessageSquarePlus size={12} />
-                <span>Review</span>
-              </span>
-            )}
-            <ChevronDown
-              className={`transition-transform duration-200 text-gray-700 ${isColumnOpen ? "rotate-180" : ""
-                }`}
-              size={20}
-            />
-          </div>
+          <ChevronDown
+            className={`transition-transform duration-200 text-gray-700 ${isColumnOpen ? "rotate-180" : ""
+              }`}
+            size={20}
+          />
         </button>
 
         {/* User status badges */}
@@ -232,6 +214,17 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
         ) : eligibilityLoading ? (
           <div className="w-full px-1 flex items-center" style={{ marginTop: "10px", marginBottom: "0px" }}>
             <span className="text-[11px] text-gray-400 animate-pulse leading-none">Checking status...</span>
+          </div>
+        ) : eligibility?.canReview ? (
+          <div className="w-full px-1 flex items-center" style={{ marginTop: "10px", marginBottom: "0px" }}>
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="text-[11px] text-[#FA4F2E] hover:opacity-85 inline-flex items-center gap-1 leading-none cursor-pointer font-medium"
+            >
+              <Plus size={12} strokeWidth={2.5} />
+              <span>Write a review</span>
+            </button>
           </div>
         ) : eligibility?.hasReviewed ? (
           <div className="w-full px-1 flex items-center" style={{ marginTop: "10px", marginBottom: "0px" }}>
@@ -262,9 +255,7 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
               </div>
             ) : reviews.length === 0 ? (
               <div className="bg-[#E9EAEE] rounded-[20px] p-6 text-center flex flex-col items-center justify-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-white/70 flex items-center justify-center text-[#F2BE2F]">
-                  <Star size={20} fill="#F2BE2F" />
-                </div>
+                <Star size={24} fill="#1A2B49" className="text-[#1A2B49]" />
                 <p className="text-xs sm:text-sm font-semibold text-[#1A2B49]">No reviews yet</p>
                 <p className="text-[11px] text-gray-600 max-w-[200px] leading-relaxed">
                   Reviews from students will appear here once lessons are completed.
@@ -467,7 +458,7 @@ export default function ReviewsColumn({ id, title, type = "curriculum", onReview
                 type="button"
                 onClick={handleSubmitReview}
                 disabled={submitting}
-                className="px-6 py-2.5 rounded-full bg-primary hover:bg-primary/90 text-white text-xs font-medium shadow-sm transition disabled:opacity-50 cursor-pointer"
+                className="px-6 py-2.5 rounded-full bg-[#1A2B49] hover:bg-[#1A2B49]/90 text-white text-xs font-medium shadow-sm transition disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Submitting..." : "Submit Review"}
               </button>

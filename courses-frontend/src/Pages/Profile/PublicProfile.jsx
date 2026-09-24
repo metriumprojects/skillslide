@@ -19,6 +19,7 @@ import CurriculumCard from "../Home/Components/CurriculumCard";
 import { getAllCurriculumsByTecherId } from "../../redux/reducers/CurriculumReducer";
 import PublicFvrt from "./components/PublicFvrt";
 import PublicUpcoming from "./components/PublicUpcoming";
+import UserAvatarPlaceholder from "../../components/UserAvatarPlaceholder";
 
 export default function PublicProfile() {
   const { userbyid, userInfo } = useSelector((state) => state.auth);
@@ -45,6 +46,7 @@ export default function PublicProfile() {
 
   // Set default tab based on role param or userbyid
   const [tab, setTab] = useState(isTeacher ? "Lesson" : "Upcoming");
+  const [imageError, setImageError] = useState(false);
 
   // Define states based on role
   const studentStates = ["Upcoming", "Bookmarks"];
@@ -52,6 +54,7 @@ export default function PublicProfile() {
   const states = isTeacher ? teacherStates : studentStates;
 
   useEffect(() => {
+    setImageError(false);
     dispatch(getUserById(id));
     dispatch(getUserFavorites());
     // Set default tab based on role param or userbyid
@@ -131,16 +134,17 @@ export default function PublicProfile() {
           {/* Profile Section - Left Aligned */}
           <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 pb-6 sm:pb-8">
             {/* Image */}
-            <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-3xl overflow-hidden shadow-sm bg-gray-100 border border-gray-200/60 shrink-0">
-              {userbyid?.image?.url && userbyid?.image?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
+            <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-3xl overflow-hidden bg-white border-[1.5px] border-[#1A2B49] shrink-0">
+              {userbyid?.image?.url && userbyid?.image?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" && !imageError ? (
                 <img
                   src={userbyid.image.url}
                   alt={userbyid?.name || "Profile"}
+                  onError={() => setImageError(true)}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-3xl sm:text-4xl">
-                  {userbyid?.name?.charAt(0)?.toUpperCase() || "U"}
+                <div className="w-full h-full flex items-center justify-center bg-white p-8 sm:p-10">
+                  <UserAvatarPlaceholder className="w-full h-full text-[#1A2B49]" />
                 </div>
               )}
             </div>
@@ -163,8 +167,8 @@ export default function PublicProfile() {
               <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-4">
                 {/* Verified Teacher Pill */}
                 {isTeacher && (
-                  <span className="inline-flex items-center gap-2 bg-[#00a100] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
-                    <svg width="15" height="15" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 overflow-visible text-white">
+                  <span className="inline-flex items-center gap-2 bg-[#E9EAEE] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                    <svg width="15" height="15" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 overflow-visible text-black">
                       <path d="M12 23C14.4477 23 16.3465 22.8672 17.8271 22.5381C19.2964 22.2115 20.2925 21.7056 20.999 20.999C21.7056 20.2925 22.2115 19.2964 22.5381 17.8271C22.8672 16.3465 23 14.4477 23 12C23 9.55232 22.8672 7.65353 22.5381 6.17285C22.2115 4.70364 21.7056 3.70752 20.999 3.00098C20.2925 2.29443 19.2964 1.78846 17.8271 1.46191C16.3465 1.13284 14.4477 1 12 1C9.55232 1 7.65353 1.13284 6.17285 1.46191C4.70364 1.78846 3.70752 2.29443 3.00098 3.00098C2.29443 3.70752 1.78846 4.70364 1.46191 6.17285C1.13284 7.65353 1 9.55232 1 12C1 14.4477 1.13284 16.3465 1.46191 17.8271C1.78846 19.2964 2.29443 20.2925 3.00098 20.999C3.70752 21.7056 4.70364 22.2115 6.17285 22.5381C7.65353 22.8672 9.55232 23 12 23Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M16 9L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M9 12L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -211,7 +215,7 @@ export default function PublicProfile() {
                   <button
                     type="button"
                     onClick={() => navigate("/edit-profile")}
-                    className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
+                    className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
                   >
                     <svg
                       width="15"
@@ -270,16 +274,17 @@ export default function PublicProfile() {
         {/* Profile Section - Left Aligned */}
         <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
           {/* Image */}
-          <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-3xl overflow-hidden shadow-sm bg-gray-100 border border-gray-200/60 shrink-0">
-            {userbyid?.image?.url && userbyid?.image?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
+          <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-3xl overflow-hidden bg-white border-[1.5px] border-[#1A2B49] shrink-0">
+            {userbyid?.image?.url && userbyid?.image?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" && !imageError ? (
               <img
                 src={userbyid.image.url}
                 alt={userbyid?.name || "Profile"}
+                onError={() => setImageError(true)}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-[#1A4BFF] text-white flex items-center justify-center font-bold text-3xl sm:text-4xl">
-                {userbyid?.name?.charAt(0)?.toUpperCase() || "U"}
+              <div className="w-full h-full flex items-center justify-center bg-white p-8 sm:p-10">
+                <UserAvatarPlaceholder className="w-full h-full text-[#1A2B49]" />
               </div>
             )}
           </div>
@@ -302,8 +307,8 @@ export default function PublicProfile() {
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-4">
               {/* Verified Teacher Pill */}
               {isTeacher && (
-                <span className="inline-flex items-center gap-2 bg-[#00a100] text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
-                  <svg width="15" height="15" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 overflow-visible text-white">
+                <span className="inline-flex items-center gap-2 bg-[#E9EAEE] text-black px-3.5 py-2 rounded-full text-xs sm:text-sm font-normal shadow-none shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 overflow-visible text-black">
                     <path d="M12 23C14.4477 23 16.3465 22.8672 17.8271 22.5381C19.2964 22.2115 20.2925 21.7056 20.999 20.999C21.7056 20.2925 22.2115 19.2964 22.5381 17.8271C22.8672 16.3465 23 14.4477 23 12C23 9.55232 22.8672 7.65353 22.5381 6.17285C22.2115 4.70364 21.7056 3.70752 20.999 3.00098C20.2925 2.29443 19.2964 1.78846 17.8271 1.46191C16.3465 1.13284 14.4477 1 12 1C9.55232 1 7.65353 1.13284 6.17285 1.46191C4.70364 1.78846 3.70752 2.29443 3.00098 3.00098C2.29443 3.70752 1.78846 4.70364 1.46191 6.17285C1.13284 7.65353 1 9.55232 1 12C1 14.4477 1.13284 16.3465 1.46191 17.8271C1.78846 19.2964 2.29443 20.2925 3.00098 20.999C3.70752 21.7056 4.70364 22.2115 6.17285 22.5381C7.65353 22.8672 9.55232 23 12 23Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M16 9L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M9 12L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -350,7 +355,7 @@ export default function PublicProfile() {
                 <button
                   type="button"
                   onClick={() => navigate("/edit-profile")}
-                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
                 >
                   <svg
                     width="15"

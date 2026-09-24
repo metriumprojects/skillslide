@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
-import { Star, Edit3, Loader, Edit, Smile, Frown } from "lucide-react";
+import { Star, Edit3, Loader, Edit, Smile, Frown, Plus } from "lucide-react";
 import { FaInstagram, FaStar, FaYoutube } from "react-icons/fa";
 import { SlSocialYoutube } from "react-icons/sl";
 
@@ -48,18 +48,23 @@ export default function Profile() {
   const normalizedTab =
     requestedTab === "Student Dashboard" || requestedTab === "Dashboard"
       ? "My Schedule"
+      : requestedTab === "Upcoming" ||
+        requestedTab === "All my Booking" ||
+        requestedTab === "All My Booking" ||
+        requestedTab === "Bookings"
+      ? "All My Bookings"
       : requestedTab;
   const tab =
     normalizedTab === "Bookmarks"
       ? "My Bookmarks"
-      : normalizedTab || (userInfo?.role === "user" ? "My Schedule" : "Revenue");
+      : normalizedTab || (userInfo?.role === "user" ? "All My Bookings" : "Revenue");
 
   useEffect(() => {
     if (userInfo) {
       // Set initial tab from query param or default based on role
       if (!searchParams.get("tab") || searchParams.get("tab") === "Student Dashboard" || searchParams.get("tab") === "Dashboard") {
         setSearchParams({
-          tab: userInfo.role === "user" ? "My Schedule" : "Revenue",
+          tab: userInfo.role === "user" ? "All My Bookings" : "Revenue",
         });
       }
       // Set initial profile image
@@ -113,7 +118,7 @@ export default function Profile() {
         dispatch(getUser());
 
         if (role === "user") {
-          setSearchParams({ tab: "My Schedule" });
+          setSearchParams({ tab: "All My Bookings" });
         } else if (role === "teacher") {
           setSearchParams({ tab: "Revenue" });
         }
@@ -125,14 +130,14 @@ export default function Profile() {
     });
   };
 
-  // Student tabs - Updated to include "My Schedule"
+  // Student tabs - "All My Bookings" placed at 1st position
   const studentStates = [
+    "All My Bookings",
     "My Schedule",
     "My Bookmarks",
     "My Profile",
     "My Requests",
     // "Booked",
-    "Upcoming",
     "Unscheduled",
     "Canceled",
   ];
@@ -143,7 +148,6 @@ export default function Profile() {
     "Lessons",
     "My Profile",
     "Calendar",
-    "My Requests",
     "Curriculum",
     "Schedule",
     "Payout History",
@@ -157,7 +161,7 @@ export default function Profile() {
 
   return (
     <MainLayout className="mx-auto" width="100%">
-      <div className="min-h-screen w-full flex flex-col items-center pt-[32px] pb-10">
+      <div className="min-h-screen w-full flex flex-col items-center pt-[16px] pb-10">
         {/* Bottom Tabs Section */}
         <div className="w-full">
           {/* Desktop Tabs */}
@@ -188,32 +192,14 @@ export default function Profile() {
               </Swiper>
             </div>
 
-            {userInfo?.role === "teacher" && (
-              <>
-                {!hasPaymentSetup && (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/withdraw-request")}
-                    className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                  >
-                    Complete payments setup
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => navigate("/create-lesson")}
-                  className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                >
-                  Create lesson
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/create-curriculum")}
-                  className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                >
-                  Create curriculum
-                </button>
-              </>
+            {userInfo?.role === "teacher" && !hasPaymentSetup && (
+              <button
+                type="button"
+                onClick={() => navigate("/withdraw-request")}
+                className="h-[50px] whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-6 text-sm font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
+              >
+                Complete your payment setup
+              </button>
             )}
           </div>
           {/* Mobile Dropdown Tabs */}
@@ -238,30 +224,14 @@ export default function Profile() {
                 />
               </svg>
             </button>
-            {userInfo?.role === "teacher" && (
+            {userInfo?.role === "teacher" && !hasPaymentSetup && (
               <div className="flex items-center gap-2 shrink-0">
-                {!hasPaymentSetup && (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/withdraw-request")}
-                    className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                  >
-                    Complete payments setup
-                  </button>
-                )}
                 <button
                   type="button"
-                  onClick={() => navigate("/create-lesson")}
+                  onClick={() => navigate("/withdraw-request")}
                   className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
                 >
-                  Create lesson
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/create-curriculum")}
-                  className="h-10 whitespace-nowrap inline-flex items-center justify-center rounded-full bg-black px-3.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors shrink-0 shadow-sm"
-                >
-                  Create curriculum
+                  Complete your payment setup
                 </button>
               </div>
             )}
@@ -289,7 +259,7 @@ export default function Profile() {
           {/* {tab === "Booked" && <Booked />} */}
           <Suspense fallback={null}>
           {tab === "Revenue" && <Revenu />}
-          {tab === "Upcoming" && <Upcoming />}
+          {(tab === "All My Bookings" || tab === "All my Booking" || tab === "Upcoming") && <Upcoming />}
           {tab === "Unscheduled" && <UnShaduled />}
           {tab === "Canceled" && <Canceled />}
           {tab === "My Bookmarks" && <BookMark />}

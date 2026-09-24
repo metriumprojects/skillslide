@@ -10,7 +10,7 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
   const dispatch = useDispatch();
   const { favorites } = useSelector((state) => state.favorite);
   const [openPropose, setOpenPropose] = useState(null);
-  const [activeTab, setActiveTab] = useState("Curriculum");
+  const [activeTab, setActiveTab] = useState("Curriculums");
 
   useEffect(() => {
     dispatch(getUserFavorites());
@@ -57,21 +57,21 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
     proposeFavorites.length > 0;
 
   const tabs = [
-    "Curriculum",
-    "Lesson",
+    "Curriculums",
+    "Lessons",
     ...(proposeFavorites.length > 0 ? ["Proposals"] : []),
   ];
 
   return (
-    <div className="w-full pt-4">
+    <div className="w-full">
       {!hasFavorites ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 mt-[32px]">
           <p className="text-gray-500 text-lg">No favorites yet</p>
         </div>
       ) : (
         <div className="w-full">
-          {/* Tabs Navigation matching Public Profile design */}
-          <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mb-6">
+          {/* Tabs Navigation matching All My Bookings design */}
+          <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mt-[32px] mb-[32px]">
             {tabs.map((tab) => (
               <button
                 type="button"
@@ -89,7 +89,7 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
           </div>
 
           {/* Curriculum Tab Content */}
-          {activeTab === "Curriculum" && (
+          {activeTab === "Curriculums" && (
             <div>
               {curriculumFavorites.length > 0 ? (
                 <div className="max-w-[2800px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
@@ -106,7 +106,7 @@ export default function BookMark({ onSendExistingLesson = () => {} }) {
           )}
 
           {/* Lesson Tab Content */}
-          {activeTab === "Lesson" && (
+          {activeTab === "Lessons" && (
             <div>
               {lessonFavorites.length > 0 ? (
                 <div className="max-w-[2800px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">

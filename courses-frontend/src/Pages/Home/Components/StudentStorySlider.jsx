@@ -3,8 +3,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import api from "../../../redux/api";
+import UserAvatarPlaceholder from "../../../components/UserAvatarPlaceholder";
 
-const FALLBACK_AVATAR = "https://i.ibb.co/tpV3m2GW/no-image.png";
+const FALLBACK_AVATAR = "/default-avatar.svg";
 
 const mapStory = (item) => ({
   id: item._id,
@@ -67,7 +68,7 @@ export default function StudentStorySlider() {
             <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
               {/* Left column: card + arrows (defines total height) */}
               <div className="flex w-full flex-col md:w-[32%] md:min-w-[280px] md:max-w-[360px]">
-                <div className="flex flex-1 flex-col justify-between rounded-[22px] bg-primary p-6 text-white md:p-7">
+                <div className="flex flex-1 flex-col justify-between rounded-[22px] bg-[#008494] p-6 text-white md:p-7">
                   <div>
                     <span className="inline-block rounded-md border border-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide">
                       Student story
@@ -78,13 +79,19 @@ export default function StudentStorySlider() {
                   </div>
 
                   <div className="mt-8 flex items-center gap-3">
-                    <img
-                      src={item.profileImage}
-                      alt={item.studentName}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-10 w-10 rounded-full object-cover ring-2 ring-white/30"
-                    />
+                    <div className="h-10 w-10 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm ring-2 ring-white/30 flex items-center justify-center shrink-0">
+                      {item.profileImage && item.profileImage !== FALLBACK_AVATAR && item.profileImage !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
+                        <img
+                          src={item.profileImage}
+                          alt={item.studentName}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <UserAvatarPlaceholder className="h-5 w-5 text-white" />
+                      )}
+                    </div>
                     <span className="text-sm font-medium md:text-base">
                       {item.studentName}
                     </span>

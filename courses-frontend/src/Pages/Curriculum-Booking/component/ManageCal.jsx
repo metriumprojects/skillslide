@@ -807,7 +807,11 @@ export function ManageCal({
                     }`}
                 >
                   {isGroup && (
-                    <span className="w-full text-[9px] font-semibold text-yellow-800 bg-yellow-300 py-0.5 text-center shrink-0">
+                    <span
+                      className={`w-full text-[9px] font-semibold text-white py-0.5 text-center shrink-0 transition-colors ${
+                        selectedTime === time ? "bg-[#1A2B49]" : "bg-primary"
+                      }`}
+                    >
                       Group
                     </span>
                   )}

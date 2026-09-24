@@ -58,31 +58,33 @@ const handleDelete = (id) => {
 };
 
   return (
-    <div className="w-full pb-10 space-y-6">
-      <div className="flex items-center justify-start mt-[32px] mb-[32px]">
+    <div className="w-full pb-10">
+      <div className="flex items-center justify-start mt-[32px] mb-[16px]">
         <button 
           type="button"
           onClick={() => setShowCreateRequest(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
         >
           <Plus size={16} strokeWidth={2.5} />
           Place a request
         </button>
       </div>
-      {userProposes && userProposes.length > 0 ? (
-        userProposes.map((req) => (
-          <ProfileRequestCard
-            key={req._id}
-            req={req}
-            onEdit={handleedit}
-            onDelete={handleDelete}
-          />
-        ))
-      ) : (
-        <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl">
-          <p>No requests found</p>
-        </div>
-      )}
+      <div className="space-y-4">
+        {userProposes && userProposes.length > 0 ? (
+          userProposes.map((req) => (
+            <ProfileRequestCard
+              key={req._id}
+              req={req}
+              onEdit={handleedit}
+              onDelete={handleDelete}
+            />
+          ))
+        ) : (
+          <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl">
+            <p>No requests found</p>
+          </div>
+        )}
+      </div>
 
       {edit && (
         <UpdateRequest id={id} open={edit} onClose={() => setEdit(false)} />

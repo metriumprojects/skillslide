@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Layers3, MessageCircle, Smartphone } from "lucide-react";
+import { Layers3, MessageCircle, Smartphone, Plus } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategories } from "../../../redux/reducers/CategoryReducer";
@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import CurrencySelector from "../../../components/CurrencySelector";
 import LogoIcon from "../../../components/LogoIcon";
 import HeaderSearchBar from "../../../components/HeaderSearchBar";
+import UserAvatarPlaceholder from "../../../components/UserAvatarPlaceholder";
 
 export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, setShowProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
   const navigate = useNavigate();
@@ -36,20 +37,20 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
   }, [dispatch, hasFetched, categoriesLoading]);
 
   useEffect(() => {
-  const handleResize = () => {
-    const width = window.innerWidth;
+    const handleResize = () => {
+      const width = window.innerWidth;
 
-    const ITEM_WIDTH = 180; // adjust to your actual card width + gap
-    const limit = Math.floor(width / ITEM_WIDTH);
+      const ITEM_WIDTH = 180; // adjust to your actual card width + gap
+      const limit = Math.floor(width / ITEM_WIDTH);
 
-    setDisplayLimit(limit - (userInfo ? 3 : 4)); // If user is logged in, reserve space for profile icon
-  };
+      setDisplayLimit(limit - (userInfo ? 3 : 4)); // If user is logged in, reserve space for profile icon
+    };
 
-  handleResize();
+    handleResize();
 
-  window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
-}, [userInfo]);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [userInfo]);
 
   // Close "More" dropdown when clicking outside
   useEffect(() => {
@@ -84,16 +85,14 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     const pathMatches = exact ? location.pathname === path : location.pathname.startsWith(path);
     const searchMatches = search ? location.search === search : location.search === "";
     const isActive = pathMatches && searchMatches;
-    return `h-11.5 px-5 rounded-full text-sm font-semibold uppercase flex items-center gap-2 transition-colors ${
-      isActive ? "bg-primary text-white" : "bg-transparent text-black hover:bg-gray-100"
-    }`;
+    return `h-11.5 px-5 rounded-full text-sm font-semibold uppercase flex items-center gap-2 transition-colors ${isActive ? "bg-primary text-white" : "bg-transparent text-black hover:bg-gray-100"
+      }`;
   };
 
   const messageButtonClass = (path) => {
     const isActive = location.pathname === path;
-    return `relative cursor-pointer border-[1.5px] px-4 font-medium rounded-full text-sm flex items-center justify-center gap-2 h-11.5 shrink-0 transition-colors ${
-      isActive ? "border-primary bg-primary text-white" : "border-black bg-white text-black hover:bg-gray-50"
-    }`;
+    return `relative cursor-pointer border-[1.5px] px-4 font-medium rounded-full text-sm flex items-center justify-center gap-2 h-11.5 shrink-0 transition-colors ${isActive ? "border-primary bg-primary text-white" : "border-black bg-white text-black hover:bg-gray-50"
+      }`;
   };
 
   const menuLinkClass = (path, searchTab = "") => {
@@ -101,9 +100,8 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
     const isActive = searchTab
       ? (location.pathname === path && currentTab === searchTab)
       : (location.pathname === path && !currentTab);
-    return `w-full px-4 py-2 text-left flex items-center gap-2 text-sm transition-colors hover:bg-gray-50 ${
-      isActive ? "font-bold text-black" : "text-black"
-    }`;
+    return `w-full px-4 py-2 text-left flex items-center gap-2 text-sm transition-colors hover:bg-gray-50 ${isActive ? "font-bold text-black" : "text-black"
+      }`;
   };
 
   return (
@@ -123,7 +121,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
               <span className="italic">Skill</span>
               <span className="not-italic">Slide</span>
             </span>
-            <span className="text-[16px] sm:text-[18px] font-bold italic tracking-wide text-[#1A2B49] leading-none mt-1 whitespace-nowrap">
+            <span className="text-[16px] sm:text-[18px] font-normal italic tracking-wide text-[#1A2B49] leading-none mt-1 whitespace-nowrap">
               Learn anything, from anywhere
             </span>
           </div>
@@ -132,6 +130,25 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
 
       {/* Row 2: Search Bar, USD, Messages, and Profile Icon (All Left-Aligned) */}
       <div className="flex w-full items-center justify-start gap-2.5 xl:gap-3.5 mt-6">
+        {userInfo?.role === "teacher" && (
+          <div className="flex items-center gap-2.5 xl:gap-3.5 shrink-0">
+            <Link
+              to="/create-lesson"
+              className="h-11.5 whitespace-nowrap inline-flex items-center gap-2 justify-center rounded-full border-[1.5px] border-[#1A2B49] bg-white px-5 text-sm font-medium text-[#1A2B49] hover:bg-gray-50 transition-colors shrink-0 shadow-sm cursor-pointer"
+            >
+              <Plus size={16} strokeWidth={2.5} />
+              <span>Create lesson</span>
+            </Link>
+            <Link
+              to="/create-curriculum"
+              className="h-11.5 whitespace-nowrap inline-flex items-center gap-2 justify-center rounded-full border-[1.5px] border-[#1A2B49] bg-white px-5 text-sm font-medium text-[#1A2B49] hover:bg-gray-50 transition-colors shrink-0 shadow-sm cursor-pointer"
+            >
+              <Plus size={16} strokeWidth={2.5} />
+              <span>Create curriculum</span>
+            </Link>
+          </div>
+        )}
+
         {/* 1. Search Bar (Search, Location, Lesson type, Price Range) */}
         <HeaderSearchBar />
 
@@ -155,17 +172,23 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
             <div className="relative flex items-center" ref={menuRef}>
               <button
                 onClick={handleProfileClick}
-                className="rounded-full focus:outline-none flex items-center justify-center"
+                className="h-11.5 w-11.5 rounded-full border-[1.5px] border-black bg-white focus:outline-none flex items-center justify-center shrink-0 cursor-pointer overflow-hidden hover:bg-gray-50 transition-colors"
                 aria-label="Open profile menu"
                 type="button"
               >
-                <img loading="lazy" decoding="async" src={userInfo?.image?.url || 'https://i.ibb.co/tpV3m2GW/no-image.png'} className="h-11.5 w-11.5 rounded-full object-cover border-[1.5px] border-gray-200" alt="profile" />
+                {userInfo?.image?.url && userInfo?.image?.url !== 'https://i.ibb.co/tpV3m2GW/no-image.png' ? (
+                  <img loading="lazy" decoding="async" src={userInfo.image.url} className="h-full w-full object-cover" alt="profile" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center p-2.5">
+                    <UserAvatarPlaceholder className="w-full h-full text-[#1A2B49]" />
+                  </div>
+                )}
               </button>
               {showProfileMenu && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -40, scale: 0.95 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 left-0 mt-2 w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -40, scale: 0.95 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 left-0 mt-2 w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
                   <Link
                     to="/profile?tab=My Profile"
                     className={menuLinkClass("/profile", "My Profile")}
@@ -195,7 +218,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                     className={menuLinkClass("/teach")}
                     onClick={() => setShowProfileMenu?.(false)}
                   >
-                  {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
+                    {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
                   </Link>
                   <Link
                     to="/profile?tab=My Schedule"

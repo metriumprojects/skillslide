@@ -1072,21 +1072,43 @@ const buildListingOrderSnapshot = (booking) => {
 export const userBookings = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
 
     if (!req.user?._id) {
       return res.status(401).json({ status: false, message: "Unauthorized" });
     }
 
-    const filter = { user: req.user._id };
+    const filter = {
+      user: req.user._id,
+      status: { $ne: "cancelled" },
+      $or: [
+        { paymentStatus: { $in: ["paid", "part"] } },
+        { payment_status: "paid" },
+        { status: { $in: ["paid", "scheduled", "completed"] } },
+      ],
+    };
 
     const total = await Booking.countDocuments(filter);
 
     const bookings = await Booking.find(filter)
-      .populate("lesson")
-      .populate("curriculum", "title price")
-      .populate("teacher", "firstname lastname")
+      .populate(
+        "lesson",
+        "title duration type images coverImage totalRatings averageRating price currency"
+      )
+      .populate(
+        "curriculum",
+        "title type images coverImage totalRatings averageRating price currency"
+      )
+      .populate(
+        "listing",
+        "title duration type images coverImage totalRatings averageRating price currency"
+      )
+      .populate("teacher", "name image totalRatings averageRating")
+      .populate(
+        "lessonPosition.lId",
+        "title duration type images coverImage totalRatings averageRating price currency"
+      )
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -1622,9 +1644,18 @@ export const cancelBooking = async (req, res) => {
       .populate("curriculum");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    // 1. If TYPE = LESSON or LISTING -> full booking cancel
-    if (type === "lesson" || type === "listing") {
-      if (type === "listing") {
+    const bookingType = type || booking.type;
+
+    // 1. If TYPE = LESSON or LISTING -> full booking cancel with instant refund
+    if (bookingType === "lesson" || bookingType === "listing") {
+      if (booking.status === "cancelled") {
+        return res.status(400).json({
+          status: false,
+          message: bookingType === "listing" ? "Order is already cancelled" : "Lesson booking is already cancelled",
+        });
+      }
+
+      if (bookingType === "listing") {
         const listingSlots = getListingBookingSlots(booking, booking.listing);
         for (const slot of listingSlots) {
           await releaseBookedSlot({
@@ -1648,11 +1679,93 @@ export const cancelBooking = async (req, res) => {
       booking.status = "cancelled";
       booking.scheduledAt = null;
 
+      const baseChargedAmount = booking.chargedAmount || booking.amount || 0;
+      const chargedCurrency = (booking.chargedCurrency || booking.currency || "USD").toUpperCase();
+      const refundAmount = roundMoney(baseChargedAmount, chargedCurrency);
+
+      let stripeRefund = null;
+      let paymentIntentId = booking.stripePaymentIntentId || booking.stripe_payment_intent_id || booking.meta?.stripe?.id;
+
+      if (stripe && refundAmount > 0) {
+        if (!paymentIntentId && (booking.stripeSessionId || booking.stripe_session_id)) {
+          try {
+            const session = await stripe.checkout.sessions.retrieve(booking.stripeSessionId || booking.stripe_session_id);
+            if (session?.payment_intent) {
+              paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+            }
+          } catch (sessErr) {
+            console.error("Error retrieving Stripe session for refund:", sessErr?.message || sessErr);
+          }
+        } else if (paymentIntentId && typeof paymentIntentId === "string" && paymentIntentId.startsWith("cs_")) {
+          try {
+            const session = await stripe.checkout.sessions.retrieve(paymentIntentId);
+            if (session?.payment_intent) {
+              paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+            }
+          } catch (sessErr) {
+            console.error("Error resolving cs_ paymentIntent for refund:", sessErr?.message || sessErr);
+          }
+        }
+
+        if (paymentIntentId) {
+          try {
+            const amountInSmallestUnit = toSmallestUnit(refundAmount, chargedCurrency);
+            stripeRefund = await stripe.refunds.create({
+              payment_intent: paymentIntentId,
+              amount: amountInSmallestUnit,
+              reason: "requested_by_customer",
+            });
+          } catch (stripeErr) {
+            console.error("Stripe refund error during lesson cancel:", stripeErr?.message || stripeErr);
+          }
+        }
+      }
+
+      // Deduct refunded portion from teacher pending balance
+      if (booking.teacher && booking.amount) {
+        const teacher = await User.findById(booking.teacher);
+        if (teacher) {
+          const commissionRate = await getCommissionRate();
+          const teacherTotalEarnings = (booking.amount || 0) * (1 - commissionRate);
+          const teacherDeduction = roundMoney(teacherTotalEarnings, booking.currency || "USD");
+
+          if (typeof teacher.moneyPending === "number") {
+            teacher.moneyPending = Math.max(0, teacher.moneyPending - teacherDeduction);
+          }
+          const earningCurrency = (booking.currency || "USD").toUpperCase();
+          if (teacher.balances?.pending?.[earningCurrency]) {
+            teacher.balances.pending[earningCurrency] = Math.max(
+              0,
+              teacher.balances.pending[earningCurrency] - teacherDeduction
+            );
+          }
+          await teacher.save();
+        }
+      }
+
+      booking.paymentStatus = "cancelled";
+      booking.payment_status = "cancelled";
+
+      booking.meta = {
+        ...(booking.meta || {}),
+        refund: {
+          refundAmount,
+          currency: chargedCurrency,
+          stripeRefundId: stripeRefund?.id || null,
+          refundedAt: new Date(),
+        },
+      };
+
       await booking.save();
+
+      const successMsg = stripeRefund
+        ? `${bookingType === "listing" ? "Order" : "Lesson"} cancelled successfully. Full refund of ${chargedCurrency} ${refundAmount} has been processed.`
+        : `${bookingType === "listing" ? "Order" : "Lesson"} cancelled successfully. Refund of ${chargedCurrency} ${refundAmount} processed.`;
 
       return res.json({
         status: true,
-        message: type === "listing" ? "Order cancelled successfully" : "Lesson booking cancelled successfully",
+        message: successMsg,
+        refundAmount,
         booking,
       });
     } else if (
@@ -1884,13 +1997,17 @@ export const userUpcomingBookings = async (req, res) => {
     const total = await Booking.countDocuments(filter);
 
     const bookings = await Booking.find(filter)
-      .select("-lessonPosition -stripePaymentIntentId")
+      .select("-stripePaymentIntentId")
       .populate(
         "lesson",
-        "title duration type images totalRatings averageRating"
+        "title duration type images coverImage totalRatings averageRating price currency"
       )
-      .populate("curriculum", "title type images totalRatings averageRating")
+      .populate("curriculum", "title type images coverImage totalRatings averageRating price currency")
       .populate("teacher", "name image totalRatings averageRating")
+      .populate(
+        "lessonPosition.lId",
+        "title duration type images coverImage totalRatings averageRating price currency"
+      )
       .sort({ scheduledAt: 1 })
       .skip(skip)
       .limit(limit);
@@ -2238,20 +2355,20 @@ export const getBookingById = async (req, res) => {
     const booking = await Booking.findById(req.params.id)
       .populate(
         "lesson",
-        "title duration type images totalRatings averageRating"
+        "title duration type images totalRatings averageRating calender calenderId createdBy"
       )
       .populate(
         "listing",
-        "title price duration type coverImage images totalRatings averageRating message"
+        "title price duration type coverImage images totalRatings averageRating message calender calenderId createdBy"
       )
       .populate(
         "curriculum",
-        "title type images totalRatings averageRating calenderId"
+        "title type images totalRatings averageRating calender calenderId createdBy"
       )
-      .populate("teacher", "name image totalRatings averageRating")
+      .populate("teacher", "name image totalRatings averageRating timezone")
       .populate(
         "lessonPosition.lId",
-        "title duration type images totalRatings averageRating"
+        "title duration type images totalRatings averageRating calender calenderId createdBy"
       ); // populate lessonPosition lessons
 
     if (!booking) {

@@ -17,10 +17,10 @@ export default function Curriculum() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-start mt-[32px] mb-[32px]">
+      <div className="flex items-center justify-start mt-[32px] mb-[16px]">
         <Link
           to="/create-curriculum"
-          className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
         >
           <Plus size={16} strokeWidth={2.5} />
           Create a curriculum

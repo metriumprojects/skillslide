@@ -852,7 +852,11 @@ export function Calendar({
                     }`}
                 >
                   {isGroup && (
-                    <span className="w-full text-[9px] font-semibold text-white bg-primary py-0.5 text-center shrink-0">
+                    <span
+                      className={`w-full text-[9px] font-semibold text-white py-0.5 text-center shrink-0 transition-colors ${
+                        selectedTime === time ? "bg-[#1A2B49]" : "bg-primary"
+                      }`}
+                    >
                       Group
                     </span>
                   )}

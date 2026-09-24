@@ -74,7 +74,7 @@ export default function UnShaduled() {
   };
 
   return (
-    <div className="w-full mt-6">
+    <div className="w-full mt-[32px]">
       {userUnscheduleddata?.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-6">
           {userUnscheduleddata?.map((course, index) => {
@@ -169,7 +169,7 @@ export default function UnShaduled() {
                       <img
                         src={
                           course?.teacher?.image?.url ||
-                          "https://i.ibb.co/tpV3m2GW/no-image.png"
+                          "/default-avatar.svg"
                         }
                         loading="lazy"
                         decoding="async"
@@ -198,7 +198,9 @@ export default function UnShaduled() {
           })}
         </div>
       ) : (
-        <p className="text-center text-gray-500 py-8">No Unscheduled Bookings yet</p>
+        <div className="w-full bg-[#F5F5F5] p-3 md:p-10 rounded-3xl">
+          <p>No Unscheduled Bookings yet</p>
+        </div>
       )}
     </div>
   );

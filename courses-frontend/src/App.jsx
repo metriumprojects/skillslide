@@ -1,16 +1,10 @@
 import React, { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ToastContainer, cssTransition } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { getUser } from "./redux/reducers/AuthReducer";
 import PrivateRoute from "./redux/PrivateRoute";
 import { SearchProvider } from "./context/SearchContext";
-
-const NoToastAnimation = cssTransition({
-  enter: "toast-no-animation",
-  exit: "toast-no-animation",
-  collapse: false,
-});
 
 // Suspense fallback (no loader)
 const Loading = () => null;
@@ -119,17 +113,17 @@ const App = () => {
         </SearchProvider>
       </Router>
       <ToastContainer
-        position="top-right"
-        autoClose={1000}
+        position="bottom-center"
+        autoClose={2000}
         hideProgressBar
         newestOnTop={false}
-        closeOnClick={false}
+        closeOnClick
         rtl={false}
         pauseOnFocusLoss={false}
         draggable
         pauseOnHover
         theme="light"
-        transition={NoToastAnimation}
+        transition={Slide}
       />
     </>
   );

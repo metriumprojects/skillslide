@@ -225,15 +225,15 @@ export default function StudentDashboard() {
 
   return (
     <div className="w-full">
-      {/* ✅ Tab Navigation */}
-      <div className="flex items-center gap-3 mt-[32px] mb-[32px]">
+      {/* Tab Navigation */}
+      <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mt-[32px] mb-[32px]">
         <button 
           type="button"
           onClick={() => setActiveTab('upcoming')}
-          className={`h-10 px-5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center justify-center ${
+          className={`pb-3 transition-colors cursor-pointer ${
             activeTab === 'upcoming' 
-              ? "border border-black text-black bg-white"
-              : "border border-transparent text-black hover:bg-gray-100"
+              ? "border-b-2 border-black text-black font-semibold"
+              : "text-gray-500 hover:text-black"
           }`}
         >
           Upcoming Lessons
@@ -241,10 +241,10 @@ export default function StudentDashboard() {
         <button 
           type="button"
           onClick={() => setActiveTab('past')}
-          className={`h-10 px-5 rounded-full text-sm font-medium transition-colors duration-200 inline-flex items-center justify-center ${
+          className={`pb-3 transition-colors cursor-pointer ${
             activeTab === 'past' 
-              ? "border border-black text-black bg-white"
-              : "border border-transparent text-black hover:bg-gray-100"
+              ? "border-b-2 border-black text-black font-semibold"
+              : "text-gray-500 hover:text-black"
           }`}
         >
           Past Lessons
@@ -333,14 +333,16 @@ export default function StudentDashboard() {
                             >
                               {isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
                             </button>
-                            {isCurriculum && (
-                              <button 
-                                onClick={() => navigate(`/after-payment-curri/${lesson.bookingId}?manage=true`)}
-                                className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
-                              >
-                                Manage curriculum
-                              </button>
-                            )}
+                            <button 
+                              onClick={() => {
+                                const targetId = lesson.bookingId || lesson._id;
+                                localStorage.setItem('bookId', targetId);
+                                navigate(`/after-payment-curri/${targetId}?manage=true`);
+                              }}
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
+                            >
+                              {isCurriculum ? "Manage curriculum" : "Manage lesson"}
+                            </button>
                           </div>
                         </td>
                       </tr>

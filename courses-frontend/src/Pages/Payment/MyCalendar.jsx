@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import moment from "moment-timezone";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 export function MyCalendar({
   selectedDate,
@@ -11,10 +11,13 @@ export function MyCalendar({
   weeklyAvailability = {},
   dateAvailability = [],
   dateUnAvailability = [],
-  teacherTimezone = teacherTimezone,
+  teacherTimezone = "UTC",
   isDisabled = false,
+  isLoading = false,
   lessonTitle = "",
   lessonNumber = 1,
+  showLessonNumber = false,
+  flat = false,
   lessonId = "",
   bookingId = "",
   onSchedule = null, // New prop for scheduling callback
@@ -28,6 +31,8 @@ export function MyCalendar({
   const [internalSelectedDate, setInternalSelectedDate] = useState(null);
   const [userTimezone, setUserTimezone] = useState("UTC");
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [internalScheduling, setInternalScheduling] = useState(false);
+  const isScheduling = isLoading || internalScheduling;
   const [bookingInfo, setBookingInfo] = useState({
     newDate: "",
     timezone: ""
@@ -76,11 +81,13 @@ export function MyCalendar({
 
   // Function to convert time using moment-timezone
   const convertTimeWithMoment = (timeStr, fromTimezone, toTimezone) => {
+    const fromTz = fromTimezone || "UTC";
+    const toTz = toTimezone || "UTC";
     // Create a moment object with the time in the fromTimezone
-    const momentTime = moment.tz(`${moment().format('YYYY-MM-DD')} ${timeStr}`, 'YYYY-MM-DD HH:mm', fromTimezone);
+    const momentTime = moment.tz(`${moment().format('YYYY-MM-DD')} ${timeStr}`, 'YYYY-MM-DD HH:mm', fromTz);
     
     // Convert to target timezone
-    const convertedTime = momentTime.tz(toTimezone);
+    const convertedTime = momentTime.tz(toTz);
     
     // Return in HH:mm format
     return convertedTime.format('HH:mm');
@@ -359,7 +366,9 @@ export function MyCalendar({
       .padStart(2, "0")}`;
   };
 
-  const handleScheduleClick = () => {
+  const handleScheduleClick = async () => {
+    if (isScheduling) return;
+
     if (!internalSelectedDate || !selectedTime) {
       toast.error("Please select both date and time");
       return;
@@ -371,7 +380,14 @@ export function MyCalendar({
     }
 
     if (onSchedule && lessonId && bookingId) {
-      onSchedule(lessonId, bookingInfo);
+      try {
+        setInternalScheduling(true);
+        await onSchedule(lessonId, bookingInfo);
+      } catch (err) {
+        console.error("Schedule error:", err);
+      } finally {
+        setInternalScheduling(false);
+      }
     } else {
       toast.error("Unable to schedule lesson");
     }
@@ -383,13 +399,13 @@ export function MyCalendar({
   const daysInMonth = new Date(year, currentMonth.getMonth() + 1, 0).getDate();
 
   const handlePrevMonth = () => {
-    if (isDisabled) return;
+    if (isDisabled || isScheduling) return;
     const prevMonth = new Date(year, currentMonth.getMonth() - 1, 1);
     setCurrentMonth(prevMonth);
   };
   
   const handleNextMonth = () => {
-    if (isDisabled) return;
+    if (isDisabled || isScheduling) return;
     setCurrentMonth(new Date(year, currentMonth.getMonth() + 1, 1));
   };
 
@@ -412,22 +428,24 @@ export function MyCalendar({
   };
 
   return (
-    <div className={`w-full bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)] ${isDisabled ? 'opacity-60' : ''}`}>
-      {/* Lesson title and number */}
+    <div className={`w-full ${flat ? '' : 'bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)]'} ${isDisabled ? 'opacity-60' : ''}`}>
+      {/* Lesson title and status tag */}
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-500">Lesson {lessonNumber}</span>
+        <div className="flex items-center justify-start mb-2">
           {isDisabled ? (
-            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
               Scheduled
             </span>
           ) : (
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full">
               Pending
             </span>
           )}
         </div>
-        <h4 className="font-semibold text-gray-800 mb-2 break-words">{lessonTitle}</h4>
+        {showLessonNumber && lessonNumber && (
+          <p className="text-sm font-medium text-gray-500 mb-1">Lesson {lessonNumber}</p>
+        )}
+        {lessonTitle && <h4 className="font-semibold text-gray-800 mb-2 break-words">{lessonTitle}</h4>}
       </div>
 
       <div className="flex justify-between items-center mb-3">
@@ -474,7 +492,7 @@ export function MyCalendar({
           return (
             <div
               key={i}
-              onClick={() => !isPast && isAvailable && !isDisabled && handleSelectDate(day)}
+              onClick={() => !isPast && isAvailable && !isDisabled && !isScheduling && handleSelectDate(day)}
               className={`py-2 text-sm border border-gray-300 ${
                 isDisabled || isPast
                   ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
@@ -525,7 +543,7 @@ export function MyCalendar({
                 isPastTime = slotTime < now;
               }
 
-              const isSlotDisabled = isDisabled || isPastTime;
+              const isSlotDisabled = isDisabled || isPastTime || isScheduling;
 
               return (
                 <button
@@ -561,14 +579,21 @@ export function MyCalendar({
       {!isDisabled && (
         <button
           onClick={handleScheduleClick}
-          disabled={!internalSelectedDate || !selectedTime || isDisabled}
-          className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium transition-colors ${
-            !internalSelectedDate || !selectedTime
+          disabled={!internalSelectedDate || !selectedTime || isDisabled || isScheduling}
+          className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            !internalSelectedDate || !selectedTime || isDisabled || isScheduling
               ? "bg-gray-400 text-white cursor-not-allowed"
-              : "bg-primary hover:bg-blue-700 text-white cursor-pointer"
+              : "bg-primary hover:bg-[#008494] text-white cursor-pointer"
           }`}
         >
-          Schedule This Lesson
+          {isScheduling ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+              <span>Scheduling...</span>
+            </>
+          ) : (
+            <span>Schedule This Lesson</span>
+          )}
         </button>
       )}
     </div>
