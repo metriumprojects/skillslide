@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { checkAvailablity, initiateBooking } from "../../../redux/reducers/BookingReducer";
 import { toast } from "react-toastify";
 import moment from "moment-timezone";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, MapPin, X } from "lucide-react";
 import { useCurrency } from "../../../currency/CurrencyContext";
 
 export function Calendar({
@@ -43,6 +45,7 @@ export function Calendar({
   const [slotMetadata, setSlotMetadata] = useState({});
   const [bookingTab, setBookingTab] = useState("individual"); // "individual" | "group"
   const [isBooking, setIsBooking] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Helper to check if a slot has group availability
   const checkSlotIsGroup = (slot) => {
@@ -739,9 +742,66 @@ export function Calendar({
 
 
 
-  return (
-    <div className="w-full rounded-2xl px-4 sm:px-5 pt-3 pb-5 shadow-[0_4px_16px_rgba(0,0,0,0.1)] bg-white">
+  const renderBookingButtonContent = () => {
+    if (isBooking) {
+      return (
+        <>
+          <svg
+            className="animate-spin h-4 w-4 text-white shrink-0"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          <span>Processing...</span>
+        </>
+      );
+    }
 
+    if (selectedTime) {
+      const metadata = slotMetadata[selectedTime];
+      const isGroup = metadata?.group;
+      const maxCapacity = lessonCapacity || 10;
+      const currentUsage = metadata?.usecapacity || 0;
+      const hasCapacity = currentUsage < maxCapacity;
+      const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
+
+      if (isGroup && hasCapacity && groupPrice > 0) {
+        return `Book (${formatPrice(groupPrice, priceCurrency)})`;
+      }
+      if (!price && !groupPrice) return "Book (Free)";
+      return `Book (${formatPrice(price, priceCurrency)})`;
+    }
+
+    // Inactive state (no slot selected yet) - show group price if in group tab
+    if (hasAnyGroupSlots && bookingTab === "group") {
+      const defaultGroupPrice = Number(
+        (groupTimes.length > 0 && slotMetadata[groupTimes[0]]?.groupPrice) || discount || 0
+      );
+      if (defaultGroupPrice > 0) {
+        return `Book (${formatPrice(defaultGroupPrice, priceCurrency)})`;
+      }
+    }
+
+    if (!price) return "Book (Free)";
+    return `Book (${formatPrice(price, priceCurrency)})`;
+  };
+
+  const renderCalendarContent = () => (
+    <>
       <div className="flex justify-between items-center mb-3">
         <p className="font-semibold text-base sm:text-lg md:text-xl text-[#1A2B49] leading-normal">{monthName} {year}</p>
         <div className="flex items-center gap-0.5">
@@ -774,7 +834,7 @@ export function Calendar({
                   : !isAvailable
                     ? "text-gray-400 cursor-not-allowed bg-[#f2f3f7]"
                     : isSelected
-                      ? "bg-[#1A2B49] text-white"
+                      ? "bg-[#1A2B49] text-white font-semibold"
                       : "text-black hover:bg-[#1A2B49]/10 cursor-pointer bg-white"
                 }`}
               title={isPast ? "Past date" : !isAvailable ? "Not available" : ""}
@@ -895,71 +955,146 @@ export function Calendar({
           </div>
         )}
       </div>
+    </>
+  );
 
-      <button
-        onClick={handleConfirmSchedule}
-        disabled={!internalSelectedDate || !selectedTime || isBooking}
-        className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${!internalSelectedDate || !selectedTime || isBooking
-            ? "bg-gray-400 text-white cursor-not-allowed opacity-80"
-            : "bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 text-white cursor-pointer active:scale-[0.99]"
-          }`}
-      >
-        {isBooking ? (
-          <>
-            <svg
-              className="animate-spin h-4 w-4 text-white shrink-0"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span>Processing...</span>
-          </>
-        ) : (
-          (() => {
-            if (selectedTime) {
-              const metadata = slotMetadata[selectedTime];
-              const isGroup = metadata?.group;
-              const maxCapacity = lessonCapacity || 10;
-              const currentUsage = metadata?.usecapacity || 0;
-              const hasCapacity = currentUsage < maxCapacity;
-              const groupPrice = isGroup && hasCapacity ? (metadata.groupPrice || 0) : 0;
+  return (
+    <>
+      {/* Desktop In-Page Calendar Card (Sticky on xl screens) */}
+      <div className="hidden xl:block w-full rounded-2xl px-4 sm:px-5 pt-3 pb-5 shadow-[0_4px_16px_rgba(0,0,0,0.1)] bg-white">
+        {renderCalendarContent()}
 
-              if (isGroup && hasCapacity && groupPrice > 0) {
-                return `Book (${formatPrice(groupPrice, priceCurrency)})`;
-              }
-              if (!price && !groupPrice) return "Book (Free)";
-              return `Book (${formatPrice(price, priceCurrency)})`;
-            }
+        <button
+          onClick={handleConfirmSchedule}
+          disabled={!internalSelectedDate || !selectedTime || isBooking}
+          className={`w-full mt-6 py-2.5 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-all duration-150 ${!internalSelectedDate || !selectedTime || isBooking
+              ? "bg-gray-400 text-white cursor-not-allowed opacity-80"
+              : "bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 text-white cursor-pointer active:scale-[0.99]"
+            }`}
+        >
+          {renderBookingButtonContent()}
+        </button>
+      </div>
 
-            // Inactive state (no slot selected yet) - show group price if in group tab
-            if (hasAnyGroupSlots && bookingTab === "group") {
-              const defaultGroupPrice = Number(
-                (groupTimes.length > 0 && slotMetadata[groupTimes[0]]?.groupPrice) || discount || 0
-              );
-              if (defaultGroupPrice > 0) {
-                return `Book (${formatPrice(defaultGroupPrice, priceCurrency)})`;
-              }
-            }
+      {/* Mobile Fixed Bottom Bar (Airbnb Style) & Movable Modal */}
+      {createPortal(
+        <>
+          {/* Fixed Bottom Bar */}
+          <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+              {/* Left Info: Price & Details */}
+              <div
+                onClick={() => setIsModalOpen(true)}
+                className="flex flex-col min-w-0 cursor-pointer"
+              >
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-bold text-[#1A2B49] leading-tight">
+                    {price > 0 ? formatPrice(price, priceCurrency) : "Free"}
+                  </span>
+                  {price > 0 && (
+                    <span className="text-xs text-gray-500 font-normal">
+                      {type === "curri" ? "/ curriculum" : "/ lesson"}
+                    </span>
+                  )}
+                </div>
 
-            if (!price) return "Book (Free)";
-            return `Book (${formatPrice(price, priceCurrency)})`;
-          })()
-        )}
-      </button>
-    </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
+                  {internalSelectedDate && selectedTime ? (
+                    <span className="font-semibold text-[#FA4F2E] truncate">
+                      {monthName.slice(0, 3)} {internalSelectedDate.getDate()} • {selectedTime}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500 underline decoration-gray-300 truncate">
+                      {duration ? `${duration} • ` : ""}Add dates for prices
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Action Button */}
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="px-6 py-2.5 rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 text-white font-semibold text-sm shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+              >
+                {internalSelectedDate && selectedTime ? "Confirm booking" : "Check availability"}
+              </button>
+            </div>
+          </div>
+
+          {/* Movable Modal / Bottom Sheet */}
+          <AnimatePresence>
+            {isModalOpen && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsModalOpen(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 xl:hidden"
+                />
+
+                {/* Bottom Sheet Container with Drag-to-Dismiss */}
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.6 }}
+                  onDragEnd={(e, info) => {
+                    if (info.offset.y > 100 || info.velocity.y > 300) {
+                      setIsModalOpen(false);
+                    }
+                  }}
+                  className="fixed bottom-0 left-0 right-0 max-h-[92vh] bg-white rounded-t-[28px] shadow-2xl z-50 flex flex-col xl:hidden overflow-hidden"
+                >
+                  {/* Top Drag Handle & Title Bar */}
+                  <div className="pt-2.5 pb-2 px-5 border-b border-gray-100 shrink-0">
+                    <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2 cursor-grab active:cursor-grabbing" />
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-[#1A2B49]">Select Date & Time</h3>
+                        <p className="text-xs text-gray-500">Pick an available slot to book</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsModalOpen(false)}
+                        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Calendar Body */}
+                  <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 hide-scrollbar">
+                    {renderCalendarContent()}
+                  </div>
+
+                  {/* Bottom Action Button in Modal */}
+                  <div className="p-4 border-t border-gray-100 bg-white shrink-0">
+                    <button
+                      onClick={handleConfirmSchedule}
+                      disabled={!internalSelectedDate || !selectedTime || isBooking}
+                      className={`w-full py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-150 shadow-md ${
+                        !internalSelectedDate || !selectedTime || isBooking
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-80"
+                          : "bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 text-white cursor-pointer active:scale-[0.99]"
+                      }`}
+                    >
+                      {renderBookingButtonContent()}
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </>,
+        document.body
+      )}
+    </>
   );
 }

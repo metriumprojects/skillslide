@@ -162,44 +162,8 @@ export default function LessonBooking() {
 
   return (
     <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
-      <div className="w-full min-h-screen pb-8">
+      <div className="w-full min-h-screen pb-24 xl:pb-8">
         <div className="w-full">
-          {/* Mobile Header Controls */}
-          <div className="flex md:hidden items-center justify-between w-full mx-auto mb-3 pt-3">
-            <Link
-              to={`/`}
-              className="flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-
-            <div className="flex items-center gap-5">
-              <button
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(window.location.href);
-                    toast.success("Copied to clipboard!");
-                  } catch (err) {
-                    toast.error("Failed to copy: ", err);
-                  }
-                }}
-                className="flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-              >
-                <Link2 size={20} />
-              </button>
-              <button
-                onClick={() => handleSave(lesson?._id)}
-                className="flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-              >
-                <Heart
-                  size={20}
-                  className={`${isBookmarked ? "fill-red-500 text-red-500" : ""
-                    }`}
-                />
-              </button>
-            </div>
-          </div>
-
           {/* Top section with Grey Bar and Title */}
           <div className="w-full pt-[20px] sm:pt-[24px]">
 
