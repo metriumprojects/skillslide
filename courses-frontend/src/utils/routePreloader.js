@@ -44,10 +44,26 @@ export const preloadRouteByPath = (path) => {
   if (path.includes("/curriculum-booking")) return preloadRoute("curriculumBooking");
   if (path.includes("/lesson-payment")) return preloadRoute("lessonPayment");
   if (path.includes("/curriculum-payment")) return preloadRoute("curriPayment");
+  if (path.includes("/after-payment") || path.includes("/manage-lesson")) return preloadRoute("afterPaymentCurri");
   if (path.includes("/user-profile")) return preloadRoute("publicProfile");
   if (path.includes("/profile")) return preloadRoute("profile");
   if (path.includes("/chat")) return preloadRoute("chat");
   if (path.includes("/teach")) return preloadRoute("teach");
   if (path.includes("/withdrawal")) return preloadRoute("withdrawal");
   if (path === "/" || path === "") return preloadRoute("home");
+};
+
+/**
+ * Automatically prefetch critical destination routes during idle browser time
+ * Ensures 0ms instant page openings when user taps any lesson, curriculum, or manage button.
+ */
+export const preloadCriticalRoutes = () => {
+  if (typeof window === "undefined") return;
+  const schedule = window.requestIdleCallback || ((cb) => setTimeout(cb, 1000));
+  schedule(() => {
+    preloadRoute("lesson");
+    preloadRoute("curriculumLesson");
+    preloadRoute("curriculumBooking");
+    preloadRoute("afterPaymentCurri");
+  });
 };

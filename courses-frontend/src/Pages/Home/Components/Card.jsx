@@ -95,8 +95,9 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
 
   return (
     <article 
-      className="mb-7 min-w-0 group"
+      className="mb-7 min-w-0 group transition-all duration-150 active:scale-[0.98] select-none"
       onMouseEnter={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+      onTouchStart={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
       <Link
@@ -109,6 +110,7 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
         )}
         state={{ preview: course }}
         onMouseEnter={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+        onTouchStart={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
       >
         <img
           src={getCardImageUrl(course?.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"}
@@ -150,6 +152,7 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
           state={{ preview: course }}
           className="block hover:underline"
           onMouseEnter={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+          onTouchStart={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
         >
           <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
         </Link>

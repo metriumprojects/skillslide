@@ -43,14 +43,16 @@ const CurriculumCard = ({ course, linkTo }) => {
 
   return (
     <article 
-      className="mb-7 min-w-0 group"
+      className="mb-7 min-w-0 group transition-all duration-150 active:scale-[0.98] select-none"
       onMouseEnter={() => preloadRoute("curriculumBooking")}
+      onTouchStart={() => preloadRoute("curriculumBooking")}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
         <Link 
           to={linkTo || `/curriculum-booking/${course._id}`} 
           state={{ preview: course }}
           onMouseEnter={() => preloadRoute("curriculumBooking")}
+          onTouchStart={() => preloadRoute("curriculumBooking")}
         >
           <img
             src={
@@ -88,6 +90,7 @@ const CurriculumCard = ({ course, linkTo }) => {
           state={{ preview: course }}
           className="block hover:underline"
           onMouseEnter={() => preloadRoute("curriculumBooking")}
+          onTouchStart={() => preloadRoute("curriculumBooking")}
         >
           <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
         </Link>

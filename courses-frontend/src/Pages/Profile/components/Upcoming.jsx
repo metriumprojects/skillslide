@@ -9,6 +9,7 @@ import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
+import { preloadRoute } from "../../../utils/routePreloader";
 
 export default function Upcoming() {
   const dispatch = useDispatch();
@@ -20,6 +21,7 @@ export default function Upcoming() {
   const { favorites } = useSelector((state) => state.favorite);
   const [localTimeZone, setLocalTimeZone] = useState("");
   const [activeSubTab, setActiveSubTab] = useState("All");
+  const [openingCourseId, setOpeningCourseId] = useState(null);
 
   const subTabs = ["All", "Upcoming", "Past Lessons"];
 
@@ -88,6 +90,9 @@ export default function Upcoming() {
   };
 
   const handleCurriculumClick = (course) => {
+    if (openingCourseId) return;
+    setOpeningCourseId(course._id);
+    preloadRoute("afterPaymentCurri");
     localStorage.setItem("bookId", course._id);
     if (course.lesson?._id) localStorage.setItem("lId", course.lesson._id);
     const isPastCourse =
@@ -409,11 +414,22 @@ export default function Upcoming() {
                   {/* Action Button */}
                   <div className="mt-3">
                     <button
+                      type="button"
                       onClick={() => handleCurriculumClick(course)}
-                      className="w-full bg-primary hover:bg-primary/90 text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-sm"
+                      disabled={openingCourseId === course._id}
+                      className="w-full bg-primary hover:bg-primary/90 text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-all active:scale-95 cursor-pointer shadow-sm disabled:opacity-85"
                     >
-                      {details.type === "curriculum" ? "Manage Curriculum" : "Manage Lesson"}
-                      <BiSolidZap className="w-4 h-4" />
+                      {openingCourseId === course._id ? (
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <span>Opening...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{details.type === "curriculum" ? "Manage Curriculum" : "Manage Lesson"}</span>
+                          <BiSolidZap className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

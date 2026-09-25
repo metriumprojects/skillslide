@@ -8,6 +8,7 @@ import { Heart } from "lucide-react";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
+import { preloadRoute } from "../../../utils/routePreloader";
 
 export default function UnShaduled() {
   const { userInfo } = useSelector((state) => state.auth);
@@ -17,6 +18,7 @@ export default function UnShaduled() {
   const { favorites } = useSelector((state) => state.favorite);
   const { formatPrice } = useCurrency();
   const cardPriceOptions = { currencyDisplay: "narrowSymbol" };
+  const [openingCourseId, setOpeningCourseId] = useState(null);
 
   useEffect(() => {
     dispatch(userUnscheduledBookings({ page: 1, limit: 20 }));
@@ -38,6 +40,9 @@ export default function UnShaduled() {
   };
 
   const handleCurriculumClick = (course) => {
+    if (openingCourseId) return;
+    setOpeningCourseId(course._id);
+    preloadRoute("afterPaymentCurri");
     navigate(`/after-payment-curri/${course._id}?manage=true`);
   };
 
@@ -186,11 +191,22 @@ export default function UnShaduled() {
                   {/* Action Button */}
                   <div className="mt-3">
                     <button
+                      type="button"
                       onClick={() => handleCurriculumClick(course)}
-                      className="w-full bg-primary hover:bg-primary/90 text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-sm"
+                      disabled={openingCourseId === course._id}
+                      className="w-full bg-primary hover:bg-primary/90 text-white text-base font-medium py-2.5 rounded-full flex justify-center items-center gap-2 transition-all active:scale-95 cursor-pointer shadow-sm disabled:opacity-85"
                     >
-                      {unscheduledCount > 0 ? `Schedule Lesson (${unscheduledCount} pending)` : 'Manage Curriculum'}
-                      <BiSolidZap className="w-4 h-4" />
+                      {openingCourseId === course._id ? (
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <span>Opening...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{unscheduledCount > 0 ? `Schedule Lesson (${unscheduledCount} pending)` : 'Manage Curriculum'}</span>
+                          <BiSolidZap className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

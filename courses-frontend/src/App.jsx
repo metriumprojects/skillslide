@@ -6,6 +6,7 @@ import { getUser } from "./redux/reducers/AuthReducer";
 import PrivateRoute from "./redux/PrivateRoute";
 import { SearchProvider } from "./context/SearchContext";
 import TopProgressBar from "./components/TopProgressBar";
+import { preloadCriticalRoutes } from "./utils/routePreloader";
 
 // Suspense fallback with sleek top progress indicator
 const Loading = () => <TopProgressBar />;
@@ -51,6 +52,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(getUser());
+    preloadCriticalRoutes();
 
     // Safely re-sync user session when tab/phone becomes active again after sleep/inactivity
     const handleVisibilityChange = () => {
