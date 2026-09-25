@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLocation } from "react-router-dom";
 import { ChevronDown, ListFilter, MapPin, Search, X } from "lucide-react";
 import { useSearch } from "../context/SearchContext";
 import { useCurrency } from "../currency/CurrencyContext";
 import LocationAutocomplete from "../Pages/Home/Components/LocationAutocomplete";
 
 export default function HeaderSearchBar() {
+  const location = useLocation();
   const { currency, symbol } = useCurrency();
   const {
     searchInput,
@@ -29,10 +31,30 @@ export default function HeaderSearchBar() {
   const [showTypeFilterMenu, setShowTypeFilterMenu] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isLocationFocused, setIsLocationFocused] = useState(false);
+  const searchInputRef = useRef(null);
   const typeFilterRef = useRef(null);
   const typeMenuDropdownRef = useRef(null);
   const popupRef = useRef(null);
   const [typeMenuPos, setTypeMenuPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    const handleFocusSearch = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    };
+
+    window.addEventListener("focus-header-search", handleFocusSearch);
+
+    if (location.search.includes("focusSearch=true")) {
+      handleFocusSearch();
+    }
+
+    return () => {
+      window.removeEventListener("focus-header-search", handleFocusSearch);
+    };
+  }, [location.search]);
 
   useEffect(() => {
     if (!showTypeFilterMenu) return;
@@ -102,6 +124,8 @@ export default function HeaderSearchBar() {
             aria-hidden="true"
           />
           <input
+            ref={searchInputRef}
+            id="header-search-input"
             value={searchInput}
             onChange={(event) => {
               setSearchInput(event.target.value);
