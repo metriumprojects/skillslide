@@ -66,7 +66,7 @@ export default function Login() {
     if (res.payload?.status) {
       setGoogleIdToken("");
       dispatch(getUser());
-      navigate(location.state?.from || "/");
+      navigate(location.state?.from || searchParams.get("redirect") || "/");
       return;
     }
     toast.error(res.payload?.message || "Login failed");

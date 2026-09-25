@@ -11,10 +11,15 @@ const LocationAutocomplete = ({
   variant = "default",
   leadingIcon = null,
   positionRelative = true,
+  onFocus,
+  onBlur,
+  isFocused: isFocusedProp,
 }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [internalFocused, setInternalFocused] = useState(false);
   const wrapperRef = useRef(null);
+  const isInputFocused = isFocusedProp !== undefined ? isFocusedProp : internalFocused;
 
   useEffect(() => {
     // Close suggestions when clicking outside
@@ -105,7 +110,19 @@ const LocationAutocomplete = ({
             onChange(e.target.value);
             setShowSuggestions(true);
           }}
-          className="w-full min-w-0 bg-transparent text-inherit outline-none placeholder:text-inherit"
+          onFocus={(e) => {
+            setInternalFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setInternalFocused(false);
+            onBlur?.(e);
+          }}
+          className={`w-full min-w-0 bg-transparent text-inherit outline-none placeholder:text-inherit transition-all ${
+            isInputFocused
+              ? "font-semibold placeholder:font-semibold"
+              : "font-medium placeholder:font-medium"
+          }`}
         />
       </div>
 

@@ -27,6 +27,8 @@ export default function HeaderSearchBar() {
 
   const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [showTypeFilterMenu, setShowTypeFilterMenu] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isLocationFocused, setIsLocationFocused] = useState(false);
   const typeFilterRef = useRef(null);
   const typeMenuDropdownRef = useRef(null);
   const popupRef = useRef(null);
@@ -88,21 +90,36 @@ export default function HeaderSearchBar() {
     <>
       <div className="flex items-center justify-start gap-2 xl:gap-3 shrink-0">
         {/* Search Input */}
-        <label className="flex h-11.5 w-[280px] xl:w-[380px] 2xl:w-[460px] shrink-0 items-center gap-2 rounded-full border-[1.5px] border-black px-4 xl:px-5 focus-within:ring-1 focus-within:ring-black">
-          <Search size={16} className="shrink-0 text-black" aria-hidden="true" />
+        <label
+          className={`flex h-11.5 w-[280px] xl:w-[380px] 2xl:w-[460px] shrink-0 items-center gap-2 rounded-full border-black px-4 xl:px-5 transition-all ${
+            isSearchFocused ? "border-[2px]" : "border-[1.5px]"
+          } focus-within:border-[2px]`}
+        >
+          <Search
+            size={16}
+            strokeWidth={isSearchFocused ? 2.5 : 2}
+            className="shrink-0 text-black transition-all"
+            aria-hidden="true"
+          />
           <input
             value={searchInput}
             onChange={(event) => {
               setSearchInput(event.target.value);
               setSearchFilter(event.target.value);
             }}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 handleSearchSubmit();
               }
             }}
             placeholder="Search"
-            className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-black"
+            className={`min-w-0 flex-1 bg-transparent text-sm outline-none text-black transition-all ${
+              isSearchFocused
+                ? "font-semibold placeholder:font-semibold placeholder:text-black"
+                : "font-medium placeholder:font-medium placeholder:text-black"
+            }`}
           />
           {searchInput && (
             <button
@@ -117,7 +134,11 @@ export default function HeaderSearchBar() {
         </label>
 
         {/* Location Input */}
-        <div className="relative flex h-11.5 w-[140px] xl:w-[200px] shrink-0 items-center gap-2 rounded-full border-[1.5px] border-black px-3 xl:px-4 focus-within:ring-1 focus-within:ring-black">
+        <div
+          className={`relative flex h-11.5 w-[140px] xl:w-[200px] shrink-0 items-center gap-2 rounded-full border-black px-3 xl:px-4 transition-all ${
+            isLocationFocused ? "border-[2px]" : "border-[1.5px]"
+          } focus-within:border-[2px]`}
+        >
           <LocationAutocomplete
             value={locationFilter}
             onChange={handleLocationChange}
@@ -127,9 +148,23 @@ export default function HeaderSearchBar() {
             }}
             placeholder="Location"
             variant="type"
-            leadingIcon={<MapPin size={16} className="text-black" aria-hidden="true" />}
+            leadingIcon={
+              <MapPin
+                size={16}
+                strokeWidth={isLocationFocused ? 2.5 : 2}
+                className="text-black transition-all"
+                aria-hidden="true"
+              />
+            }
+            onFocus={() => setIsLocationFocused(true)}
+            onBlur={() => setIsLocationFocused(false)}
+            isFocused={isLocationFocused}
             positionRelative={false}
-            className="min-w-0 flex-1 bg-transparent p-0 text-sm font-medium text-black outline-none placeholder:text-black"
+            className={`min-w-0 flex-1 bg-transparent p-0 text-sm text-black outline-none placeholder:text-black transition-all ${
+              isLocationFocused
+                ? "font-semibold placeholder:font-semibold"
+                : "font-medium placeholder:font-medium"
+            }`}
           />
           {locationFilter && (
             <button
@@ -153,9 +188,9 @@ export default function HeaderSearchBar() {
             }`}
           >
             {selectedType === "lesson"
-              ? "Lesson"
+              ? "Lessons"
               : selectedType === "curriculum"
-                ? "Curriculum"
+                ? "Curriculums"
                 : "Lesson type"}
             <ChevronDown size={16} className={showTypeFilterMenu ? "rotate-180 transition-transform" : "transition-transform"} />
           </button>
@@ -172,8 +207,8 @@ export default function HeaderSearchBar() {
               >
                 {[
                   { value: "", label: "All" },
-                  { value: "lesson", label: "Lesson" },
-                  { value: "curriculum", label: "Curriculum" },
+                  { value: "lesson", label: "Lessons" },
+                  { value: "curriculum", label: "Curriculums" },
                 ].map((option) => (
                   <button
                     key={option.value}

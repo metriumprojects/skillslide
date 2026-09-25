@@ -802,12 +802,26 @@ export function Calendar({
 
   const renderCalendarContent = () => (
     <>
-      <div className="flex justify-between items-center mb-3">
-        <p className="font-semibold text-base sm:text-lg md:text-xl text-[#1A2B49] leading-normal">{monthName} {year}</p>
-        <div className="flex items-center gap-0.5">
-          <button onClick={handlePrevMonth} className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors" title="Previous month"><ChevronLeft size={20} /></button>
-          <button onClick={handleNextMonth} className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors" title="Next month"><ChevronRight size={20} /></button>
+      <div className="flex flex-col items-start gap-1 mb-3">
+        <div className="flex items-center gap-1 -ml-1">
+          <button
+            type="button"
+            onClick={handlePrevMonth}
+            className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            title="Previous month"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            title="Next month"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
+        <p className="font-semibold text-base sm:text-lg md:text-xl text-[#1A2B49] leading-tight">{monthName} {year}</p>
       </div>
 
       <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-600 mb-1">

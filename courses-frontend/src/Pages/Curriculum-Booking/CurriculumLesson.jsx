@@ -145,14 +145,14 @@ export default function CurriculumLesson() {
 
   if (!lesson) {
     return (
-      <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
+      <MainLayout width="100%" hideMobileMenu contentClassName="lg:overflow-x-visible">
         <BookingPageSkeleton isCurriculum={false} />
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
+    <MainLayout width="100%" hideMobileMenu contentClassName="lg:overflow-x-visible">
       <div className="w-full min-h-screen pb-24 xl:pb-8">
         <div className="w-full">
           {/* Top section with Grey Bar and Title */}

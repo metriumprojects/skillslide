@@ -295,13 +295,13 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
           <div className="flex shrink-0 items-center gap-2.5 xl:gap-3.5">
             <Link
               to="/login"
-              className="flex h-11.5 items-center rounded-full border-[1.5px] border-black bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-gray-50"
+              className="flex h-11.5 items-center rounded-full border-[1.5px] border-black bg-white px-6 text-sm font-medium text-black transition-colors hover:bg-gray-50"
             >
               Log in
             </Link>
             <Link
               to={`/register`}
-              className="flex h-11.5 items-center rounded-full bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-black"
+              className="flex h-11.5 items-center rounded-full bg-primary px-6 text-sm font-medium text-white transition-colors hover:bg-black"
             >
               Create an account
             </Link>
