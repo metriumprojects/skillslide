@@ -20,6 +20,17 @@ body {
     color: #1A2B49 !important;
 }
 
+/* Globally map placeholder to title color (#1A2B49) */
+::placeholder,
+input::placeholder,
+textarea::placeholder,
+.placeholder-black::placeholder,
+.placeholder-black,
+.placeholder\:text-black::placeholder {
+    color: #1A2B49 !important;
+    opacity: 0.9;
+}
+
 .hover\:text-black:hover,
 .hover\:text-\[\#000000\]:hover {
     color: #1A2B49 !important;
@@ -94,4 +105,15 @@ button:focus-visible {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Mobile Tawk.to chat widget float on top right in icon row */
+@media (max-width: 768px) {
+  #tawk-bubble-container,
+  .tawk-min-container,
+  div[id*="tawk-bubble"] {
+    top: 18px !important;
+    bottom: auto !important;
+    right: 14px !important;
+  }
 }

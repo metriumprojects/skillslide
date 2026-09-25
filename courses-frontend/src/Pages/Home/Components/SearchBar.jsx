@@ -26,13 +26,13 @@ export default function SearchBar({
         {/* Search Input */}
         <div className="flex items-center justify-between w-full">
         <div className="relative flex-1">
-          <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
+          <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#1A2B49] w-4 h-4" />
           <input
             type="text"
             placeholder="Search skillslide.com"
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
-            className="w-full outline-none pl-[28px] pr-2 text-black text-base lg:text-lg placeholder-black font-semibold hidden md:block"
+            className="w-full outline-none pl-[28px] pr-2 text-[#1A2B49] text-base lg:text-lg placeholder-[#1A2B49] font-semibold hidden md:block"
             autoFocus
           />
           <input
@@ -40,7 +40,7 @@ export default function SearchBar({
             placeholder="Search"
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
-            className="w-full outline-none pl-[28px] pr-2 text-black text-base lg:text-base placeholder-black font-semibold block md:hidden"
+            className="w-full outline-none pl-[28px] pr-2 text-[#1A2B49] text-base lg:text-base placeholder-[#1A2B49] font-semibold block md:hidden"
             autoFocus
           />
         </div>

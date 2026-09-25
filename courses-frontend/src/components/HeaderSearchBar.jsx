@@ -136,10 +136,10 @@ export default function HeaderSearchBar() {
               }
             }}
             placeholder="Search"
-            className={`min-w-0 flex-1 bg-transparent text-sm outline-none text-black transition-all ${
+            className={`min-w-0 flex-1 bg-transparent text-sm outline-none text-[#1A2B49] transition-all ${
               isSearchFocused
-                ? "font-semibold placeholder:font-semibold placeholder:text-black"
-                : "font-medium placeholder:font-medium placeholder:text-black"
+                ? "font-semibold placeholder:font-semibold placeholder:text-[#1A2B49]"
+                : "font-medium placeholder:font-medium placeholder:text-[#1A2B49]"
             }`}
           />
           {searchInput && (
@@ -173,7 +173,7 @@ export default function HeaderSearchBar() {
               <MapPin
                 size={16}
                 strokeWidth={isLocationFocused ? 2.5 : 2}
-                className="text-black transition-all"
+                className="text-[#1A2B49] transition-all"
                 aria-hidden="true"
               />
             }
@@ -181,7 +181,7 @@ export default function HeaderSearchBar() {
             onBlur={() => setIsLocationFocused(false)}
             isFocused={isLocationFocused}
             positionRelative={false}
-            className={`min-w-0 flex-1 bg-transparent p-0 text-sm text-black outline-none placeholder:text-black transition-all ${
+            className={`min-w-0 flex-1 bg-transparent p-0 text-sm text-[#1A2B49] outline-none placeholder:text-[#1A2B49] transition-all ${
               isLocationFocused
                 ? "font-semibold placeholder:font-semibold"
                 : "font-medium placeholder:font-medium"

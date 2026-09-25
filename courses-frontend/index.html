@@ -48,9 +48,24 @@
 
     <!--Start of Tawk.to Script (deferred for performance)-->
     <script type="text/javascript">
+      window.Tawk_API = window.Tawk_API || {};
+      window.Tawk_API.customStyle = {
+        visibility: {
+          mobile: {
+            position: 'tr', // Float on top-right on mobile
+            xOffset: 12,
+            yOffset: 18
+          },
+          desktop: {
+            position: 'br',
+            xOffset: 20,
+            yOffset: 20
+          }
+        }
+      };
+
       // Defer Tawk.to until after page load + idle to avoid blocking initial render
       function loadTawk() {
-        var Tawk_API = window.Tawk_API || {};
         var s1 = document.createElement("script");
         s1.async = true;
         s1.src = "https://embed.tawk.to/69f0a841e1b7ea1c36a440f1/1jna12fsr";
@@ -59,10 +74,10 @@
         document.head.appendChild(s1);
       }
       if (document.readyState === "complete") {
-        (window.requestIdleCallback || setTimeout)(loadTawk, 3000);
+        (window.requestIdleCallback || setTimeout)(loadTawk, 2000);
       } else {
         window.addEventListener("load", function () {
-          (window.requestIdleCallback || setTimeout)(loadTawk, 3000);
+          (window.requestIdleCallback || setTimeout)(loadTawk, 2000);
         });
       }
     </script>
