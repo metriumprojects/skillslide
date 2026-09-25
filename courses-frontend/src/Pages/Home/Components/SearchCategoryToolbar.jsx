@@ -13,7 +13,7 @@ export default function SearchCategoryToolbar({
     <section className="mb-6 mt-4 min-w-0 w-full">
       <div className="relative min-w-0 w-full overflow-hidden">
         <Swiper
-          className="category-free-slider !overflow-visible pb-2 select-none"
+          className="category-free-slider pb-2 select-none"
           modules={[FreeMode, Mousewheel]}
           spaceBetween={12}
           slidesPerView="auto"

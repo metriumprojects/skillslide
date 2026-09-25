@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Calendar, Home, MessageSquare, Search, User } from "lucide-react";
+import { Calendar, Home, LogIn, MessageSquare, Search, User } from "lucide-react";
 
 export default function MobileMenu() {
   const navigate = useNavigate();
@@ -112,11 +112,15 @@ export default function MobileMenu() {
     },
     {
       id: "profile",
-      label: "Profile",
-      icon: User,
-      isActive: isProfileActive,
+      label: isLoggedIn ? "Profile" : "Login",
+      icon: isLoggedIn ? User : LogIn,
+      isActive: isLoggedIn ? isProfileActive : false,
       onClick: () => {
-        handleNavigateWithAuth("/profile?tab=My Profile");
+        if (!isLoggedIn) {
+          navigate("/login");
+          return;
+        }
+        navigate("/profile?tab=My Profile");
       },
     },
   ];

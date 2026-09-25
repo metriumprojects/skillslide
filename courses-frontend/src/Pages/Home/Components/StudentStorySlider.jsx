@@ -61,7 +61,7 @@ export default function StudentStorySlider() {
         onSlideChange={(swiper) => {
           setCurrentIndex(swiper.realIndex || 0);
         }}
-        className="student-story-slider w-full !overflow-visible"
+        className="student-story-slider w-full"
       >
         {stories.map((item) => (
           <SwiperSlide key={item.id} className="!h-auto">

@@ -45,14 +45,12 @@ const CurriculumCard = ({ course, linkTo }) => {
     <article 
       className="mb-7 min-w-0 group"
       onMouseEnter={() => preloadRoute("curriculumBooking")}
-      onTouchStart={() => preloadRoute("curriculumBooking")}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
         <Link 
           to={linkTo || `/curriculum-booking/${course._id}`} 
           state={{ preview: course }}
           onMouseEnter={() => preloadRoute("curriculumBooking")}
-          onTouchStart={() => preloadRoute("curriculumBooking")}
         >
           <img
             src={
@@ -90,7 +88,6 @@ const CurriculumCard = ({ course, linkTo }) => {
           state={{ preview: course }}
           className="block hover:underline"
           onMouseEnter={() => preloadRoute("curriculumBooking")}
-          onTouchStart={() => preloadRoute("curriculumBooking")}
         >
           <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
         </Link>
@@ -100,7 +97,6 @@ const CurriculumCard = ({ course, linkTo }) => {
                  <Link 
                    to={userInfo?._id === course?.createdBy?._id ? "/profile" : `/user-profile/${course?.createdBy?._id}?role=teacher`} 
                    onMouseEnter={() => preloadRoute(userInfo?._id === course?.createdBy?._id ? "profile" : "publicProfile")}
-                   onTouchStart={() => preloadRoute(userInfo?._id === course?.createdBy?._id ? "profile" : "publicProfile")}
                    className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black"
                  >
                    <img
