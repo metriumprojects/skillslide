@@ -803,7 +803,7 @@ export function Calendar({
   const renderCalendarContent = () => (
     <>
       <div className="flex flex-col items-start gap-1 mb-3">
-        <div className="flex items-center gap-1 -ml-1">
+        <div className="flex items-center gap-1 -ml-2.5">
           <button
             type="button"
             onClick={handlePrevMonth}
