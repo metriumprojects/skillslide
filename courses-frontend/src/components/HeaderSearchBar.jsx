@@ -41,20 +41,17 @@ export default function HeaderSearchBar() {
     const handleFocusSearch = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(() => {
+        searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         searchInputRef.current?.focus();
-      }, 100);
+      }, 50);
     };
 
     window.addEventListener("focus-header-search", handleFocusSearch);
 
-    if (location.search.includes("focusSearch=true")) {
-      handleFocusSearch();
-    }
-
     return () => {
       window.removeEventListener("focus-header-search", handleFocusSearch);
     };
-  }, [location.search]);
+  }, []);
 
   useEffect(() => {
     if (!showTypeFilterMenu) return;

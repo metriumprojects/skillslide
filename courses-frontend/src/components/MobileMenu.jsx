@@ -61,16 +61,13 @@ export default function MobileMenu() {
   };
 
   const handleSearchClick = () => {
-    if (location.pathname !== "/") {
-      navigate("/?focusSearch=true");
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      const input = document.getElementById("header-search-input");
-      if (input) {
-        input.focus();
-      }
-      window.dispatchEvent(new CustomEvent("focus-header-search"));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const input = document.getElementById("header-search-input");
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+    window.dispatchEvent(new CustomEvent("focus-header-search"));
   };
 
   const tabs = [
