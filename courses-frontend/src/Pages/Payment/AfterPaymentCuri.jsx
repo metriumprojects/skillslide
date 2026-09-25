@@ -732,9 +732,10 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
               <h2 className="text-xl font-semibold mb-4 text-[#1A2B49]">
                 Lesson Details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl items-start">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-4xl items-start">
                 {/* Left: Lesson Tile (Home page Card style - Cancelled) */}
-                <article className="min-w-0 group opacity-85">
+                <div className="w-full flex flex-col [&>article]:mb-3 md:[&>article]:mb-7">
+                  <article className="min-w-0 group opacity-85">
                   <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
                     <img
                       src={getCardImageUrl(lessonCoverUrl) || lessonCoverUrl}
@@ -777,8 +778,9 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
                     )}
                   </div>
                 </article>
+              </div>
 
-                {/* Right: Refund Information Card */}
+              {/* Right: Refund Information Card */}
                 <div className="bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)] flex flex-col justify-between">
                   <div>
                     <div className="mb-3 flex flex-col items-start gap-1">
@@ -852,9 +854,9 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
                 {isManage ? (isSingleLessonPast ? "Completed Lesson Details" : "Lesson Details") : (scheduledLessons.length > 0 ? "Scheduled Lesson" : "Schedule Your Lesson")}
               </h2>
 
-              <div className={`grid grid-cols-1 ${isRescheduling ? "lg:grid-cols-3 max-w-7xl" : "md:grid-cols-2 max-w-4xl"} gap-6 items-start transition-all duration-300`}>
+              <div className={`grid grid-cols-1 ${isRescheduling ? "lg:grid-cols-3 max-w-7xl" : "md:grid-cols-2 max-w-4xl"} gap-3 md:gap-6 items-start transition-all duration-300`}>
                 {/* 1. Left: Lesson Tile (Home page Card style) */}
-                <div className="w-full flex flex-col">
+                <div className="w-full flex flex-col [&>article]:mb-3 md:[&>article]:mb-7">
                   <Card
                     course={courseForCard}
                     favorites={favorites}
@@ -1091,9 +1093,10 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
             <h2 className="text-xl font-semibold mb-4 text-[#1A2B49]">
               Curriculum Details
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-4xl items-start">
               {/* Left: Curriculum Tile (Home page Card style - Cancelled) */}
-              <article className="min-w-0 group opacity-85">
+              <div className="w-full flex flex-col [&>article]:mb-3 md:[&>article]:mb-7">
+                <article className="min-w-0 group opacity-85">
                 <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
                   <img
                     src={getCardImageUrl(curriculumCoverUrl) || curriculumCoverUrl}
@@ -1136,8 +1139,9 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
                   )}
                 </div>
               </article>
+            </div>
 
-              {/* Right: Refund Information Card */}
+            {/* Right: Refund Information Card */}
               <div className="bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)] flex flex-col justify-between">
                 <div>
                   <div className="mb-3 flex flex-col items-start gap-1">
@@ -1219,10 +1223,10 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
                   : scheduledLessons.length > 0 && pendingLessons.length > 0 && !isCurriculumAllPast
                   ? "lg:grid-cols-3 max-w-7xl"
                   : "md:grid-cols-2 max-w-4xl"
-              } gap-6 items-start transition-all duration-300`}
+              } gap-3 md:gap-6 items-start transition-all duration-300`}
             >
               {/* 1. Left: Curriculum Card (Home page style) */}
-              <div className="w-full flex flex-col">
+              <div className="w-full flex flex-col [&>article]:mb-3 md:[&>article]:mb-7">
                 <CurriculumCard
                   course={curriculumForCard}
                   linkTo={curriculumId ? `/curriculum-booking/${curriculumId}` : undefined}
