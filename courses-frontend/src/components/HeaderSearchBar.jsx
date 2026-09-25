@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, ListFilter, MapPin, Search, X } from "lucide-react";
 import { useSearch } from "../context/SearchContext";
 import { useCurrency } from "../currency/CurrencyContext";
@@ -27,7 +28,34 @@ export default function HeaderSearchBar() {
   const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [showTypeFilterMenu, setShowTypeFilterMenu] = useState(false);
   const typeFilterRef = useRef(null);
+  const typeMenuDropdownRef = useRef(null);
   const popupRef = useRef(null);
+  const [typeMenuPos, setTypeMenuPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!showTypeFilterMenu) return;
+    const updatePosition = () => {
+      if (typeFilterRef.current) {
+        const rect = typeFilterRef.current.getBoundingClientRect();
+        const menuWidth = 144;
+        let left = rect.left;
+        if (left + menuWidth > window.innerWidth - 12) {
+          left = Math.max(12, window.innerWidth - menuWidth - 12);
+        }
+        setTypeMenuPos({
+          top: rect.bottom + 6,
+          left: Math.max(8, left),
+        });
+      }
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [showTypeFilterMenu]);
 
   // Close price filter on Escape
   useEffect(() => {
@@ -43,7 +71,12 @@ export default function HeaderSearchBar() {
   useEffect(() => {
     if (!showTypeFilterMenu) return;
     const closeMenu = (event) => {
-      if (!typeFilterRef.current?.contains(event.target)) setShowTypeFilterMenu(false);
+      if (
+        !typeFilterRef.current?.contains(event.target) &&
+        !typeMenuDropdownRef.current?.contains(event.target)
+      ) {
+        setShowTypeFilterMenu(false);
+      }
     };
     document.addEventListener("mousedown", closeMenu);
     return () => document.removeEventListener("mousedown", closeMenu);
@@ -126,30 +159,40 @@ export default function HeaderSearchBar() {
                 : "Lesson type"}
             <ChevronDown size={16} className={showTypeFilterMenu ? "rotate-180 transition-transform" : "transition-transform"} />
           </button>
-          {showTypeFilterMenu && (
-            <div className="absolute left-0 top-full z-50 mt-2 min-w-36 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg space-y-1">
-              {[
-                { value: "", label: "All" },
-                { value: "lesson", label: "Lesson" },
-                { value: "curriculum", label: "Curriculum" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setSelectedType(option.value);
-                    setShowTypeFilterMenu(false);
-                    handleSearchSubmit();
-                  }}
-                  className={`block w-full rounded-xl px-4 py-2.5 text-left text-sm font-medium ${
-                    selectedType === option.value ? "bg-primary text-white" : "text-black hover:bg-gray-100"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          )}
+          {showTypeFilterMenu &&
+            createPortal(
+              <div
+                ref={typeMenuDropdownRef}
+                style={{
+                  position: "fixed",
+                  top: `${typeMenuPos.top}px`,
+                  left: `${typeMenuPos.left}px`,
+                }}
+                className="z-[9999] min-w-36 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-2xl space-y-1"
+              >
+                {[
+                  { value: "", label: "All" },
+                  { value: "lesson", label: "Lesson" },
+                  { value: "curriculum", label: "Curriculum" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedType(option.value);
+                      setShowTypeFilterMenu(false);
+                      handleSearchSubmit();
+                    }}
+                    className={`block w-full rounded-xl px-4 py-2.5 text-left text-sm font-medium cursor-pointer transition-colors ${
+                      selectedType === option.value ? "bg-primary text-white" : "text-black hover:bg-gray-100"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>,
+              document.body
+            )}
         </div>
 
         {/* Price Filter Trigger */}

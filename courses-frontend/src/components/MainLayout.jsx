@@ -32,7 +32,8 @@ const MainLayout = ({
       </main>
       </div>
       {!hideFooter && <Footer />}
-      {!hideMobileMenu && <MobileMenu />}
+      {/* Old bottom mobile menu disabled to keep layout clean */}
+      {/* {!hideMobileMenu && <MobileMenu />} */}
     </div>
   )
 }

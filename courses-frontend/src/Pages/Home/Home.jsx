@@ -28,7 +28,6 @@ import LessonCardSkeleton from "./Components/LessonCardSkeleton";
 import CurriculumCardSkeleton from "./Components/CurriculumCardSkeleton";
 import CategoryCardSkeleton from "./Components/CategoryCardSkeleton";
 import CategoriesBar from "./Components/Categories";
-import CategoryMobile from "./Components/CategoryMobile";
 import SearchBar from "./Components/SearchBar";
 import SearchCategoryToolbar from "./Components/SearchCategoryToolbar";
 import StudentStorySlider from "./Components/StudentStorySlider";
@@ -561,18 +560,6 @@ const Home = () => {
         </div>
       )}
 
-
-      {/* Categories Swiper */}
-      <div className="hidden"><CategoryMobile
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onSelectCategory={(categoryName) => {
-          setSelectedCategory(categoryName);
-          setSearchInput("");
-          setPage(1);
-        }}
-        setShowFilter={() => setShowFilter(true)}
-      /></div>
 
 
       {/* Category Heading */}

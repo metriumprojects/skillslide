@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getCategories } from "../../../redux/reducers/CategoryReducer";
 import { IoIosArrowDown } from "react-icons/io";
 import { motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import CurrencySelector from "../../../components/CurrencySelector";
 import LogoIcon from "../../../components/LogoIcon";
 import HeaderSearchBar from "../../../components/HeaderSearchBar";
@@ -28,6 +29,33 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
   const [showMore, setShowMore] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(5);
   const moreMenuRef = useRef(null);
+  const [profileMenuPos, setProfileMenuPos] = useState({ top: 0, left: 0 });
+  const profileDropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const updatePosition = () => {
+      if (menuRef?.current) {
+        const rect = menuRef.current.getBoundingClientRect();
+        const menuWidth = 192; // w-48 is 192px
+        let left = rect.left;
+        if (left + menuWidth > window.innerWidth - 12) {
+          left = Math.max(12, window.innerWidth - menuWidth - 12);
+        }
+        setProfileMenuPos({
+          top: rect.bottom + 8,
+          left: Math.max(8, left),
+        });
+      }
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [showProfileMenu, menuRef]);
 
   // Fetch categories once (avoid empty-array dependency loop)
   useEffect(() => {
@@ -105,31 +133,31 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
   };
 
   return (
-    <div className="w-full hidden lg:block">
+    <div className="w-full">
       {/* Top Row: Logo */}
       <div className="flex w-full items-center justify-between">
-        <Link to="/" className="flex shrink-0 items-center gap-3 select-none" aria-label="SkillSlide home">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5 sm:gap-3 select-none" aria-label="SkillSlide home">
           {/* S Orange Icon Badge - Official SVG */}
-          <LogoIcon className="h-[46px] w-[46px]" />
+          <LogoIcon className="h-[36px] w-[36px] sm:h-[46px] sm:w-[46px]" />
 
           {/* Skill (italic) + Slide (simple) + Learn anything, from anywhere */}
           <div
             style={{ fontFamily: "'DM Sans', sans-serif" }}
             className="flex flex-col tracking-tight leading-none"
           >
-            <span className="text-2xl sm:text-[26px] font-black text-[#FA4F2E] leading-none">
+            <span className="text-xl sm:text-2xl md:text-[26px] font-black text-[#FA4F2E] leading-none">
               <span className="italic">Skill</span>
               <span className="not-italic">Slide</span>
             </span>
-            <span className="text-[16px] sm:text-[18px] font-normal italic tracking-wide text-[#1A2B49] leading-none mt-1 whitespace-nowrap">
+            <span className="text-[12px] sm:text-[15px] md:text-[18px] font-normal italic tracking-wide text-[#1A2B49] leading-none mt-0.5 sm:mt-1 whitespace-nowrap">
               Learn anything, from anywhere
             </span>
           </div>
         </Link>
       </div>
 
-      {/* Row 2: Search Bar, USD, Messages, and Profile Icon (All Left-Aligned) */}
-      <div className="flex w-full items-center justify-start gap-2.5 xl:gap-3.5 mt-6">
+      {/* Row 2: Search Bar, USD, Messages, and Profile Icon (All Left-Aligned & Horizontally Scrollable on Mobile) */}
+      <div className="flex w-full items-center justify-start gap-2.5 xl:gap-3.5 mt-4 sm:mt-6 overflow-x-auto lg:overflow-visible no-scrollbar py-1">
         {userInfo?.role === "teacher" && (
           <div className="flex items-center gap-2.5 xl:gap-3.5 shrink-0">
             <Link
@@ -184,57 +212,83 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                   </div>
                 )}
               </button>
-              {showProfileMenu && (
-                <motion.div initial={{ opacity: 0, y: -10, scale: 1 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -40, scale: 0.95 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }} className="absolute top-14 left-0 mt-2 w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
-                  <Link
-                    to="/profile?tab=My Profile"
-                    className={menuLinkClass("/profile", "My Profile")}
-                    onClick={() => setShowProfileMenu?.(false)}
+              {showProfileMenu &&
+                createPortal(
+                  <motion.div
+                    ref={profileDropdownRef}
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    style={{
+                      position: "fixed",
+                      top: `${profileMenuPos.top}px`,
+                      left: `${profileMenuPos.left}px`,
+                    }}
+                    className="profile-dropdown-portal w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.18)] border border-gray-100 z-[9999] overflow-hidden py-1"
                   >
-                    My Profile
-                  </Link>
-                  {userInfo?.role === "user" && (
-                    <button onClick={() => { handleTeacher("teacher"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
-                      {Teacherlessons.length > 0 ? "Teacher profile" : "Become a Teacher"}
+                    <Link
+                      to="/profile?tab=My Profile"
+                      className={menuLinkClass("/profile", "My Profile")}
+                      onClick={() => setShowProfileMenu?.(false)}
+                    >
+                      My Profile
+                    </Link>
+                    {userInfo?.role === "user" && (
+                      <button
+                        onClick={() => {
+                          handleTeacher("teacher");
+                          setShowProfileMenu?.(false);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm text-black cursor-pointer"
+                      >
+                        {Teacherlessons.length > 0 ? "Teacher profile" : "Become a Teacher"}
+                      </button>
+                    )}
+                    {userInfo?.role === "teacher" && (
+                      <button
+                        onClick={() => {
+                          handleTeacher("user");
+                          setShowProfileMenu?.(false);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm text-black cursor-pointer"
+                      >
+                        Student profile
+                      </button>
+                    )}
+                    <Link
+                      to="/"
+                      className={menuLinkClass("/")}
+                      onClick={() => setShowProfileMenu?.(false)}
+                    >
+                      Discover
+                    </Link>
+                    <Link
+                      to="/teach"
+                      className={menuLinkClass("/teach")}
+                      onClick={() => setShowProfileMenu?.(false)}
+                    >
+                      {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
+                    </Link>
+                    <Link
+                      to="/profile?tab=My Schedule"
+                      className={menuLinkClass("/profile", "My Schedule")}
+                      onClick={() => setShowProfileMenu?.(false)}
+                    >
+                      My Schedule
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setShowProfileMenu?.(false);
+                      }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-[#FA4F2E] font-medium text-sm border-t border-gray-100 cursor-pointer"
+                    >
+                      Logout
                     </button>
-                  )}
-                  {userInfo?.role === "teacher" && (
-                    <button onClick={() => { handleTeacher("user"); setShowProfileMenu?.(false); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm">
-                      Student profile
-                    </button>
-                  )}
-                  <Link
-                    to="/"
-                    className={menuLinkClass("/")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                    Discover
-                  </Link>
-                  <Link
-                    to="/teach"
-                    className={menuLinkClass("/teach")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                    {userInfo?.role === "teacher" ? "Student Requests" : "Requests"}
-                  </Link>
-                  <Link
-                    to="/profile?tab=My Schedule"
-                    className={menuLinkClass("/profile", "My Schedule")}
-                    onClick={() => setShowProfileMenu?.(false)}
-                  >
-                    My Schedule
-                  </Link>
-                  <button
-                    onClick={() => { handleLogout(); setShowProfileMenu?.(false); }}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-[#1A2B49] text-sm"
-                  >
-                    Logout
-                  </button>
-                </motion.div>
-              )}
+                  </motion.div>,
+                  document.body
+                )}
             </div>
           </>
         ) : (

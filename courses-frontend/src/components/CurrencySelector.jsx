@@ -32,16 +32,50 @@ export function getCurrencyIcon(code, { size = 16, strokeWidth = 1.8, className 
   }
 }
 
+import { createPortal } from "react-dom";
+
 export default function CurrencySelector({ className = "", buttonClassName = "", hideIcon = false }) {
   const { currency, setCurrency, supportedCurrencies, rateMeta } = useCurrency();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!open) return;
+    const updatePosition = () => {
+      if (wrapperRef.current) {
+        const rect = wrapperRef.current.getBoundingClientRect();
+        const menuWidth = 144; // w-36 is 144px
+        let left = rect.left;
+        if (left + menuWidth > window.innerWidth - 12) {
+          left = Math.max(12, window.innerWidth - menuWidth - 12);
+        }
+        setDropdownPos({
+          top: rect.bottom + 6,
+          left: Math.max(8, left),
+        });
+      }
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setOpen(false);
       }
     };
@@ -70,7 +104,7 @@ export default function CurrencySelector({ className = "", buttonClassName = "",
         aria-expanded={open}
         disabled={saving || rateMeta.loading}
         onClick={() => setOpen((current) => !current)}
-        className={`flex ${buttonClassName || "h-9"} items-center justify-center gap-1.5 rounded-full border-[1.5px] border-black bg-white px-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50 disabled:opacity-60`}
+        className={`flex ${buttonClassName || "h-9"} items-center justify-center gap-1.5 rounded-full border-[1.5px] border-black bg-white px-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50 disabled:opacity-60 cursor-pointer`}
       >
         {getCurrencyIcon(currency, { size: 16, strokeWidth: 1.8 })}
         <span className="font-medium uppercase">{currency}</span>
@@ -83,29 +117,39 @@ export default function CurrencySelector({ className = "", buttonClassName = "",
         )}
       </button>
 
-      {open && (
-        <ul className="absolute left-0 top-full z-50 mt-2 flex max-h-60 w-36 flex-col gap-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg hide-scrollbar">
-          {supportedCurrencies.map((code) => (
-            <li key={code}>
-              <button
-                type="button"
-                onClick={() => handleSelect(code)}
-                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-                  currency === code
-                    ? "bg-primary text-white"
-                    : "text-black hover:bg-gray-100"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  {getCurrencyIcon(code, { size: 14, strokeWidth: 1.8 })}
-                  <span>{code}</span>
-                </span>
-                {currency === code && <span className="text-xs">✓</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {open &&
+        createPortal(
+          <ul
+            ref={dropdownRef}
+            style={{
+              position: "fixed",
+              top: `${dropdownPos.top}px`,
+              left: `${dropdownPos.left}px`,
+            }}
+            className="z-[9999] flex max-h-60 w-36 flex-col gap-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-2xl hide-scrollbar"
+          >
+            {supportedCurrencies.map((code) => (
+              <li key={code}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(code)}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                    currency === code
+                      ? "bg-primary text-white"
+                      : "text-black hover:bg-gray-100"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {getCurrencyIcon(code, { size: 14, strokeWidth: 1.8 })}
+                    <span>{code}</span>
+                  </span>
+                  {currency === code && <span className="text-xs">✓</span>}
+                </button>
+              </li>
+            ))}
+          </ul>,
+          document.body
+        )}
     </div>
   );
 }

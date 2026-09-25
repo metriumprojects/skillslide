@@ -37,7 +37,6 @@ import { motion } from "framer-motion";
 import LocationAutocomplete from "./Components/LocationAutocomplete";
 import { getCategories } from "../../redux/reducers/CategoryReducer";
 import CategoriesBar from "./Components/Categories";
-import CategoryMobile from "./Components/CategoryMobile";
 import SearchBar from "./Components/SearchBar";
 import { useCurrency } from "../../currency/CurrencyContext";
 import ProfileRequestCard from "../Profile/components/ProfileRequestCard";
@@ -406,17 +405,6 @@ const Teach = () => {
           showMobileLocation={true}
         />
       )}
-
-      {/* Categories Mobile */}
-      <CategoryMobile
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onSelectCategory={(categoryName) => {
-          setSelectedCategory(categoryName);
-          setSearchInput("");
-          setPage(1);
-        }}
-      />
 
       {/* Lessons Grid / User Requests / Saved Proposals */}
       {activeTab === "All Requests" ? (
