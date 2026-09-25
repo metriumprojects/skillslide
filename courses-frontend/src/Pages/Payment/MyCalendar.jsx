@@ -457,19 +457,19 @@ export function MyCalendar({
             onClick={handlePrevMonth}
             disabled={isDisabled}
             className={`px-2 py-1 rounded transition-colors ${
-              isDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+              isDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-800 hover:bg-gray-100 cursor-pointer"
             }`}
           >
-            <ChevronLeft />
+            <ChevronLeft size={20} strokeWidth={2.75} />
           </button>
           <button
             onClick={handleNextMonth}
             disabled={isDisabled}
             className={`px-2 py-1 rounded transition-colors ${
-              isDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+              isDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-800 hover:bg-gray-100 cursor-pointer"
             }`}
           >
-            <ChevronRight />
+            <ChevronRight size={20} strokeWidth={2.75} />
           </button>
         </div>
       </div>

@@ -807,18 +807,18 @@ export function Calendar({
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            className="p-1 text-[#1A2B49] hover:bg-gray-100 rounded cursor-pointer transition-colors"
             title="Previous month"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={20} strokeWidth={2.75} />
           </button>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="p-1 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            className="p-1 text-[#1A2B49] hover:bg-gray-100 rounded cursor-pointer transition-colors"
             title="Next month"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={20} strokeWidth={2.75} />
           </button>
         </div>
         <p className="font-semibold text-base sm:text-lg md:text-xl text-[#1A2B49] leading-tight">{monthName} {year}</p>
