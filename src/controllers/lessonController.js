@@ -6,6 +6,8 @@ import fs from "fs";
 import Curriculum from "../models/Curriculum.js";
 import { createLessonCalender, updateLessonCalender, addLessonToLessonCalender, updateLessonInLessonCalender, removeLessonFromLessonCalender } from "./lessonCalenderController.js";
 import { addLessonToAvailability, updateLessonInAvailability, removeLessonFromAvailability } from "./availabilityController.js";
+import Availability from "../models/availabilityModel.js";
+import LessonCalender from "../models/LessonCalender.js";
 import { convertToUsd, requireCurrency, requirePositivePrice } from "../services/currencyService.js";
 import { requireTeacherPayoutCurrency } from "../services/stripeService.js";
 
@@ -589,6 +591,45 @@ export const getLessonById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/* -------------------- GET LESSON BOOKING BUNDLE (OPTIMIZED) ----------------- */
+export const getLessonBookingBundle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lesson = await Lesson.findById(id)
+      .populate("createdBy", "name email image averageRating totalRatings timeZone bio country")
+      .lean();
+
+    if (!lesson) {
+      return res.status(404).json({ status: false, message: "Lesson not found" });
+    }
+
+    const teacherId = lesson.createdBy?._id;
+
+    // Concurrently fetch all dependencies in one DB batch without network waterfalls
+    const [teacherUnavailability, teacherLessons, availability] = await Promise.all([
+      teacherId ? Availability.findOne({ user: teacherId, specific: false }).lean() : null,
+      teacherId ? Lesson.find({ createdBy: teacherId, status: "Active", _id: { $ne: id } }).limit(6).lean() : [],
+      lesson.calender && teacherId
+        ? Availability.findOne({ user: teacherId, global: true }).lean()
+        : lesson.calenderId
+          ? LessonCalender.findById(lesson.calenderId).lean()
+          : null,
+    ]);
+
+    res.json({
+      status: true,
+      lesson,
+      teacher: lesson.createdBy,
+      teacherLessons,
+      unavailability: teacherUnavailability,
+      availability,
+    });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 
 /* ----------------------------- UPDATE LESSON ----------------------------- */
 export const updateLesson = async (req, res) => {

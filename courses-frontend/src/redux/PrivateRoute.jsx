@@ -6,25 +6,33 @@ import Spinner from "../components/Spinner";
 
 const PrivateRoute = () => {
   const dispatch = useDispatch();
-  const { userInfo } = useSelector((state) => state.auth);
-  const [ok, setOk] = useState(true);
-  
-  // Memoize the userInfo processing to avoid unnecessary computations
-  const processedUserInfo = useMemo(() => {
-    return userInfo ? userInfo : null;
-  }, [userInfo]);
+  const { userInfo, loading } = useSelector((state) => state.auth);
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   useEffect(() => {
-    if (!processedUserInfo) {
+    if (!userInfo && token) {
       dispatch(getUser());
     }
-  }, [dispatch, processedUserInfo]);
+  }, [dispatch, userInfo, token]);
 
-  useEffect(() => {
-    setOk(!!processedUserInfo);
-  }, [processedUserInfo]);
+  // If no token exists at all, redirect to login
+  if (!token) {
+    return <Spinner path="login" />;
+  }
 
-  return ok ? <Outlet /> : <Spinner />;
+  // If token exists and we are verifying user, show smooth loader instead of black screen
+  if (!userInfo && loading) {
+    return <Spinner path="login" />;
+  }
+
+  // If user profile is loaded, render protected route
+  if (userInfo) {
+    return <Outlet />;
+  }
+
+  // If verification failed and user remains null, redirect to login
+  return <Spinner path="login" />;
 };
+
 
 export default PrivateRoute;

@@ -4,6 +4,7 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { Link } from "react-router-dom";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 
 export default function UnitsSection({ Data }) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -35,9 +36,9 @@ export default function UnitsSection({ Data }) {
           title: lessonPos.lId.title,
           label: lessonPos.lId.isIndependent ? "Available as standalone" : "Part of a curriculum",
           independent: lessonPos.lId.isIndependent,
-          image: lessonPos.lId.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png",
+          image: getCardImageUrl(lessonPos.lId.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png",
           instructor: lessonPos.lId.createdBy?.name || "Unknown",
-          instructorImg: lessonPos.lId.createdBy?.image?.url || "https://i.ibb.co/tpV3m2GW/no-image.png",
+          instructorImg: getAvatarUrl(lessonPos.lId.createdBy?.image?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png",
           rating: "9/10", // Keeping static as per your design
           reviews: "(32)", // Keeping static as per your design
           description: lessonPos.lId.description,

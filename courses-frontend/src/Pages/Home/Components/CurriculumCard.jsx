@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
+import { preloadRoute } from "../../../utils/routePreloader";
 import { Copy, Heart, Star } from "lucide-react";
 import { BiSolidZap } from "react-icons/bi";
 import { Link, useNavigate } from "react-router-dom";
@@ -41,9 +42,18 @@ const CurriculumCard = ({ course, linkTo }) => {
   };
 
   return (
-    <article className="mb-7 min-w-0 group">
+    <article 
+      className="mb-7 min-w-0 group"
+      onMouseEnter={() => preloadRoute("curriculumBooking")}
+      onTouchStart={() => preloadRoute("curriculumBooking")}
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
-        <Link to={linkTo || `/curriculum-booking/${course._id}`} state={{ preview: course }}>
+        <Link 
+          to={linkTo || `/curriculum-booking/${course._id}`} 
+          state={{ preview: course }}
+          onMouseEnter={() => preloadRoute("curriculumBooking")}
+          onTouchStart={() => preloadRoute("curriculumBooking")}
+        >
           <img
             src={
               getCardImageUrl(course.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"
@@ -75,11 +85,24 @@ const CurriculumCard = ({ course, linkTo }) => {
       </div>
 
       <div className="pt-2">
-        <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
+        <Link 
+          to={linkTo || `/curriculum-booking/${course._id}`} 
+          state={{ preview: course }}
+          className="block hover:underline"
+          onMouseEnter={() => preloadRoute("curriculumBooking")}
+          onTouchStart={() => preloadRoute("curriculumBooking")}
+        >
+          <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
+        </Link>
         <p className="mt-1 text-base text-[#6A6A6A]">
           {formatPrice(course.price, course.currency || "USD", cardPriceOptions)} &nbsp;·&nbsp; Curriculum
         </p>
-                 <Link to={userInfo?._id === course?.createdBy?._id ? "/profile" : `/user-profile/${course?.createdBy?._id}?role=teacher`} className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black">
+                 <Link 
+                   to={userInfo?._id === course?.createdBy?._id ? "/profile" : `/user-profile/${course?.createdBy?._id}?role=teacher`} 
+                   onMouseEnter={() => preloadRoute(userInfo?._id === course?.createdBy?._id ? "profile" : "publicProfile")}
+                   onTouchStart={() => preloadRoute(userInfo?._id === course?.createdBy?._id ? "profile" : "publicProfile")}
+                   className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black"
+                 >
                    <img
                      src={
                        getAvatarUrl(course?.createdBy?.image?.url) ||

@@ -19,13 +19,17 @@ const ensureAdmin = (req, res) => {
 export const loginAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
-
-        if (user.role != "admin") {
-            res.status(401).json({ status: false, message: "Invalid role" });
+        if (!email || !password) {
+            return res.status(400).json({ status: false, message: "Email and password are required" });
         }
 
-        if (user && (await user.matchPassword(password))) {
+        const user = await User.findOne({ email: String(email).trim().toLowerCase() });
+
+        if (!user || user.role !== "admin") {
+            return res.status(401).json({ status: false, message: "Invalid credentials or unauthorized" });
+        }
+
+        if (await user.matchPassword(password)) {
             const token = generateToken(user._id);
 
             // Set JWT token in cookie

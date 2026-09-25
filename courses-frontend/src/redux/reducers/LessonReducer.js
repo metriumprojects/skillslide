@@ -212,6 +212,23 @@ export const getLessonById = createAsyncThunk(
     }
   }
 );
+
+export const getLessonBookingBundle = createAsyncThunk(
+  "lesson/get-booking-bundle",
+  async (lessonId, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/lessons/booking-bundle/${lessonId}`, {
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: "Something went wrong" }
+      );
+    }
+  }
+);
+
 export const getCurriLessonById = createAsyncThunk(
   "lesson/get-curri-by-id",
   async (lessonId, { rejectWithValue }) => {
@@ -286,6 +303,7 @@ const initialState = {
   Teacherlessons:[],
   Teacheridlessons:[],
   currilesson:[],
+  bookingBundle: null,
   
   // State management
   loading: false,
@@ -420,6 +438,23 @@ const lessonSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // Get Lesson Booking Bundle (Optimized single-call)
+      .addCase(getLessonBookingBundle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getLessonBookingBundle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.lesson = action.payload.lesson;
+        state.Teacheridlessons = action.payload.teacherLessons;
+        state.bookingBundle = action.payload;
+      })
+      .addCase(getLessonBookingBundle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
       // Get CurriLesson by ID
       .addCase(getCurriLessonById.pending, (state) => {
         state.loading = true;

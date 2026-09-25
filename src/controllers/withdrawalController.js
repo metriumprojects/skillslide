@@ -5,38 +5,65 @@ import { generateOrderNo } from "../utils/utils.js";
 export const createWithdrawal = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { name, accountNo,  bank, amount,country,currency,iban,routingNumber,swiftBic } = req.body;
+        const { name, accountNo, bank, amount, country, currency, iban, routingNumber, swiftBic } = req.body;
 
-        if (!name || !accountNo ||  !bank || !amount) {
+        if (!name || !accountNo || !bank || !amount) {
             return res.status(400).json({ message: "All fields required" });
         }
 
+        const numericAmount = Number(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            return res.status(400).json({ message: "Withdrawal amount must be a positive number" });
+        }
+
         const user = await User.findById(userId);
-        if (user.money < amount) return res.status(400).json({ message: "Insufficient balance" });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const reqCurrency = (currency || user.currency || "USD").toUpperCase();
+        const availableInMap = user.balances?.available instanceof Map 
+            ? user.balances.available.get(reqCurrency) 
+            : user.balances?.available?.[reqCurrency];
+        const userAvailable = (typeof availableInMap === "number" && !isNaN(availableInMap))
+            ? availableInMap
+            : (reqCurrency === "USD" ? (user.money || 0) : 0);
+
+        if (userAvailable < numericAmount) {
+            return res.status(400).json({ 
+                message: `Insufficient balance. Available: ${userAvailable} ${reqCurrency}, requested: ${numericAmount} ${reqCurrency}` 
+            });
+        }
 
         const withdrawal = await Withdrawal.create({
             userId,
             name,
             accountNo,
-                      bank,
-            amount,
+            bank,
+            amount: numericAmount,
             country,
-            currency,
+            currency: reqCurrency,
             iban,
             routingNumber,
             swiftBic,
-            orderNo:generateOrderNo(),
+            orderNo: generateOrderNo(),
             status: "pending",
         });
-        await User.findByIdAndUpdate(userId, {
-            $inc: { money: -amount }
-        });
-        res.json({ status: true, message: "Withdrawal request created", withdrawal });
 
+        const updateOps = {
+            $inc: {
+                [`balances.available.${reqCurrency}`]: -numericAmount
+            }
+        };
+        if (reqCurrency === "USD") {
+            updateOps.$inc.money = -numericAmount;
+        }
+        await User.findByIdAndUpdate(userId, updateOps);
+
+        res.json({ status: true, message: "Withdrawal request created", withdrawal });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 export const getUserWithdrawals = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -83,9 +110,14 @@ export const approveWithdrawal = async (req, res) => {
         } else {
 
             // OPTIONAL → Update User Balance
-            await User.findByIdAndUpdate(withdrawal.userId, {
-                $inc: { money: withdrawal.amount }
-            });
+            const rejectCurrency = (withdrawal.currency || "USD").toUpperCase();
+            const rejectOps = {
+                $inc: {
+                    [`balances.available.${rejectCurrency}`]: withdrawal.amount,
+                    money: withdrawal.amount,
+                }
+            };
+            await User.findByIdAndUpdate(withdrawal.userId, rejectOps);
             withdrawal.status = "rejected";
             await withdrawal.save();
         }

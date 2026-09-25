@@ -23,9 +23,24 @@ export const protect = async (req, res, next) => {
 
     req.user = await User.findById(decoded.id).select("-password");
 
+    if (!req.user) {
+      return res.status(401).json({ status: false, message: "User not found or account deactivated" });
+    }
+
     next();
   } catch (error) {
-    console.error("Auth error:", error);
-    res.status(401).json({ message: "Not authorized, token invalid" });
+    console.error("Auth error:", error.message || error);
+    res.status(401).json({ status: false, message: "Not authorized, token invalid or expired" });
   }
 };
+
+export const adminOnly = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ status: false, message: "Authentication required" });
+  }
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ status: false, message: "Admin access required" });
+  }
+  next();
+};
+

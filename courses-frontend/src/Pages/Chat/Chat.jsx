@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { IoSendSharp } from "react-icons/io5";
+import ButtonSpinner from "../../components/ButtonSpinner";
 
 const formatTime = (timestamp) => {
   if (!timestamp) return "";
@@ -533,12 +534,16 @@ export default function Chat() {
                     />
 
                     <button
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 disabled:opacity-50 hover:scale-110 transition-transform"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 disabled:opacity-50 hover:scale-110 transition-transform cursor-pointer disabled:cursor-not-allowed"
                       onClick={handleSend}
                       disabled={sendDisabled}
                       aria-label="Send message"
                     >
-                      <IoSendSharp size={18} className="text-primary md:w-5 md:h-5" />
+                      {sendMessageLoading ? (
+                        <ButtonSpinner size={18} className="text-primary" />
+                      ) : (
+                        <IoSendSharp size={18} className="text-primary md:w-5 md:h-5" />
+                      )}
                     </button>
                   </div>
 

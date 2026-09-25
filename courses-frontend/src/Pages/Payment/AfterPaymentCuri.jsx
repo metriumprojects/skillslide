@@ -13,6 +13,7 @@ import { useCurrency } from "../../currency/CurrencyContext";
 import Card from "../Home/Components/Card";
 import CurriculumCard from "../Home/Components/CurriculumCard";
 import { getCardImageUrl, getAvatarUrl } from "../../utils/imageUtils";
+import ButtonSpinner from "../../components/ButtonSpinner";
 
 export default function AfterPaymentCurri({ bookIdOverride }) {
   const { formatPrice } = useCurrency();
@@ -999,10 +1000,19 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
                                 type="button"
                                 disabled={cancellingId === lesson._id || cancellingId === bookId}
                                 onClick={() => handleCancelLesson(lesson)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-red-500 text-red-600 hover:bg-red-50 px-4 py-2 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-red-500 text-red-600 hover:bg-red-50 px-4 py-2 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <CalendarX size={15} />
-                                {cancellingId === lesson._id || cancellingId === bookId ? "Cancelling..." : "Cancel lesson"}
+                                {cancellingId === lesson._id || cancellingId === bookId ? (
+                                  <>
+                                    <ButtonSpinner size={14} />
+                                    <span>Cancelling...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CalendarX size={15} />
+                                    <span>Cancel lesson</span>
+                                  </>
+                                )}
                               </button>
                             </div>
                           )}
@@ -1372,10 +1382,19 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
                                 type="button"
                                 disabled={cancellingId === lesson._id || cancellingId === bookId}
                                 onClick={() => handleCancelLesson(lesson)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-red-500 text-red-600 hover:bg-red-50 px-4 py-2 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-red-500 text-red-600 hover:bg-red-50 px-4 py-2 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <CalendarX size={15} />
-                                {cancellingId === lesson._id || cancellingId === bookId ? "Cancelling..." : "Cancel Curriculum"}
+                                {cancellingId === lesson._id || cancellingId === bookId ? (
+                                  <>
+                                    <ButtonSpinner size={14} />
+                                    <span>Cancelling...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CalendarX size={15} />
+                                    <span>Cancel Curriculum</span>
+                                  </>
+                                )}
                               </button>
                             </div>
                           )}

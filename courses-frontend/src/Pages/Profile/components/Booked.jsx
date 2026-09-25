@@ -8,6 +8,7 @@ import { userBookings } from "../../../redux/reducers/BookingReducer";
 import { Link } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { useCurrency } from "../../../currency/CurrencyContext";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 
 export default function Booked() {
   const { formatPrice } = useCurrency();
@@ -30,7 +31,7 @@ export default function Booked() {
                 <Link to={``}>
                   <img
                     src={
-                      course?.lesson?.coverImage?.url ||
+                      getCardImageUrl(course?.lesson?.coverImage?.url) ||
                       "https://i.ibb.co/tpV3m2GW/no-image.png"
                     }
                     alt={course?.lesson?.title}
@@ -59,7 +60,7 @@ export default function Booked() {
                     >
                       <img
                         src={
-                          course?.teacher?.image?.url ||
+                          getAvatarUrl(course?.teacher?.image?.url) ||
                           "https://i.ibb.co/tpV3m2GW/no-image.png"
                         }
                         alt={course.teacher?.name}

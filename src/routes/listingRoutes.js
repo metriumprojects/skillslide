@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import { upload } from "../middleware/uploadMiddleware.js";
 import { compressImages } from "../middleware/compressImages.js";
 import {
@@ -16,7 +16,8 @@ import {
 const router = express.Router();
 
 // Admin: list all listings (protected + controller checks admin role)
-router.get("/", protect, getAllListings);
+router.get("/", protect, adminOnly, getAllListings);
+
 
 router.post("/create", protect, upload.any(), compressImages, createListing);
 router.get("/my-listings", protect, getMyListings);

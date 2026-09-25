@@ -5,6 +5,7 @@ import MainLayout from "../../components/MainLayout";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { ResetPassword } from "../../redux/reducers/AuthReducer";
+import ButtonSpinner from "../../components/ButtonSpinner";
 
 import LogoIcon from "../../components/LogoIcon";
 
@@ -111,8 +112,9 @@ export default function NewPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="block w-fit rounded-full bg-black px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 w-fit rounded-full bg-black px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
+            {loading && <ButtonSpinner size={18} />}
             {loading ? "Saving..." : "Continue"}
           </button>
 

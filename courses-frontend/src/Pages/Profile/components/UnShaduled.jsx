@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 
 export default function UnShaduled() {
   const { userInfo } = useSelector((state) => state.auth);
@@ -108,7 +109,7 @@ export default function UnShaduled() {
                   >
                     <img
                       src={
-                        details.coverImage?.url ||
+                        getCardImageUrl(details.coverImage?.url) ||
                         "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80"
                       }
                       alt={details.title}
@@ -168,7 +169,7 @@ export default function UnShaduled() {
                     >
                       <img
                         src={
-                          course?.teacher?.image?.url ||
+                          getAvatarUrl(course?.teacher?.image?.url) ||
                           "/default-avatar.svg"
                         }
                         loading="lazy"

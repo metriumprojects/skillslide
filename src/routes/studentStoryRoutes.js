@@ -1,6 +1,6 @@
 import express from "express";
 import { upload } from "../middleware/uploadMiddleware.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import {
   getActiveStudentStories,
   getAllStudentStories,
@@ -17,9 +17,10 @@ const storyUploads = upload.fields([
 ]);
 
 router.get("/active", getActiveStudentStories);
-router.get("/", protect, getAllStudentStories);
-router.post("/", protect, storyUploads, createStudentStory);
-router.put("/:id", protect, storyUploads, updateStudentStory);
-router.delete("/:id", protect, deleteStudentStory);
+router.get("/", protect, adminOnly, getAllStudentStories);
+router.post("/", protect, adminOnly, storyUploads, createStudentStory);
+router.put("/:id", protect, adminOnly, storyUploads, updateStudentStory);
+router.delete("/:id", protect, adminOnly, deleteStudentStory);
+
 
 export default router;

@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 
 export default function Upcoming() {
   const dispatch = useDispatch();
@@ -324,7 +325,7 @@ export default function Upcoming() {
                   <Link to={targetLink} state={{ preview: details }}>
                     <img
                       src={
-                        details.coverImage?.url ||
+                        getCardImageUrl(details.coverImage?.url) ||
                         "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80"
                       }
                       alt={details.title}
@@ -380,7 +381,7 @@ export default function Upcoming() {
                       className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black hover:bg-gray-200 transition-colors"
                     >
                       <img
-                        src={course?.teacher?.image?.url || "/default-avatar.svg"}
+                        src={getAvatarUrl(course?.teacher?.image?.url) || "/default-avatar.svg"}
                         loading="lazy"
                         decoding="async"
                         alt={course.teacher?.name}

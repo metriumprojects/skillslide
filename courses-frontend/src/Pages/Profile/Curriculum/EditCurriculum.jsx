@@ -1197,8 +1197,8 @@ function EditStep3DirectLessons({
               <button type="button" onClick={handleAddNew} className="px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors">
                 Add another lesson
               </button>
-              <button onClick={onSubmit} disabled={loading || lessons.length < 2} className="px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
-                {loading ? "Updating..." : <>Update Curriculum <ArrowRight size={16} /></>}
+              <button onClick={onSubmit} disabled={loading || lessons.length < 2} className="px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer">
+                {loading ? <><Loader size={18} className="animate-spin" /> Updating Curriculum...</> : <>Update Curriculum <ArrowRight size={16} /></>}
               </button>
               <button onClick={onDelete} disabled={loading} className="px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2">
                 <Trash2 size={16} />
@@ -1446,8 +1446,8 @@ function EditStep3Units({
               <button onClick={() => handleAddLessonInline(selectedUnitId)} className="px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors">
                 Add another Lesson
               </button>
-              <button onClick={onSubmit} disabled={loading || lessons.length < 2} className="px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
-                {loading ? "Updating..." : <>Update Curriculum <ArrowRight size={16} /></>}
+              <button onClick={onSubmit} disabled={loading || lessons.length < 2} className="px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer">
+                {loading ? <><Loader size={18} className="animate-spin" /> Updating Curriculum...</> : <>Update Curriculum <ArrowRight size={16} /></>}
               </button>
               <button onClick={onDelete} disabled={loading} className="px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors">
                 <Trash2 size={16} />

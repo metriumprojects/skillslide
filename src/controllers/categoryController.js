@@ -51,6 +51,7 @@ export const createCategory = async (req, res) => {
 export const getCategories = async (req, res) => {
     try {
         const categories = await Category.find().sort({ createdAt: -1 }).lean();
+        res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
         res.json(categories);
     } catch (error) {
         res.status(500).json({status:false, message: error.message });

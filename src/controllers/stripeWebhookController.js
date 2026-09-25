@@ -2,6 +2,7 @@ import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 import { handleConnectAccountUpdate } from "./stripeConnectController.js";
 import { getStripe } from "../services/stripeService.js";
+import { fulfillBookingOrder } from "./bookingController.js";
 
 export const stripeWebhook = async (req, res) => {
   const signature = req.headers["stripe-signature"];
@@ -59,6 +60,17 @@ export const stripeWebhook = async (req, res) => {
             ...settlement,
           },
         });
+
+        // Fulfill the booking reliably so tab closures never create ghost bookings
+        try {
+          await fulfillBookingOrder({
+            bookingId,
+            paymentIntentId: session.payment_intent,
+            session,
+          });
+        } catch (fulfillErr) {
+          console.error("Error fulfilling booking in stripeWebhook:", fulfillErr?.message || fulfillErr);
+        }
       }
     }
 

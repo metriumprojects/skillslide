@@ -47,6 +47,17 @@ export default function CurriculumPage() {
   const [currentStep, setCurrentStep] = useState(1); // 1=Details, 2=Type, 3=Lessons/Units
   const [lessonType, setLessonType] = useState(null); // null, "direct", or "unit"
   const [curriculumCurrency, setCurriculumCurrency] = useState(currency);
+  const [errors, setErrors] = useState({});
+
+  const clearError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (payoutCurrencies.length && !payoutCurrencies.includes(curriculumCurrency)) setCurriculumCurrency(payoutCurrencies[0]);
   }, [payoutCurrencies, curriculumCurrency]);
@@ -101,6 +112,7 @@ export default function CurriculumPage() {
     const file = e.target.files?.[0];
     if (file) {
       setCoverImage(file);
+      clearError("coverImage");
     }
   };
 
@@ -116,15 +128,70 @@ export default function CurriculumPage() {
     );
   };
 
+  const handleNextFromStep1 = () => {
+    const newErrors = {};
+
+    if (!curriculumData.title?.trim()) {
+      newErrors.title = "Curriculum title is required";
+    }
+
+    if (!curriculumData.description?.trim()) {
+      newErrors.description = "Curriculum description is required";
+    } else if (curriculumData.description.trim().length < 50) {
+      newErrors.description = "Description should be at least 50 characters long";
+    }
+
+    if (curriculumData.price === "" || curriculumData.price === null || Number(curriculumData.price) < 0) {
+      newErrors.price = "Valid curriculum price is required";
+    }
+
+    if (!curriculumData.category) {
+      newErrors.category = "Please select a category";
+    }
+
+    if (!curriculumData.isOnline && !curriculumData.supportsInPerson) {
+      newErrors.location = "Select at least one lesson format (Online or In Person)";
+    } else if (curriculumData.supportsInPerson && !curriculumData.location?.trim()) {
+      newErrors.location = "Location address is required for in-person curriculum";
+    }
+
+    if (!coverImage) {
+      newErrors.coverImage = "Curriculum cover image is required";
+    }
+
+    if (!curriculumData.images || curriculumData.images.length < MIN_IMAGES_REQUIRED) {
+      newErrors.images = `Curriculum must have at least ${MIN_IMAGES_REQUIRED} images`;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill in all required fields highlighted in red");
+      const firstKey = Object.keys(newErrors)[0];
+      const el = document.getElementById(`field-curri-${firstKey}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
+    setErrors({});
+    setCurrentStep(2);
+  };
+
   // STEP 2: Choose lesson type
   const handleChooseLessonType = (type) => {
     setLessonType(type);
+    clearError("lessonType");
   };
 
   const handleNextFromType = () => {
-    if (lessonType) {
-      setCurrentStep(3);
+    if (!lessonType) {
+      setErrors({ lessonType: "Please choose whether your course has direct lessons or units" });
+      toast.error("Please select a course structure");
+      return;
     }
+    setErrors({});
+    setCurrentStep(3);
   };
 
   // Navigate back from lesson/unit page
@@ -143,6 +210,10 @@ export default function CurriculumPage() {
       ...prev,
       [field]: value,
     }));
+    clearError(field);
+    if (field === "isOnline" || field === "supportsInPerson" || field === "location") {
+      clearError("location");
+    }
   };
 
   const handleCurriculumImagesChange = (updatedImages) => {
@@ -150,6 +221,9 @@ export default function CurriculumPage() {
       ...prev,
       images: updatedImages,
     }));
+    if (updatedImages && updatedImages.length >= MIN_IMAGES_REQUIRED) {
+      clearError("images");
+    }
   };
 
   // UNIT HANDLERS
@@ -705,17 +779,22 @@ export default function CurriculumPage() {
   const handleCreateCurriculum = async () => {
     // Validation
     if (!curriculumData.title.trim()) {
-      alert("Please enter curriculum title");
+      toast.error("Please enter curriculum title");
+      setCurrentStep(1);
       return;
     }
 
     if (!coverImage) {
-      alert("Please upload a curriculum cover image");
+      toast.error("Please upload a curriculum cover image");
+      setCurrentStep(1);
       return;
     }
 
     if (!lessons || lessons.length < 2) {
-      alert("Curriculum must have at least 2 lessons");
+      toast.error("Curriculum must have at least 2 lessons");
+      setErrors((prev) => ({ ...prev, lessons: "Curriculum must contain at least 2 lessons" }));
+      const el = document.getElementById("field-curri-lessons-container");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -723,7 +802,16 @@ export default function CurriculumPage() {
       !curriculumData.images ||
       curriculumData.images.length < MIN_IMAGES_REQUIRED
     ) {
-      alert(`Curriculum must have at least ${MIN_IMAGES_REQUIRED} images`);
+      toast.error(`Curriculum must have at least ${MIN_IMAGES_REQUIRED} images`);
+      setCurrentStep(1);
+      return;
+    }
+
+    const lessonsWithoutTitle = lessons.filter(
+      (lesson) => !lesson.title || !lesson.title.trim(),
+    );
+    if (lessonsWithoutTitle.length > 0) {
+      toast.error("All lessons must have a title");
       return;
     }
 
@@ -731,7 +819,7 @@ export default function CurriculumPage() {
       (lesson) => !lesson.images || lesson.images.length < MIN_IMAGES_REQUIRED,
     );
     if (lessonsWithoutEnoughImages.length > 0) {
-      alert(`All lessons must have at least ${MIN_IMAGES_REQUIRED} images`);
+      toast.error(`All lessons must have at least ${MIN_IMAGES_REQUIRED} images`);
       return;
     }
 
@@ -739,7 +827,13 @@ export default function CurriculumPage() {
       (lesson) => !lesson.description || lesson.description.trim().length < 50,
     );
     if (lessonsWithoutDescription.length > 0) {
-      alert("All lessons should have a description (at least 50 characters)");
+      toast.error("All lessons should have a description (at least 50 characters)");
+      return;
+    }
+
+    const lessonsWithoutDuration = lessons.filter((lesson) => !lesson.duration);
+    if (lessonsWithoutDuration.length > 0) {
+      toast.error("All lessons must have a duration selected");
       return;
     }
 
@@ -965,7 +1059,8 @@ export default function CurriculumPage() {
               MAX_DESCRIPTION_LENGTH={MAX_DESCRIPTION_LENGTH}
               MIN_IMAGES_REQUIRED={MIN_IMAGES_REQUIRED}
               isStep1Valid={isStep1Valid}
-              onNext={() => setCurrentStep(2)}
+              onNext={handleNextFromStep1}
+              errors={errors}
             />
           )}
 
@@ -976,6 +1071,7 @@ export default function CurriculumPage() {
               onChooseType={handleChooseLessonType}
               onBack={handleBackToDetails}
               onNext={handleNextFromType}
+              errors={errors}
             />
           )}
 
@@ -1003,6 +1099,7 @@ export default function CurriculumPage() {
               onBack={handleBackToType}
               onSubmit={handleCreateCurriculum}
               loading={loading}
+              errors={errors}
             />
           )}
 
@@ -1045,6 +1142,7 @@ export default function CurriculumPage() {
               onBack={handleBackToType}
               onSubmit={handleCreateCurriculum}
               loading={loading}
+              errors={errors}
             />
           )}
         </div>
@@ -1071,13 +1169,14 @@ function Step1Details({
   MIN_IMAGES_REQUIRED,
   isStep1Valid,
   onNext,
+  errors = {},
 }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* LEFT COLUMN: CURRICULUM FORM */}
       <form className="space-y-6">
         {/* Title */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-title" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">
             Curriculum Title *
           </label>
@@ -1087,15 +1186,22 @@ function Step1Details({
             maxLength="300"
             value={curriculumData.title}
             onChange={(e) => handleCurriculumChange("title", e.target.value)}
-            className="w-full bg-white border border-[#DDDDDD] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black"
+            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 ${
+              errors.title
+                ? "border-red-500 ring-1 ring-red-500 bg-red-50/20"
+                : "border-[#DDDDDD] focus:border-black"
+            }`}
           />
+          {errors.title && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.title}</p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             {curriculumData.title.length}/300 characters
           </p>
         </div>
 
         {/* Description */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-description" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">
             Description *
           </label>
@@ -1112,8 +1218,15 @@ function Step1Details({
               }
             }}
             rows="5"
-            className="w-full bg-white border border-[#DDDDDD] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black resize-none"
+            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 resize-none ${
+              errors.description
+                ? "border-red-500 ring-1 ring-red-500 bg-red-50/20"
+                : "border-[#DDDDDD] focus:border-black"
+            }`}
           />
+          {errors.description && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.description}</p>
+          )}
           <div className="flex justify-between text-xs mt-2">
             <div
               className={
@@ -1139,7 +1252,7 @@ function Step1Details({
         </div>
 
         {/* Price */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-price" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">
             Curriculum Price ({currency}) *
           </label>
@@ -1151,7 +1264,11 @@ function Step1Details({
               onChange={(e) => handleCurriculumChange("price", e.target.value)}
               step="1"
               min="0"
-              className="w-full bg-white border border-[#DDDDDD] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black"
+              className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 ${
+                errors.price
+                  ? "border-red-500 ring-1 ring-red-500 bg-red-50/20"
+                  : "border-[#DDDDDD] focus:border-black"
+              }`}
             />
             <select
               value={currency}
@@ -1165,14 +1282,19 @@ function Step1Details({
               ))}
             </select>
           </div>
+          {errors.price && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.price}</p>
+          )}
         </div>
 
         {/* Category */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-category" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">
             Category *
           </label>
-          <div className="bg-white border border-[#DDDDDD] rounded-xl p-4">
+          <div className={`bg-white border rounded-xl p-4 ${
+            errors.category ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-[#DDDDDD]"
+          }`}>
             {categories.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
@@ -1201,14 +1323,19 @@ function Step1Details({
               <p className="text-gray-500 text-sm">Loading categories...</p>
             )}
           </div>
+          {errors.category && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.category}</p>
+          )}
         </div>
 
         {/* Curriculum Location */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-location" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">
             Curriculum Location *
           </label>
-          <div className="bg-white border border-[#DDDDDD] rounded-xl p-4 space-y-3">
+          <div className={`bg-white border rounded-xl p-4 space-y-3 ${
+            errors.location ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-[#DDDDDD]"
+          }`}>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -1246,17 +1373,26 @@ function Step1Details({
                   onChange={(e) =>
                     handleCurriculumChange("location", e.target.value)
                   }
-                  className="w-full px-4 py-2 border border-[#DDDDDD] rounded-xl text-sm focus:outline-none focus:border-black"
+                  className={`w-full px-4 py-2 border rounded-xl text-sm focus:outline-none ${
+                    errors.location
+                      ? "border-red-500 ring-1 ring-red-500 bg-red-50/20"
+                      : "border-[#DDDDDD] focus:border-black"
+                  }`}
                 />
               </div>
             )}
           </div>
+          {errors.location && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.location}</p>
+          )}
         </div>
 
         {/* Curriculum Cover Image */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-coverImage" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">Curriculum Cover Image *</label>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
+          <div className={`bg-white border rounded-xl p-4 space-y-4 ${
+            errors.coverImage ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-200"
+          }`}>
             <div className="flex items-center justify-center">
               {/* Upload Button */}
               <label className="flex items-center justify-center gap-2 text-gray-700 rounded-md px-4 py-2 text-base hover:bg-gray-50 cursor-pointer w-fit disabled:opacity-50 transition-colors">
@@ -1304,14 +1440,19 @@ function Step1Details({
               </div>
             )}
           </div>
+          {errors.coverImage && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.coverImage}</p>
+          )}
         </div>
 
         {/* Curriculum Images */}
-        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+        <div id="field-curri-images" className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block mb-2 text-sm font-semibold text-gray-900">
             Curriculum Images *
           </label>
-          <div className="bg-white border border-[#DDDDDD] rounded-xl p-4">
+          <div className={`bg-white border rounded-xl p-4 ${
+            errors.images ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-[#DDDDDD]"
+          }`}>
             <ImageUploader
               images={curriculumData.images || []}
               onImagesChange={handleCurriculumImagesChange}
@@ -1321,6 +1462,9 @@ function Step1Details({
               label="Upload Images (min 2, max 10)"
             />
           </div>
+          {errors.images && (
+            <p className="text-xs text-red-500 font-medium mt-1.5">{errors.images}</p>
+          )}
         </div>
         <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
           <label className="block text-sm font-semibold text-gray-900">
@@ -1339,9 +1483,8 @@ function Step1Details({
         {/* Submit Button */}
         <button
           type="button"
-          disabled={!isStep1Valid()}
           onClick={onNext}
-          className="w-fit bg-black text-white font-medium px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-fit bg-black text-white font-medium px-6 py-3 rounded-xl transition-colors hover:bg-gray-800 flex items-center justify-center gap-2 cursor-pointer"
         >
           Next <ArrowRight size={16} />
         </button>
@@ -1402,7 +1545,7 @@ function Step1MobileCalendar({
 }
 
 // STEP 2 COMPONENT
-function Step2Type({ lessonType, onChooseType, onBack, onNext }) {
+function Step2Type({ lessonType, onChooseType, onBack, onNext, errors = {} }) {
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div className="space-y-4">
@@ -1410,8 +1553,10 @@ function Step2Type({ lessonType, onChooseType, onBack, onNext }) {
         <button
           type="button"
           onClick={() => onChooseType("direct")}
-          className={`w-full text-left rounded-2xl border px-5 py-4 transition-all ${
-            lessonType === "direct"
+          className={`w-full text-left rounded-2xl border px-5 py-4 transition-all cursor-pointer ${
+            errors.lessonType
+              ? "border-red-500 ring-1 ring-red-500 bg-red-50/20"
+              : lessonType === "direct"
               ? "border-black shadow-sm"
               : "border-[#DDDDDD] hover:border-gray-400"
           }`}
@@ -1430,8 +1575,10 @@ function Step2Type({ lessonType, onChooseType, onBack, onNext }) {
         <button
           type="button"
           onClick={() => onChooseType("unit")}
-          className={`w-full text-left rounded-2xl border px-5 py-4 transition-all ${
-            lessonType === "unit"
+          className={`w-full text-left rounded-2xl border px-5 py-4 transition-all cursor-pointer ${
+            errors.lessonType
+              ? "border-red-500 ring-1 ring-red-500 bg-red-50/20"
+              : lessonType === "unit"
               ? "border-black shadow-sm"
               : "border-[#DDDDDD] hover:border-gray-400"
           }`}
@@ -1445,19 +1592,22 @@ function Step2Type({ lessonType, onChooseType, onBack, onNext }) {
             progressively over time.
           </p>
         </button>
+
+        {errors.lessonType && (
+          <p className="text-xs text-red-500 font-medium text-center mt-2">{errors.lessonType}</p>
+        )}
       </div>
 
       <div className="flex items-center justify-between pt-6">
         <button
           onClick={onBack}
-          className="px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          className="px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
           <ArrowLeft size={16} /> Back
         </button>
         <button
           onClick={onNext}
-          disabled={!lessonType}
-          className="px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
           Next <ArrowRight size={16} />
         </button>
@@ -1489,6 +1639,7 @@ function Step3DirectLessons({
   onBack,
   onSubmit,
   loading,
+  errors = {},
 }) {
   const [selectedLessonId, setSelectedLessonId] = useState(
     lessons[0]?.id ?? null,
@@ -1544,16 +1695,18 @@ function Step3DirectLessons({
     <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LEFT: LESSON FORM & CONTROLS */}
-        <div className="space-y-4">
+        <div id="field-curri-lessons-container" className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">
             Add a lesson
           </h3>
-          <div className="bg-[#F7F7F7] rounded-2xl p-5 border border-gray-100">
+          <div className={`bg-[#F7F7F7] rounded-2xl p-5 border ${
+            errors.lessons ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"
+          }`}>
             <div className="space-y-3">
               <button
                 type="button"
                 onClick={handleAddNewLesson}
-                className="w-full px-4 py-3 rounded-xl bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-[#DDDDDD] text-sm font-semibold text-gray-900 hover:bg-gray-300 transition-colors cursor-pointer"
               >
                 Create a new lesson +
               </button>
@@ -1570,6 +1723,9 @@ function Step3DirectLessons({
                 ))}
               </select>
             </div>
+            {errors.lessons && (
+              <p className="text-xs text-red-500 font-medium mt-2">{errors.lessons}</p>
+            )}
           </div>
 
           {selectedLesson ? (
@@ -1604,24 +1760,33 @@ function Step3DirectLessons({
           <div className="flex justify-between gap-4 pt-2">
             <button
               onClick={onBack}
-              className="w-fit px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              className="w-fit px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <ArrowLeft size={16} /> Back
             </button>
             <div className="flex items-center gap-4">
               <button
                 onClick={handleAddNewLesson}
-                className=" px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                className=" px-6 py-3 border-2 border-black text-black rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 Add another lesson
               </button>
               <button
                 onClick={onSubmit}
-                disabled={loading || lessons.length < 2}
-                className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                disabled={loading}
+                className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                {loading ? "Creating..." : "Create Curriculum"}
-                {!loading && <ArrowRight size={16} />}
+                {loading ? (
+                  <>
+                    <Loader size={18} className="animate-spin" />
+                    <span>Creating Curriculum...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Curriculum</span>
+                    <ArrowRight size={16} />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1763,6 +1928,7 @@ function Step3Units({
   onBack,
   onSubmit,
   loading,
+  errors = {},
 }) {
   const [selectedUnitId, setSelectedUnitId] = useState(
     sortedUnits[0]?.id ?? null,
@@ -1858,7 +2024,12 @@ function Step3Units({
     <div className="w-full mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LEFT: ADD UNIT / LESSON FORM */}
-        <div className="space-y-6">
+        <div id="field-curri-lessons-container" className="space-y-6">
+          {errors.lessons && (
+            <div className="p-3 bg-red-50 border border-red-500 rounded-xl text-xs text-red-600 font-medium">
+              {errors.lessons}
+            </div>
+          )}
           {mode === "unit" ? (
             <div className="bg-[#F7F7F7] rounded-2xl p-6 border border-gray-100 space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -2038,8 +2209,8 @@ function Step3Units({
               </button>
               <button
                 onClick={onSubmit}
-                disabled={loading || lessons.length < 2}
-                className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                disabled={loading}
+                className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? "Publishing..." : "Publish"}
                 {!loading && <ArrowRight size={16} />}

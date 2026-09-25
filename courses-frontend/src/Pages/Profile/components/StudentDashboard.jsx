@@ -8,12 +8,14 @@ import ReviewModal from "./ReviewModal";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
+import ButtonSpinner from "../../../components/ButtonSpinner";
 
 export default function StudentDashboard() {
   const { formatPrice } = useCurrency();
   const [openReview, setOpenReview] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming'); // New state for tab management
+  const [cancellingId, setCancellingId] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
@@ -133,6 +135,8 @@ export default function StudentDashboard() {
         return;
       }
 
+      const idKey = lesson.bookingId || lesson._id;
+      setCancellingId(idKey);
       dispatch(
         CancelBooking({
           bookId: lesson?.bookingId,
@@ -174,6 +178,8 @@ export default function StudentDashboard() {
         } else {
           toast.error(res?.payload?.message || res?.payload || "Cancellation failed");
         }
+      }).finally(() => {
+        setCancellingId(null);
       });
     }
   };
@@ -329,9 +335,11 @@ export default function StudentDashboard() {
                             </button>
                             <button 
                               onClick={() => handleCancel(lesson)}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
+                              disabled={cancellingId === (lesson.bookingId || lesson._id)}
+                              className="inline-flex items-center gap-1.5 bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
+                              {cancellingId === (lesson.bookingId || lesson._id) && <ButtonSpinner size={14} />}
+                              {cancellingId === (lesson.bookingId || lesson._id) ? "Cancelling..." : isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
                             </button>
                             <button 
                               onClick={() => {

@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { Heart, Star, Plus } from "lucide-react";
 import { toast } from "react-toastify";
 import { GrLocation } from "react-icons/gr";
+import { getCardImageUrl } from "../../../utils/imageUtils";
 
 export default function PublicFvrt({ id }) {
   const dispatch = useDispatch();
@@ -59,7 +60,7 @@ export default function PublicFvrt({ id }) {
         <div className="relative overflow-hidden h-[335px]">
           <Link to={`/curriculum-booking/${curriculum._id}`}>
             <img
-              src={curriculum.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
+              src={getCardImageUrl(curriculum.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"}
               alt={curriculum.title}
               className="w-full h-full object-cover rounded-[20px]"
             />
@@ -162,7 +163,7 @@ export default function PublicFvrt({ id }) {
             }
           >
             <img
-              src={lesson.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
+              src={getCardImageUrl(lesson.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"}
               alt={lesson.title}
               className="w-full h-full object-cover rounded-[20px]"
             />

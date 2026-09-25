@@ -8,12 +8,15 @@ import ReviewModal from "./ReviewModal";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
+import ButtonSpinner from "../../../components/ButtonSpinner";
 
 export default function LessonsDashboard() {
   const { formatPrice } = useCurrency();
   const [openReview, setOpenReview] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming'); // New state for tab management
+  const [completingId, setCompletingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
@@ -137,6 +140,8 @@ export default function LessonsDashboard() {
         return;
       }
 
+      const idKey = lesson.bookingId || lesson._id;
+      setCancellingId(idKey);
       dispatch(
         CancelBooking({
           bookId: lesson?.bookingId,
@@ -169,12 +174,16 @@ export default function LessonsDashboard() {
         } else {
           toast.error(res?.payload);
         }
+      }).finally(() => {
+        setCancellingId(null);
       });
     }
   };
 
   const handleComplete = (lesson) => {
     if(lesson){
+      const idKey = lesson.bookingId || lesson._id;
+      setCompletingId(idKey);
       dispatch(CompleteLessons({bookId:lesson?.bookingId, type:lesson?.type, lId:lesson?.lId})).then((res) => {
         if (res?.payload.status) {
           toast.success(res?.payload?.message);
@@ -200,6 +209,8 @@ export default function LessonsDashboard() {
         } else {
           toast.error(res?.payload?.message || "Error completing lesson");
         }
+      }).finally(() => {
+        setCompletingId(null);
       });
     }
   };
@@ -374,9 +385,11 @@ export default function LessonsDashboard() {
                           </button>
                           <button 
                             onClick={() => handleCancel(lesson)}
-                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
+                            disabled={cancellingId === (lesson.bookingId || lesson._id)}
+                            className="inline-flex items-center gap-1.5 bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
+                            {cancellingId === (lesson.bookingId || lesson._id) && <ButtonSpinner size={14} />}
+                            {cancellingId === (lesson.bookingId || lesson._id) ? "Cancelling..." : isCurriculum ? "Cancel curriculum" : "Cancel lesson"}
                           </button>
                         </td>
                       </tr>
@@ -470,15 +483,19 @@ export default function LessonsDashboard() {
                               </button>
                               <button 
                                 onClick={() => handleCancel(lesson)}
-                                className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors"
+                                disabled={cancellingId === (lesson.bookingId || lesson._id)}
+                                className="inline-flex items-center gap-1.5 bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                Cancel lesson
+                                {cancellingId === (lesson.bookingId || lesson._id) && <ButtonSpinner size={14} />}
+                                {cancellingId === (lesson.bookingId || lesson._id) ? "Cancelling..." : "Cancel lesson"}
                               </button>
                               <button 
                                 onClick={() => handleComplete(lesson)}
-                                className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors"
+                                disabled={completingId === (lesson.bookingId || lesson._id)}
+                                className="inline-flex items-center gap-1.5 bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                Mark lesson as complete
+                                {completingId === (lesson.bookingId || lesson._id) && <ButtonSpinner size={14} />}
+                                {completingId === (lesson.bookingId || lesson._id) ? "Completing..." : "Mark lesson as complete"}
                               </button>
                             </div>
                           ) : (

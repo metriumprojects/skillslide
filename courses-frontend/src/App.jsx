@@ -5,9 +5,10 @@ import { useDispatch } from "react-redux";
 import { getUser } from "./redux/reducers/AuthReducer";
 import PrivateRoute from "./redux/PrivateRoute";
 import { SearchProvider } from "./context/SearchContext";
+import TopProgressBar from "./components/TopProgressBar";
 
-// Suspense fallback (no loader)
-const Loading = () => null;
+// Suspense fallback with sleek top progress indicator
+const Loading = () => <TopProgressBar />;
 
 
 // Lazy load all components
@@ -50,7 +51,23 @@ const App = () => {
 
   useEffect(() => {
     dispatch(getUser());
+
+    // Safely re-sync user session when tab/phone becomes active again after sleep/inactivity
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const token = localStorage.getItem("token");
+        if (token) {
+          dispatch(getUser());
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [dispatch]);
+
 
   return (
     <>

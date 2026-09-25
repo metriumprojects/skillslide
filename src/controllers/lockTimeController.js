@@ -132,6 +132,110 @@ export const checkAndSaveSlot = async ({
   return { startTime, endTime };
 };
 
+export const checkSlotAvailability = async ({
+  teacher,
+  scheduledAtUTC,
+  timezone,
+  duration,
+  lessonId = null,
+  group = false,
+  capacity = 0,
+}) => {
+  if (!teacher || !scheduledAtUTC || !timezone) {
+    return { available: true };
+  }
+
+  const durationMinutes = parseDurationToMinutes(duration);
+  const startUTC = scheduledAtUTC;
+  const endUTC = calculateEndTime(startUTC, durationMinutes);
+  const bookingDate = moment(startUTC).tz(timezone).format("YYYY-MM-DD");
+  const startTime = formatTime(startUTC, timezone);
+  const endTime = formatTime(endUTC, timezone);
+
+  const lockTime = await LockTime.findOne({ user: teacher });
+  if (lockTime) {
+    const dateEntry = lockTime.dateSpecificHours?.find((d) => d.date === bookingDate);
+    if (dateEntry) {
+      if (!dateEntry.available) {
+        return { available: false, message: "Teacher is not available on selected date" };
+      }
+
+      const existingSlot = dateEntry.slots?.find(
+        (s) => s.start === startTime && s.end === endTime
+      );
+      const normalizedLessonId = lessonId ? String(lessonId) : null;
+
+      for (const slot of dateEntry.slots || []) {
+        const sameLesson =
+          !normalizedLessonId || !slot.lessonId || String(slot.lessonId) === normalizedLessonId;
+        const canShareGroupSlot =
+          (group || slot.group) && existingSlot && slot === existingSlot && sameLesson;
+
+        if (canShareGroupSlot) continue;
+
+        const slotStart = moment(`${bookingDate} ${slot.start}`, "YYYY-MM-DD HH:mm")
+          .tz(timezone)
+          .toDate();
+        const slotEnd = moment(`${bookingDate} ${slot.end}`, "YYYY-MM-DD HH:mm")
+          .tz(timezone)
+          .toDate();
+
+        if (isSlotOverlapping(startUTC, endUTC, slotStart, slotEnd)) {
+          return { available: false, message: "Selected time slot is already booked" };
+        }
+      }
+
+      if ((group || existingSlot?.group) && existingSlot) {
+        const maxCapacity = Number(capacity || 0);
+        if (maxCapacity > 0 && (existingSlot.usecapacity || 0) >= maxCapacity) {
+          return { available: false, message: "Selected time slot is fully booked" };
+        }
+      }
+    }
+  }
+
+  // Also check active bookings
+  const teacherBookings = await Booking.find({
+    teacher,
+    ...activeBookingFilter,
+  }).populate("lesson", "duration isGroupAvailable usecapacity");
+
+  for (const b of teacherBookings) {
+    const bDuration = parseDurationToMinutes(b.lesson?.duration || "60m");
+    if (b.scheduledAt) {
+      const bStart = b.scheduledAt;
+      const bEnd = moment(bStart).add(bDuration, "minutes").toDate();
+      if (isSlotOverlapping(startUTC, endUTC, bStart, bEnd)) {
+        const isGroupBooking = group || b.group || b.lesson?.isGroupAvailable;
+        const sameLesson = !lessonId || !b.lesson?._id || String(b.lesson._id) === String(lessonId);
+        if (isGroupBooking && sameLesson && bStart.getTime() === startUTC.getTime()) {
+          const maxCap = Number(capacity || b.lesson?.usecapacity || 0);
+          if (maxCap > 0 && (b.usecapacity || 1) >= maxCap) {
+            return { available: false, message: "Selected time slot is fully booked" };
+          }
+        } else {
+          return { available: false, message: "Teacher already has a booking at this time" };
+        }
+      }
+    }
+
+    if (Array.isArray(b.lessonPosition)) {
+      for (const pos of b.lessonPosition) {
+        if (!pos.scheduledAt || pos.status === "cancelled") continue;
+        const posDur = parseDurationToMinutes(pos.duration || "60m");
+        const posStart = pos.scheduledAt;
+        const posEnd = moment(posStart).add(posDur, "minutes").toDate();
+        if (isSlotOverlapping(startUTC, endUTC, posStart, posEnd)) {
+          return { available: false, message: "Teacher already has a curriculum lesson at this time" };
+        }
+      }
+    }
+  }
+
+  return { available: true };
+};
+
+
 export const releaseSlot = async ({
   teacher,
   scheduledAtUTC,

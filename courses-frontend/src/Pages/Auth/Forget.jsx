@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { Mail } from "lucide-react";
 import { forgetPassword } from "../../redux/reducers/AuthReducer";
+import ButtonSpinner from "../../components/ButtonSpinner";
 
 export default function Forget() {
   const dispatch = useDispatch();
@@ -112,8 +113,9 @@ export default function Forget() {
               <button
                 type="submit"
                 disabled={loading}
-                className="block w-fit rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 w-fit rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
+                {loading && <ButtonSpinner size={18} />}
                 {loading ? "Sending..." : "Continue"}
               </button>
               <button

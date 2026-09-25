@@ -9,6 +9,7 @@ import { Eye, EyeOff, Calendar, Mail, User } from "lucide-react";
 import GoogleLoginButton from "./GoogleLoginButton";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
 import CustomDatePicker from "../../components/CustomDatePicker";
+import ButtonSpinner from "../../components/ButtonSpinner";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dinwxxnzm/image/upload/v1784044801/Logo_1_jldcf8.png";
@@ -411,8 +412,9 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="block w-fit rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
+              className="inline-flex items-center justify-center gap-2 w-fit rounded-full bg-[#FA4F2E] hover:bg-[#FA4F2E]/90 px-12 py-[12px] text-center text-[16px] font-medium text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
             >
+              {loading && <ButtonSpinner size={18} />}
               {loading
                 ? isSellerSetup
                   ? "Creating..."

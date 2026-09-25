@@ -1,10 +1,11 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
+import { checkoutLimiter } from "../middleware/rateLimiter.js";
 import {  initiateBooking, confirmBooking, userBookings, teacherBookings, teacherListingOrders, userListingOrders,  userUpcomingBookings, userCancelBookings, userUnscheduledBookings, completeLessonByTeacher, rescheduleCLessonBooking, rescheduleBooking, cancelBooking, upcomingBookingsByUserId, getBookingById, userMainUpcomingBookings, teacherMainUpcomingBookings, teacherPastLessons, userPastLessons, checkAvailablityBooking } from "../controllers/bookingController.js";
 
 const router = express.Router();
 // Initiate booking -> returns client_secret to confirm payment on frontend
-router.post("/initiate", protect, initiateBooking);
+router.post("/initiate", protect, checkoutLimiter, initiateBooking);
 
 // Confirm booking after frontend payment (or use webhook)
 router.post("/confirm", protect, confirmBooking);

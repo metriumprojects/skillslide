@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { startChat } from '../../../redux/reducers/ChatReducer';
 import { toast } from 'react-toastify';
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
+import { getCardImageUrl } from '../../../utils/imageUtils';
+import { preloadRoute } from '../../../utils/routePreloader';
 
 
 const TeacherCard = ({
@@ -104,10 +106,15 @@ const TeacherCard = ({
         {/* Profile Picture + Attached Description Bubble */}
         <div className="w-full bg-[#E9EAEE] rounded-[20px] overflow-hidden flex flex-col shadow-none">
           {/* Full-width Profile Picture */}
-          <Link to={`/user-profile/${teacher?._id}?role=teacher`} className="block w-full overflow-hidden">
+          <Link
+            to={`/user-profile/${teacher?._id}?role=teacher`}
+            onMouseEnter={() => preloadRoute("publicProfile")}
+            onTouchStart={() => preloadRoute("publicProfile")}
+            className="block w-full overflow-hidden"
+          >
             {displayImage?.url && displayImage?.url !== "https://i.ibb.co/tpV3m2GW/no-image.png" ? (
               <img
-                src={displayImage.url}
+                src={getCardImageUrl(displayImage.url)}
                 alt={displayName}
                 loading="lazy"
                 decoding="async"

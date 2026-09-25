@@ -8,6 +8,7 @@ import {
   startChat,
 } from "../../../redux/reducers/ChatReducer";
 import { motion } from "framer-motion";
+import ButtonSpinner from "../../../components/ButtonSpinner";
 
 export default function SendLesson({ open, onClose, request }) {
   const dispatch = useDispatch();
@@ -158,10 +159,11 @@ export default function SendLesson({ open, onClose, request }) {
 
         <div className="flex justify-start mt-4">
           <button
-            className="bg-primary text-white px-6 py-2 rounded-full text-sm font-medium disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-2 rounded-full text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             onClick={handleSend}
             disabled={submitting || !request}
           >
+            {submitting && <ButtonSpinner size={14} />}
             {submitting ? "Sending..." : "Send"}
           </button>
         </div>

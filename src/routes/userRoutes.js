@@ -23,7 +23,7 @@ import { authLimiter } from "../middleware/rateLimiter.js";
 const router = express.Router();
 
 router.post("/register", authLimiter, registerUser);
-router.post("/verify/:token", verifyEmail);
+router.post("/verify/:token", authLimiter, verifyEmail);
 router.post("/login", authLimiter, loginUser);
 router.post("/forgot-password", authLimiter, forgotPassword);
 router.post("/reset-password/:token", authLimiter, resetPassword);
@@ -35,6 +35,6 @@ router.post("/update-profile", protect,updateProfile);
 router.post("/become-teacher", protect,becomeTeacher);
 router.post("/isonline-teacher", protect,isOnlineTeacher);
 router.get("/user/:id", protect,getUserById);
-router.post("/google-login", googleLogin);
+router.post("/google-login", authLimiter, googleLogin);
 
 export default router;

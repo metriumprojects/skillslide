@@ -1,5 +1,6 @@
 import React from "react";
 import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
+import { preloadRoute } from "../../../utils/routePreloader";
 
 // Haversine formula to calculate distance between two lat/lng points in km
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
@@ -93,7 +94,11 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
   };
 
   return (
-    <article className="mb-7 min-w-0 group">
+    <article 
+      className="mb-7 min-w-0 group"
+      onMouseEnter={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+      onTouchStart={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-100">
       <Link
         to={linkTo || (
@@ -104,6 +109,8 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
             : `/lesson-booking/${course._id}`
         )}
         state={{ preview: course }}
+        onMouseEnter={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+        onTouchStart={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
       >
         <img
           src={getCardImageUrl(course?.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"}
@@ -134,7 +141,21 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
       </div>
 
       <div className="pt-2">
-        <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
+        <Link
+          to={linkTo || (
+            shouldShowCurriculum
+              ? `/curriculum-lesson/${course._id}`
+              : shouldShowBothButtons
+              ? "/curriculum-booking"
+              : `/lesson-booking/${course._id}`
+          )}
+          state={{ preview: course }}
+          className="block hover:underline"
+          onMouseEnter={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+          onTouchStart={() => preloadRoute(shouldShowCurriculum ? "curriculumLesson" : "lesson")}
+        >
+          <h3 className="line-clamp-3 text-base font-semibold leading-[1.22] text-black">{course.title}</h3>
+        </Link>
         <p className="mt-1 text-base text-[#6A6A6A]">
           {formatPrice(course.price, course.currency || "USD", cardPriceOptions)} for {course?.duration || "1 hour"}
           {shouldShowCurriculum ? "  ·  Part of a curriculum" : ""}
@@ -146,6 +167,8 @@ const Card = ({ course, favorites, searchLocation, linkTo }) => {
           )}
         <Link
           to={userInfo?._id === course?.createdBy?._id ? '/profile' : `/user-profile/${course?.createdBy?._id}?role=teacher`}
+          onMouseEnter={() => preloadRoute(userInfo?._id === course?.createdBy?._id ? 'profile' : 'publicProfile')}
+          onTouchStart={() => preloadRoute(userInfo?._id === course?.createdBy?._id ? 'profile' : 'publicProfile')}
           className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#f3f3f3] py-1 pl-1 pr-3 text-base text-black"
         >
               <img

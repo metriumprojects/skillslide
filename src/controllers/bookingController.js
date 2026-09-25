@@ -8,7 +8,7 @@ import Listing from "../models/Listing.js";
 import User from "../models/User.js";
 import moment from "moment-timezone";
 import { parseLessonDuration } from "../utils/utils.js";
-import { checkAndSaveSlot, releaseSlot } from "./lockTimeController.js";
+import { checkAndSaveSlot, releaseSlot, checkSlotAvailability } from "./lockTimeController.js";
 import Availability from "../models/availabilityModel.js";
 import LessonCalender from "../models/LessonCalender.js";
 import { requireCurrency, requirePositivePrice, roundMoney, toSmallestUnit } from "../services/currencyService.js";
@@ -416,6 +416,33 @@ export const initiateBooking = async (req, res) => {
     const newDateUTC =
       scheduledAt && timezone ? moment.tz(scheduledAt, timezone).utc().toDate() : null;
 
+    if (newDateUTC && teacher) {
+      const slotDuration = type === "lesson"
+        ? itemData.duration
+        : type === "curriculum"
+          ? (lessonList[0]?.duration || "60m")
+          : (bookingSnapshot?.bookedHours || "60m");
+      const isGroup = Boolean(parsedMeta?.isGroup || parsedMeta?.group || (type === "lesson" && itemData.isGroupAvailable));
+      const capacity = Number(itemData.usecapacity || 0);
+
+      const slotCheck = await checkSlotAvailability({
+        teacher,
+        scheduledAtUTC: newDateUTC,
+        timezone,
+        duration: slotDuration,
+        lessonId: type === "lesson" ? itemData._id : (type === "curriculum" ? lessonList[0]?._id : null),
+        group: isGroup,
+        capacity,
+      });
+
+      if (!slotCheck.available) {
+        return res.status(409).json({
+          status: false,
+          message: slotCheck.message || "The selected time slot is already booked. Please choose a different time.",
+        });
+      }
+    }
+
 
     const itemCurrency = requireCurrency(bookingCurrencyOverride || itemData.currency || "USD");
     const finalAmount = requirePositivePrice(amountFloat, itemCurrency);
@@ -614,189 +641,125 @@ export const initiateBooking = async (req, res) => {
   }
 };
 
-// --------------------------- Confirm Booking -------------------------------
+export const fulfillBookingOrder = async ({
+  bookingId,
+  paymentIntentId,
+  session,
+  group,
+  usecapacity,
+}) => {
+  const booking = await Booking.findById(bookingId)
+    .populate("curriculum")
+    .populate("lesson")
+    .populate("listing")
+    .populate("user", "name email");
 
-export const confirmBooking = async (req, res) => {
-  try {
-    const {
-      bookingId,
-      type,
-      group,
+  if (!booking) {
+    return { status: false, message: "Booking not found", statusCode: 404 };
+  }
 
-      usecapacity,
-    } = req.body;
+  // If already confirmed and processed, return idempotently
+  if (booking.paymentStatus === "paid" && booking.status === "paid") {
+    return {
+      status: true,
+      message: "Booking already confirmed",
+      booking,
+    };
+  }
 
+  const resolvedPaymentIntentId =
+    paymentIntentId ||
+    (typeof session?.payment_intent === "string" ? session.payment_intent : session?.payment_intent?.id) ||
+    booking.stripePaymentIntentId ||
+    booking.stripe_payment_intent_id;
 
-    if (!bookingId) {
-      return res
-        .status(400)
-        .json({ status: false, message: "bookingId required" });
-    }
+  const confirmedGroup =
+    group ||
+    (booking.type === "lesson" && booking.lesson?.isGroupAvailable) ||
+    false;
 
-    // ðŸ” Find booking & populate data
-    const booking = await Booking.findById(bookingId)
-      .populate("curriculum")
-      .populate("lesson")
-      .populate("listing")
-      .populate("user", "name email");
-
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Booking not found" });
-    }
-
-    if (String(booking.user?._id || booking.user) !== String(req.user._id)) {
-      return res.status(403).json({ status: false, message: "You cannot confirm another user's booking" });
-    }
-
-    // Prevent duplicate confirmations with multiple safety checks
-    if (booking.paymentStatus === "paid" && booking.status === "paid") {
-      // If already paid, check if we need to create welcome message
-      if (!booking.welcomeMessageSent) {
-        // This shouldn't happen, but ensure message exists
-        return res.status(400).json({
-          status: false,
-          message: "Booking already confirmed but processing...",
-        });
-      }
-      return res.status(400).json({
-        status: false,
-        message: "Booking already confirmed",
-      });
-    }
-
-    if (booking.welcomeMessageSent) {
-      return res.status(400).json({
-        status: false,
-        message: "Booking already processed",
-      });
-    }
-
-    const checkoutSessionId = booking.stripeSessionId || booking.stripe_session_id || booking.stripePaymentIntentId;
-    if (!checkoutSessionId) {
-      return res.status(400).json({
-        status: false,
-        message: "No Stripe session found for this booking",
-      });
-    }
-
-    // â­ Retrieve Checkout Session with paymentIntent expanded
-    const session = await stripe.checkout.sessions.retrieve(
-      checkoutSessionId,
-      { expand: ["payment_intent"] }
-    );
-
-    if (!session) {
-      return res.status(400).json({
-        status: false,
-        message: "Unable to retrieve Stripe checkout session",
-      });
-    }
-
-    const paymentIntent = session.payment_intent;
-
-    if (!paymentIntent) {
-      booking.paymentStatus = "failed";
-      booking.payment_status = "failed";
-      await booking.save();
-      return res.status(400).json({
-        status: false,
-        message: "Payment not completed or no payment found",
-      });
-    }
-
-    // â­ Payment success logic
-    if (paymentIntent.status === "succeeded" && type === "succeeded") {
-      // bookSlot(group, global, slotId, day, specific, calenderId);
-      const confirmedGroup =
-        group ||
-        (booking.type === "lesson" && booking.lesson?.isGroupAvailable) ||
-        false;
-
-      const claimedBooking = await Booking.findOneAndUpdate(
-        {
-          _id: bookingId,
-          paymentStatus: { $ne: "paid" },
-          status: { $ne: "paid" },
+  // Atomic claim
+  const claimedBooking = await Booking.findOneAndUpdate(
+    {
+      _id: bookingId,
+      paymentStatus: { $ne: "paid" },
+      status: { $ne: "paid" },
+    },
+    {
+      $set: {
+        paymentStatus: "paid",
+        payment_status: "paid",
+        status: "paid",
+        stripePaymentIntentId: resolvedPaymentIntentId,
+        stripe_payment_intent_id: resolvedPaymentIntentId,
+        group: confirmedGroup,
+        "meta.stripe": {
+          id: resolvedPaymentIntentId,
+          status: "succeeded",
         },
-        {
-          $set: {
-            paymentStatus: "paid",
-            payment_status: "paid",
-            status: "paid",
-            stripePaymentIntentId: paymentIntent.id,
-            stripe_payment_intent_id: paymentIntent.id,
-            group: confirmedGroup,
-            "meta.stripe": {
-              id: paymentIntent.id,
-              status: paymentIntent.status,
-            },
-          },
-        },
-        { new: true }
+      },
+    },
+    { new: true }
+  );
+
+  if (!claimedBooking) {
+    return {
+      status: true,
+      message: "Booking already confirmed",
+      booking,
+    };
+  }
+
+  booking.paymentStatus = claimedBooking.paymentStatus;
+  booking.payment_status = claimedBooking.payment_status;
+  booking.status = claimedBooking.status;
+  booking.stripePaymentIntentId = claimedBooking.stripePaymentIntentId;
+  booking.stripe_payment_intent_id = claimedBooking.stripe_payment_intent_id;
+  booking.group = claimedBooking.group;
+  booking.meta = claimedBooking.meta;
+
+  const isLesson = booking.type === "lesson";
+  const isListing = booking.type === "listing";
+  const item = isLesson ? booking.lesson : isListing ? booking.listing : booking.curriculum;
+  const itemTitle = item?.title || "Purchased Content";
+
+  const teacher = await User.findById(item?.createdBy || booking.teacher);
+  const student = booking.user;
+  const commissionRate = await getCommissionRate();
+
+  if (teacher) {
+    if (isLesson || isListing) {
+      const earningCurrency = requireCurrency(
+        isLesson
+          ? booking.lesson_currency || "USD"
+          : booking.itemSnapshot?.currency || booking.currency || item?.currency || "USD"
       );
+      const teacherAmount = roundMoney(booking.amount - booking.amount * commissionRate, earningCurrency);
+      await User.findByIdAndUpdate(teacher._id, {
+        $inc: { [`balances.pending.${earningCurrency}`]: teacherAmount },
+      });
+    } else {
+      const earningCurrency = requireCurrency(booking.currency || "USD");
+      const commission = booking.amount * commissionRate;
+      const finalAmount = roundMoney(booking.amount - commission, earningCurrency);
+      await User.findByIdAndUpdate(teacher._id, {
+        $inc: {
+          moneyPending: finalAmount,
+          [`balances.pending.${earningCurrency}`]: finalAmount,
+        },
+      });
+    }
+  }
 
-      if (!claimedBooking) {
-        return res.status(200).json({
-          status: true,
-          message: "Booking already confirmed",
-          booking,
-        });
-      }
-
-      booking.paymentStatus = claimedBooking.paymentStatus;
-      booking.payment_status = claimedBooking.payment_status;
-      booking.status = claimedBooking.status;
-      booking.stripePaymentIntentId = claimedBooking.stripePaymentIntentId;
-      booking.stripe_payment_intent_id = claimedBooking.stripe_payment_intent_id;
-      booking.group = claimedBooking.group;
-      booking.meta = claimedBooking.meta;
-
-      // ðŸ§  Determine type (lesson, listing or curriculum)
-      const isLesson = booking.type === "lesson";
-      const isListing = booking.type === "listing";
-      const item = isLesson ? booking.lesson : isListing ? booking.listing : booking.curriculum;
-      const itemTitle = item?.title || "Purchased Content";
-
-
-      // if(isLesson){
-
-      // }else{
-      //   if (booking.lessonPosition && booking.lessonPosition.length > 0) {
-      //     booking.lessonPosition[0].group = true;
-      //   }
-      // }
-      // ðŸ§‘â€ðŸ« Get teacher
-      const teacher = await User.findById(item.createdBy);
-      const student = booking.user;
-      const commissionRate = await getCommissionRate();
-      if (isLesson || isListing) {
-        const earningCurrency = requireCurrency(
-          isLesson
-            ? booking.lesson_currency || "USD"
-            : booking.itemSnapshot?.currency || booking.currency || item.currency || "USD"
-        );
-        const teacherAmount = roundMoney(booking.amount - booking.amount * commissionRate, earningCurrency);
-        await User.findByIdAndUpdate(teacher._id, {
-          $inc: { [`balances.pending.${earningCurrency}`]: teacherAmount },
-        });
-      } else {
-        const commission = booking.amount * commissionRate;
-        const finalAmount = booking.amount - commission;
-        teacher.moneyPending = (teacher.moneyPending || 0) + finalAmount;
-        await teacher.save();
-      }
-
-      if (isLesson) {
-        let duration;
-        let newDateUTC;
-        let lessonId;
-        duration = booking.lesson.duration;
-        newDateUTC = booking.scheduledAt;
-        lessonId = booking.lesson;
+  // Register slot(s) in calendar
+  try {
+    if (isLesson && booking.lesson) {
+      const duration = booking.lesson.duration || "60m";
+      const newDateUTC = booking.scheduledAt;
+      const lessonId = booking.lesson._id || booking.lesson;
+      if (newDateUTC) {
         await checkAndSaveSlot({
-          teacher: teacher._id,
+          teacher: teacher?._id || booking.teacher,
           scheduledAtUTC: newDateUTC,
           timezone: booking.timezone,
           duration,
@@ -805,200 +768,241 @@ export const confirmBooking = async (req, res) => {
           usecapacity: 1,
           capacity: booking.lesson.usecapacity || 0,
         });
-      } else if (isListing && booking.scheduledAt) {
-        const listingSlots = getListingBookingSlots(booking, booking.listing);
-
-        for (const slot of listingSlots) {
-          await checkAndSaveSlot({
-            teacher: teacher._id,
-            scheduledAtUTC: slot.scheduledAt,
-            timezone: booking.timezone,
-            duration: slot.duration,
-            lessonId: null,
-            group: false,
-            usecapacity: 1,
-          });
-        }
-      } else if (!isListing) {
-        let duration;
-        let newDateUTC;
-        let lessonId;
-        // For curriculum, get the first lesson's duration
-        const firstLessonId = booking.curriculum.lessonPosition[0]?.lId;
-        lessonId = firstLessonId;
-        newDateUTC = booking.lessonPosition[0]?.scheduledAt;
-        if (firstLessonId) {
-          const firstLesson = await Lesson.findById(firstLessonId);
-          duration = firstLesson?.duration || "60m";
-        } else {
-          duration = "60m";
-        }
+      }
+    } else if (isListing && booking.scheduledAt) {
+      const listingSlots = getListingBookingSlots(booking, booking.listing);
+      for (const slot of listingSlots) {
         await checkAndSaveSlot({
-          teacher: teacher._id,
+          teacher: teacher?._id || booking.teacher,
+          scheduledAtUTC: slot.scheduledAt,
+          timezone: booking.timezone,
+          duration: slot.duration,
+          lessonId: null,
+          group: false,
+          usecapacity: 1,
+        });
+      }
+    } else if (!isListing && booking.curriculum) {
+      const firstLessonId = booking.curriculum.lessonPosition?.[0]?.lId;
+      const newDateUTC = booking.lessonPosition?.[0]?.scheduledAt;
+      let duration = "60m";
+      if (firstLessonId) {
+        const firstLesson = await Lesson.findById(firstLessonId);
+        duration = firstLesson?.duration || "60m";
+      }
+      if (newDateUTC) {
+        await checkAndSaveSlot({
+          teacher: teacher?._id || booking.teacher,
           scheduledAtUTC: newDateUTC,
           timezone: booking.timezone,
           duration,
-          lessonId,
+          lessonId: firstLessonId,
           group: group || false,
           usecapacity: usecapacity || 1,
         });
       }
+    }
+  } catch (slotErr) {
+    console.error("Warning: Slot registration error during fulfillment:", slotErr?.message || slotErr);
+  }
 
-      if (isListing && booking.meta?.quoteMessageId) {
-        const acceptedQuoteMessage = await Message.findOneAndUpdate(
-          {
-            _id: booking.meta.quoteMessageId,
-            type: "quote",
-            "quote.status": { $ne: "cancelled" },
-          },
-          { $set: { "quote.status": "accepted" } },
-          { new: true }
-        ).populate("userId", "name email image");
+  if (isListing && booking.meta?.quoteMessageId) {
+    const acceptedQuoteMessage = await Message.findOneAndUpdate(
+      {
+        _id: booking.meta.quoteMessageId,
+        type: "quote",
+        "quote.status": { $ne: "cancelled" },
+      },
+      { $set: { "quote.status": "accepted" } },
+      { new: true }
+    ).populate("userId", "name email image");
 
-        if (acceptedQuoteMessage) {
-          emitChatMessageUpdate(acceptedQuoteMessage.roomId, acceptedQuoteMessage);
-        }
-      }
+    if (acceptedQuoteMessage) {
+      emitChatMessageUpdate(acceptedQuoteMessage.roomId, acceptedQuoteMessage);
+    }
+  }
 
-      // ðŸ’¬ Create chat room if not exists
-      const primaryFilter = { student: student._id, teacher: teacher._id };
-      const legacyFilter = { student: teacher._id, teacher: student._id };
+  // Create chat room
+  let chatRoom = null;
+  if (student?._id && teacher?._id) {
+    const primaryFilter = { student: student._id, teacher: teacher._id };
+    const legacyFilter = { student: teacher._id, teacher: student._id };
 
-      let chatRoom = await ChatRoom.findOne({ $or: [primaryFilter, legacyFilter] });
+    chatRoom = await ChatRoom.findOne({ $or: [primaryFilter, legacyFilter] });
+    if (!chatRoom) {
+      chatRoom = await ChatRoom.create({
+        ...primaryFilter,
+        lesson: isLesson ? item?._id : undefined,
+        curriculum: !isLesson && !isListing ? item?._id : undefined,
+      });
+    }
 
-      if (!chatRoom) {
-        chatRoom = await ChatRoom.create({
-          ...primaryFilter,
-          lesson: isLesson ? item._id : undefined,
-          curriculum: !isLesson && !isListing ? item._id : undefined,
-        });
-      }
+    const updatedBooking = await Booking.findOneAndUpdate(
+      {
+        _id: bookingId,
+        welcomeMessageSent: { $ne: true },
+      },
+      {
+        $set: { welcomeMessageSent: true },
+      },
+      { new: true }
+    );
 
-      // Create welcome message - only create if this is a new booking confirmation
-      // Use atomic operation to ensure only ONE message is created even with concurrent requests
-      const updatedBooking = await Booking.findOneAndUpdate(
-        {
-          _id: bookingId,
-          welcomeMessageSent: { $ne: true } // Only update if NOT already sent
-        },
-        {
-          $set: { welcomeMessageSent: true }
-        },
-        { new: true }
-      );
-
-      // Only create message if the update was successful (meaning it hadn't been sent before)
-      if (updatedBooking) {
-        if (isListing && !booking.meta?.quoteMessageId) {
-          const bookingAcceptedMessage = await Message.create({
-            roomId: chatRoom._id,
-            userId: teacher._id,
-            type: "quote",
-            message: `Booking accepted for "${itemTitle}"`,
-            quote: {
-              listingId: item._id,
-              price: booking.amount,
-              currency: requireCurrency(
-                booking.itemSnapshot?.currency || booking.currency || item.currency || "USD"
-              ),
-              description: `Booking accepted for ${itemTitle}`,
-              status: "accepted",
-            },
-          });
-          await bookingAcceptedMessage.populate("userId", "name email image");
-          emitChatMessage(chatRoom._id, bookingAcceptedMessage);
-        }
-
-        const defaultWelcomeMessage = isLesson
-          ? "thank you for booking a lesson with me!"
-          : isListing
-            ? "thank you for booking my service!"
-            : "thank you for booking with me!";
-        const teacherWelcomeMessage =
-          (isLesson ? booking.lesson?.message : isListing ? booking.listing?.message : booking.curriculum?.message)
-            ?.trim() || defaultWelcomeMessage;
-
-        await Message.create({
+    if (updatedBooking) {
+      if (isListing && !booking.meta?.quoteMessageId) {
+        const bookingAcceptedMessage = await Message.create({
           roomId: chatRoom._id,
           userId: teacher._id,
-          message: `Hi ${student.name || booking.firstname}, ${teacherWelcomeMessage}`,
+          type: "quote",
+          message: `Booking accepted for "${itemTitle}"`,
+          quote: {
+            listingId: item?._id,
+            price: booking.amount,
+            currency: requireCurrency(
+              booking.itemSnapshot?.currency || booking.currency || item?.currency || "USD"
+            ),
+            description: `Booking accepted for ${itemTitle}`,
+            status: "accepted",
+          },
         });
+        await bookingAcceptedMessage.populate("userId", "name email image");
+        emitChatMessage(chatRoom._id, bookingAcceptedMessage);
       }
 
-      //       thank you for booking a lesson with me!
-      // I'm really looking forward to working with you.
-      // If you'd like, feel free to share your experience level, goals, or anything specific you'd like to focus on, so I can tailor the session to you.
+      const defaultWelcomeMessage = isLesson
+        ? "thank you for booking a lesson with me!"
+        : isListing
+          ? "thank you for booking my service!"
+          : "thank you for booking with me!";
+      const teacherWelcomeMessage =
+        (isLesson ? booking.lesson?.message : isListing ? booking.listing?.message : booking.curriculum?.message)
+          ?.trim() || defaultWelcomeMessage;
 
-      chatRoom.lastMessage = `Chat started for ${isLesson ? "lesson" : isListing ? "listing" : "course"
-        } "${itemTitle}"`;
-      await chatRoom.save();
+      await Message.create({
+        roomId: chatRoom._id,
+        userId: teacher._id,
+        message: `Hi ${student.name || booking.firstname}, ${teacherWelcomeMessage}`,
+      });
+    }
 
-      // âœ‰ï¸ Emails
-      const teacherMail = {
-        from: process.env.SMTP_USER,
-        to: teacher.email,
-        subject: `ðŸŽ“ Your ${isLesson ? "lesson" : isListing ? "listing" : "course"
-          } "${itemTitle}" was purchased!`,
-        html: `<p>Hello ${teacher.name},</p>
-            <p>${booking.firstname} ${booking.lastname} purchased <b>${itemTitle}</b>.</p>
-            <p><a href="${process.env.FRONTEND_URL}/chat/${chatRoom._id}">Open Chat</a></p>`,
-      };
+    chatRoom.lastMessage = `Chat started for ${isLesson ? "lesson" : isListing ? "listing" : "course"} "${itemTitle}"`;
+    await chatRoom.save();
+  }
 
-      const studentMail = {
-        from: process.env.SMTP_USER,
-        to: student.email,
-        subject: `ðŸ“˜ You enrolled in "${itemTitle}"`,
-        html: `<p>Hello ${booking.firstname},</p>
-            <p>You purchased <b>${itemTitle}</b> by ${teacher.name}.</p>
-            <p><a href="${process.env.FRONTEND_URL}/chat/${chatRoom._id}">Go to Chat Room</a></p>`,
-      };
+  // Send notification emails
+  if (teacher?.email && student?.email) {
+    const teacherMail = {
+      from: process.env.SMTP_USER,
+      to: teacher.email,
+      subject: `🎓 Your ${isLesson ? "lesson" : isListing ? "listing" : "course"} "${itemTitle}" was purchased!`,
+      html: `<p>Hello ${teacher.name},</p>
+          <p>${booking.firstname} ${booking.lastname} purchased <b>${itemTitle}</b>.</p>
+          <p><a href="${process.env.FRONTEND_URL}/chat/${chatRoom?._id || ""}">Open Chat</a></p>`,
+    };
 
-      const emailResults = await Promise.all([
-        sendEmail(teacherMail),
-        sendEmail(studentMail),
-      ]);
+    const studentMail = {
+      from: process.env.SMTP_USER,
+      to: student.email,
+      subject: `📘 You enrolled in "${itemTitle}"`,
+      html: `<p>Hello ${booking.firstname},</p>
+          <p>You purchased <b>${itemTitle}</b> by ${teacher.name}.</p>
+          <p><a href="${process.env.FRONTEND_URL}/chat/${chatRoom?._id || ""}">Go to Chat Room</a></p>`,
+    };
 
-      const failedEmails = emailResults.filter((result) => !result.status);
-      if (failedEmails.length) {
-        console.error("Booking confirmed but notification email failed:", {
-          bookingId: booking._id,
-          failedCount: failedEmails.length,
-          errors: failedEmails.map((result) => result.error),
-        });
-      }
+    Promise.all([sendEmail(teacherMail), sendEmail(studentMail)]).catch((mailErr) => {
+      console.error("Booking confirmed but email failed:", mailErr?.message || mailErr);
+    });
+  }
 
+  return {
+    status: true,
+    message: "Booking confirmed successfully",
+    chatRoomId: chatRoom?._id,
+    booking,
+  };
+};
+
+// --------------------------- Confirm Booking -------------------------------
+
+export const confirmBooking = async (req, res) => {
+  try {
+    const {
+      bookingId,
+      type,
+      group,
+      usecapacity,
+    } = req.body;
+
+    if (!bookingId) {
+      return res.status(400).json({ status: false, message: "bookingId required" });
+    }
+
+    const booking = await Booking.findById(bookingId)
+      .populate("curriculum")
+      .populate("lesson")
+      .populate("listing")
+      .populate("user", "name email");
+
+    if (!booking) {
+      return res.status(404).json({ status: false, message: "Booking not found" });
+    }
+
+    if (String(booking.user?._id || booking.user) !== String(req.user._id)) {
+      return res.status(403).json({ status: false, message: "You cannot confirm another user's booking" });
+    }
+
+    if (booking.paymentStatus === "paid" && booking.status === "paid") {
       return res.status(200).json({
         status: true,
-        message: "Booking confirmed successfully",
-        chatRoomId: chatRoom._id,
+        message: "Booking already confirmed",
         booking,
       });
     }
 
-    // ðŸ”´ Payment Failed / Requires Payment
-    if (
-      paymentIntent.status === "requires_payment_method" ||
-      paymentIntent.status === "canceled" ||
-      type === "failed"
-    ) {
-      const failedStatus = paymentIntent.status === "canceled" ? "cancelled" : "failed";
-      booking.paymentStatus = failedStatus;
-      booking.payment_status = failedStatus;
-      booking.stripePaymentIntentId = paymentIntent.id;
-      booking.stripe_payment_intent_id = paymentIntent.id;
+    if (type === "failed") {
+      booking.paymentStatus = "failed";
+      booking.payment_status = "failed";
       await booking.save();
-
-      return res.status(400).json({
-        status: false,
-        message: `Payment failed: ${paymentIntent.status}`,
-      });
+      return res.status(400).json({ status: false, message: "Payment was cancelled or failed" });
     }
 
-    // Other payment states
-    return res.status(400).json({
-      status: false,
-      message: `Payment not completed: ${paymentIntent.status}`,
+    const checkoutSessionId = booking.stripeSessionId || booking.stripe_session_id || booking.stripePaymentIntentId;
+    if (!checkoutSessionId) {
+      return res.status(400).json({ status: false, message: "No Stripe session found for this booking" });
+    }
+
+    let session = null;
+    let paymentIntent = null;
+    try {
+      session = await stripe.checkout.sessions.retrieve(checkoutSessionId, { expand: ["payment_intent"] });
+      paymentIntent = session?.payment_intent;
+    } catch (sErr) {
+      console.error("Error retrieving Stripe session in confirmBooking:", sErr?.message || sErr);
+    }
+
+    const paymentIntentStatus = typeof paymentIntent === "object" ? paymentIntent?.status : null;
+    const sessionPaid = session?.payment_status === "paid" || paymentIntentStatus === "succeeded";
+
+    if (!sessionPaid && paymentIntentStatus !== "succeeded") {
+      if (paymentIntentStatus === "requires_payment_method" || paymentIntentStatus === "canceled") {
+        const failedStatus = paymentIntentStatus === "canceled" ? "cancelled" : "failed";
+        booking.paymentStatus = failedStatus;
+        booking.payment_status = failedStatus;
+        await booking.save();
+        return res.status(400).json({ status: false, message: `Payment failed: ${paymentIntentStatus}` });
+      }
+      return res.status(400).json({ status: false, message: `Payment not completed: ${paymentIntentStatus || session?.payment_status || "pending"}` });
+    }
+
+    const result = await fulfillBookingOrder({
+      bookingId,
+      paymentIntentId: typeof paymentIntent === "object" ? paymentIntent?.id : paymentIntent,
+      session,
+      group,
+      usecapacity,
     });
+
+    return res.status(result.statusCode || 200).json(result);
   } catch (err) {
     console.error("confirmBooking error:", err);
     return res
@@ -1325,6 +1329,13 @@ export const rescheduleBooking = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    const isReschedOwner = String(booking.user?._id || booking.user) === String(req.user._id) ||
+                          String(booking.teacher?._id || booking.teacher) === String(req.user._id) ||
+                          req.user.role === "admin";
+    if (!isReschedOwner) {
+      return res.status(403).json({ status: false, message: "Unauthorized to reschedule this booking" });
+    }
+
     // Lesson duration safe parse
     const mainLesson = booking.lesson || {};
     const lessonDuration = parseLessonDuration(mainLesson.duration || "60m"); // fallback 60m
@@ -1459,6 +1470,13 @@ export const rescheduleCLessonBooking = async (req, res) => {
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const isCLessonOwner = String(booking.user?._id || booking.user) === String(req.user._id) ||
+                           String(booking.teacher?._id || booking.teacher) === String(req.user._id) ||
+                           req.user.role === "admin";
+    if (!isCLessonOwner) {
+      return res.status(403).json({ status: false, message: "Unauthorized to reschedule this lesson" });
     }
 
     // Find lesson inside lessonPosition
@@ -1644,6 +1662,13 @@ export const cancelBooking = async (req, res) => {
       .populate("curriculum");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
+    const isCancelOwner = String(booking.user?._id || booking.user) === String(req.user._id) ||
+                          String(booking.teacher?._id || booking.teacher) === String(req.user._id) ||
+                          req.user.role === "admin";
+    if (!isCancelOwner) {
+      return res.status(403).json({ status: false, message: "Unauthorized to cancel this booking" });
+    }
+
     const bookingType = type || booking.type;
 
     // 1. If TYPE = LESSON or LISTING -> full booking cancel with instant refund
@@ -1713,6 +1738,8 @@ export const cancelBooking = async (req, res) => {
             stripeRefund = await stripe.refunds.create({
               payment_intent: paymentIntentId,
               amount: amountInSmallestUnit,
+              reverse_transfer: true,
+              refund_application_fee: true,
               reason: "requested_by_customer",
             });
           } catch (stripeErr) {
@@ -2159,6 +2186,11 @@ export const completeLessonByTeacher = async (req, res) => {
         .json({ status: false, message: "Booking not found" });
     }
 
+    const isTeacher = String(booking.teacher?._id || booking.teacher) === String(req.user._id) || req.user.role === "admin";
+    if (!isTeacher) {
+      return res.status(403).json({ status: false, message: "Only the instructor or admin can mark this lesson as completed" });
+    }
+
     // --------------------------------------------
     //  TYPE = LESSON â†’ COMPLETE FULL BOOKING
     // --------------------------------------------
@@ -2255,6 +2287,38 @@ export const completeLessonByTeacher = async (req, res) => {
 
       // Update that specific lesson
       booking.lessonPosition[index].status = "completed";
+
+      // Release pro-rated funds to teacher for this completed curriculum session
+      const totalSessions = booking.lessonPosition.length || 1;
+      const earningCurrency = requireCurrency(booking.currency || "USD");
+      const commissionRate = await getCommissionRate();
+      const totalTeacherEarnings = (booking.amount || 0) * (1 - commissionRate);
+      const perLessonEarnings = roundMoney(totalTeacherEarnings / totalSessions, earningCurrency);
+
+      if (booking.teacher?._id && perLessonEarnings > 0) {
+        await User.findByIdAndUpdate(
+          booking.teacher._id,
+          {
+            $inc: {
+              moneyPending: -perLessonEarnings,
+              money: perLessonEarnings,
+              moneyTotal: perLessonEarnings,
+              [`balances.pending.${earningCurrency}`]: -perLessonEarnings,
+              [`balances.available.${earningCurrency}`]: perLessonEarnings,
+              [`balances.total.${earningCurrency}`]: perLessonEarnings,
+            },
+          },
+          { new: true }
+        );
+      }
+
+      // If all sessions are completed or cancelled, mark the parent booking completed
+      const allDone = booking.lessonPosition.every(
+        (lp) => lp.status === "completed" || lp.status === "cancelled"
+      );
+      if (allDone) {
+        booking.status = "completed";
+      }
 
       await booking.save();
 

@@ -5,6 +5,7 @@ import {
   createLesson,
   getAllLessons,
   getLessonById,
+  getLessonBookingBundle,
   updateLesson,
   deleteLesson,
   getTeacherLessons,
@@ -21,6 +22,7 @@ router.post("/create", protect, upload.array("images", 11), compressImages, crea
 router.get("/get-lesson", getAllLessons);
 router.get("/teacher-lesson", protect, getTeacherLessons);
 router.get("/lesson/:id", getLessonById);
+router.get("/booking-bundle/:id", getLessonBookingBundle);
 router.put("/update-lesson/:id", protect, upload.any("images", 5),compressImages, updateLesson);
 router.delete("/delete-lesson/:id",protect, protect, deleteLesson);
 router.get("/getLesson/:id", getLesson);

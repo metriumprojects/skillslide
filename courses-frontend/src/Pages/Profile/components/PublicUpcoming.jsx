@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { publicUpcomingBookings } from "../../../redux/reducers/BookingReducer";
 import { Calendar, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { getCardImageUrl } from "../../../utils/imageUtils";
 
 export default function PublicUpcoming({ id }) {
   const dispatch = useDispatch();
@@ -84,7 +85,7 @@ export default function PublicUpcoming({ id }) {
                 <div className="relative overflow-hidden h-[335px]">
                   <Link to={``}>
                     <img
-                      src={details.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png"}
+                      src={getCardImageUrl(details.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png"}
                       alt={details.title}
                       loading="lazy"
                       decoding="async"

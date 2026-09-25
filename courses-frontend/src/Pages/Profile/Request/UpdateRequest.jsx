@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { getCategories } from "../../../redux/reducers/CategoryReducer";
 import LocationAutocomplete from "../../Home/Components/LocationAutocomplete";
+import ButtonSpinner from "../../../components/ButtonSpinner";
 
 export default function UpdateRequest({ open, onClose, id }) {
   const dispatch = useDispatch();
@@ -398,8 +399,9 @@ export default function UpdateRequest({ open, onClose, id }) {
               <button
                 type="submit"
                 disabled={loading || (existingImages.length + selectedFiles.length < 2)}
-                className="bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
+                {loading && <ButtonSpinner size={16} />}
                 {loading ? "Updating..." : "Update"}
               </button>
               <button

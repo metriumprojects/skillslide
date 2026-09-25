@@ -32,7 +32,7 @@ import { GrLocation } from "react-icons/gr";
 import { ArrowLeft, Upload } from "lucide-react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getLessonById, getTeacherLessonsById } from "../../redux/reducers/LessonReducer";
+import { getLessonById, getLessonBookingBundle, getTeacherLessonsById } from "../../redux/reducers/LessonReducer";
 import {
   getLessonRating,
   getUserFavorites,
@@ -97,31 +97,21 @@ export default function LessonBooking() {
   }, [dispatch, id]);
 
   useEffect(() => {
-    dispatch(getLessonById(id));
-    dispatch(getLessonRating(id));
-  }, [dispatch, id]);
-
-  useEffect(() => {
-    dispatch(getUserFavorites());
-  }, [dispatch]);
-
-  const teacherId = lesson?.createdBy?._id || lesson?.teacher?._id;
-
-  // Fetch all availability data when lesson and teacherId are loaded
-  useEffect(() => {
-    const activeTeacherId = fetchedLesson?.createdBy?._id || teacherId;
-    if (fetchedLesson && (fetchedLesson._id === id || fetchedLesson.id === id) && activeTeacherId) {
-      dispatch(getTeacherUnAvailability({ id: activeTeacherId }));
-      dispatch(getUserById(activeTeacherId));
-      dispatch(getTeacherLessonsById({ id: activeTeacherId, page: 1, limit: 6 }));
-
-      if (fetchedLesson.calender === true) {
-        dispatch(getTeacherAvailability({ id: activeTeacherId }));
-      } else if (fetchedLesson.calenderId) {
-        dispatch(getLessonAvailability({ id: fetchedLesson.calenderId }));
+    dispatch(getLessonBookingBundle(id)).then((res) => {
+      const activeTeacherId = res?.payload?.teacher?._id;
+      if (activeTeacherId) {
+        dispatch(getUserById(activeTeacherId));
+        if (res?.payload?.lesson?.calender === true) {
+          dispatch(getTeacherAvailability({ id: activeTeacherId }));
+        } else if (res?.payload?.lesson?.calenderId) {
+          dispatch(getLessonAvailability({ id: res.payload.lesson.calenderId }));
+        }
+        dispatch(getTeacherUnAvailability({ id: activeTeacherId }));
       }
-    }
-  }, [dispatch, fetchedLesson, id, teacherId]);
+    });
+    dispatch(getLessonRating(id));
+    dispatch(getUserFavorites());
+  }, [dispatch, id]);
 
   const handleSave = (courseId) => {
     dispatch(toggleFavorite({ id: courseId, type: "lesson" })).then((res) => {

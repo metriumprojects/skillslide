@@ -4,6 +4,8 @@ import { Loader, Search, X } from "lucide-react";
 import { motion as Motion } from "framer-motion";
 import api from "../redux/api";
 import { useCurrency } from "../currency/CurrencyContext";
+import { getCardImageUrl } from "../utils/imageUtils";
+import { preloadRouteByPath } from "../utils/routePreloader";
 
 const fallbackImage = "https://i.ibb.co/tpV3m2GW/no-image.png";
 
@@ -52,10 +54,12 @@ const ResultRow = ({ item, onSelect }) => {
     <Link
       to={item.path}
       onClick={onSelect}
+      onMouseEnter={() => preloadRouteByPath(item.path)}
+      onTouchStart={() => preloadRouteByPath(item.path)}
       className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-gray-50"
     >
       <img
-        src={item?.coverImage?.url || item?.images?.[0]?.url || fallbackImage}
+        src={getCardImageUrl(item?.coverImage?.url || item?.images?.[0]?.url) || fallbackImage}
         alt={item?.title || item.resultType}
         className="h-16 w-16 shrink-0 rounded-lg object-cover"
         loading="lazy"

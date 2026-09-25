@@ -26,7 +26,13 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ status: false, message: "Name, email and password are required" });
     }
 
-    if (role === "teacher") {
+    if (typeof password !== "string" || password.length < 6) {
+      return res.status(400).json({ status: false, message: "Password must be at least 6 characters" });
+    }
+
+    const safeRole = role === "teacher" ? "teacher" : "user";
+
+    if (safeRole === "teacher") {
       if (!dateOfBirth || !country?.trim()) {
         return res.status(400).json({
           status: false,
@@ -35,12 +41,13 @@ export const registerUser = async (req, res) => {
       }
     }
 
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser)
       return res.status(400).json({ status: false, message: "User already exists" });
 
     const trimmedName = name.trim();
-    const isTeacher = role === "teacher";
+    const isTeacher = safeRole === "teacher";
 
     await User.create({
       name: trimmedName,
@@ -48,8 +55,8 @@ export const registerUser = async (req, res) => {
       sellerName: isTeacher ? trimmedName : undefined,
       dateOfBirth: isTeacher ? new Date(dateOfBirth) : undefined,
       country: isTeacher ? country.trim() : undefined,
-      email,
-      role,
+      email: normalizedEmail,
+      role: safeRole,
       password,
       reverseRole: isTeacher,
       publicType: isTeacher,
@@ -373,7 +380,13 @@ export const googleLogin = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const rawEmail = req.body.email;
+    if (!rawEmail || typeof rawEmail !== "string" || !rawEmail.trim()) {
+      return res.status(400).json({ status: false, message: "Valid email is required" });
+    }
+
+    const email = rawEmail.trim().toLowerCase();
+    const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ status: false, message: "User not found" });
 
     const resetToken = user.getResetPasswordToken();
@@ -408,6 +421,11 @@ export const forgotPassword = async (req, res) => {
 
 // Reset Password
 export const resetPassword = async (req, res) => {
+  const { password } = req.body;
+  if (!password || typeof password !== "string" || password.length < 6) {
+    return res.status(400).json({ status: false, message: "Password must be at least 6 characters" });
+  }
+
   const resetPasswordToken = crypto
     .createHash("sha256")
     .update(req.params.token)
@@ -420,7 +438,7 @@ export const resetPassword = async (req, res) => {
 
   if (!user) return res.status(400).json({ status: false, message: "Invalid or expired token" });
 
-  user.password = req.body.password;
+  user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   await user.save();
@@ -577,6 +595,9 @@ export const updateProfile = async (req, res) => {
       if (confirmPassword != newPassword) {
         return res.status(400).json({ message: "Confirm password is incorrect" });
       }
+      if (typeof newPassword !== "string" || newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
       user.password = newPassword;
     }
 
@@ -612,6 +633,10 @@ export const becomeTeacher = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ status: false, message: "User not found" });
+    }
+
+    if (user.role === "admin") {
+      return res.status(403).json({ status: false, message: "Admin role cannot be changed via teacher toggle" });
     }
 
     if (role === "teacher") {

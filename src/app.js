@@ -27,6 +27,7 @@ import { stripeWebhook } from "./controllers/stripeWebhookController.js";
 import placesAutocompleteRoutes from "./routes/placesAutocompleteRoutes.js";
 import studentStoryRoutes from "./routes/studentStoryRoutes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
+import { mongoSanitize } from "./middleware/mongoSanitize.js";
 dotenv.config();
 connectDB();
 
@@ -51,11 +52,41 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
+// Configurable CORS with mobile and local dev support
+const allowedOrigins = [
+  "https://skillask.com",
+  "https://www.skillask.com",
+  "https://courses-website-drab.vercel.app",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Non-browser clients (native mobile, Postman, curl)
+  if (process.env.NODE_ENV !== "production") return true; // Allow dev origins
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow hybrid mobile apps (Capacitor / Ionic)
+  if (
+    origin.startsWith("capacitor://") ||
+    origin.startsWith("ionic://") ||
+    origin.startsWith("http://localhost") ||
+    origin.startsWith("https://localhost")
+  ) {
+    return true;
+  }
+  return false;
+};
+
 app.use(
   cors({
-    origin: true, // Allow all origins for debugging
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -66,9 +97,12 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), strip
 // Rate limiter for general API routes (skips stripe webhook)
 app.use("/api", apiLimiter);
 
-// Middleware
-app.use(express.json({ limit: "100mb" }));
-app.use(express.urlencoded({ limit: "100mb", extended: true }));
+// Safe payload limits (prevents JSON memory exhaustion DoS)
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// Recursive NoSQL query injection sanitizer
+app.use(mongoSanitize);
 
 
 app.use(cookieParser());
@@ -95,14 +129,27 @@ app.use("/api/student-stories", studentStoryRoutes);
 app.use("/api", placesAutocompleteRoutes);
 
 
-// Global error handler
+// Global error handler (sanitized for production)
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
+  const isProduction = process.env.NODE_ENV === "production";
+  if (!isProduction) {
+    console.error(err.stack || err);
+  } else {
+    console.error(`[Error] ${err.name || "Error"}: ${err.message}`);
+  }
+
+  const statusCode = err.status || (res.statusCode >= 400 ? res.statusCode : 500);
+  const message = isProduction && statusCode === 500
+    ? "Internal Server Error"
+    : err.message || "An unexpected error occurred";
+
+  res.status(statusCode).json({
+    status: false,
     success: false,
-    message: err.message || "Internal Server Error",
+    message,
   });
 });
+
 
 
 export default app;

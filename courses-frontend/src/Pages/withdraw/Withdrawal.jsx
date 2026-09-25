@@ -4,6 +4,7 @@ import api from "../../redux/api";
 import { toast } from "react-toastify";
 import CustomPayoutOnboarding from "./CustomPayoutOnboarding";
 import { FaBuilding, FaCheckCircle, FaExclamationTriangle, FaPlus, FaTimes } from "react-icons/fa";
+import ButtonSpinner from "../../components/ButtonSpinner";
 
 const formatMinor = (amount, currency) =>
   new Intl.NumberFormat(undefined, {
@@ -368,8 +369,9 @@ export const Withdrawal = () => {
                   <button
                     type="submit"
                     disabled={addingBank}
-                    className="text-xs font-semibold px-5 py-2 rounded-xl bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-5 py-2 rounded-xl bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
+                    {addingBank && <ButtonSpinner size={12} />}
                     {addingBank ? "Attaching..." : "Save Bank"}
                   </button>
                 </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 
 export default function Curriculum({ Data, onExpand }) {
   const [openUnits, setOpenUnits] = useState([0]); // Only Unit 1 (index 0) is open by default
@@ -31,9 +32,9 @@ export default function Curriculum({ Data, onExpand }) {
           title: lessonPos.lId.title,
           label: lessonPos.lId.isIndependent ? "Also available as standalone" : "Part of a curriculum",
           independent: lessonPos.lId.isIndependent,
-          image: lessonPos.lId.coverImage?.url || "https://i.ibb.co/tpV3m2GW/no-image.png",
+          image: getCardImageUrl(lessonPos.lId.coverImage?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png",
           instructor: lessonPos.lId.createdBy?.name || "Unknown",
-          instructorImg: lessonPos.lId.createdBy?.image?.url || "https://i.ibb.co/tpV3m2GW/no-image.png",
+          instructorImg: getAvatarUrl(lessonPos.lId.createdBy?.image?.url) || "https://i.ibb.co/tpV3m2GW/no-image.png",
           rating: "9/10", // Keeping static as per your design
           reviews: "(32)", // Keeping static as per your design
           description: lessonPos.lId.description,

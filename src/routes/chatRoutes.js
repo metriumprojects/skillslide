@@ -1,6 +1,7 @@
 import express from "express";
 
 import { protect } from "../middleware/authMiddleware.js";
+import { chatLimiter } from "../middleware/rateLimiter.js";
 import {
   connectUser,
   getMessages,
@@ -20,6 +21,7 @@ router.get("/messages/:roomId",protect, getMessages);
 router.post(
   "/messages",
   protect,
+  chatLimiter,
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "images", maxCount: 6 },

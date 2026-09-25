@@ -85,11 +85,23 @@ const CreateLesson = () => {
   const [coverImageCroppedAreaPixels, setCoverImageCroppedAreaPixels] = useState(null);
   const [showCoverImageCropModal, setShowCoverImageCropModal] = useState(false);
   const [tempCoverImagePreview, setTempCoverImagePreview] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  const clearError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
 
   const handleLocationSelect = ({ description, placeId: selectedPlaceId }) => {
     setFormData((prev) => ({ ...prev, location: description || "" }));
     setLocationFilter(description || "");
     setPlaceId(selectedPlaceId || "");
+    clearError("location");
+    clearError("locationType");
   };
 
   // Pre-fill from request proposal if available
@@ -276,72 +288,75 @@ const CreateLesson = () => {
     }
     
     setFormData((prev) => ({ ...prev, [name]: value }));
+    clearError(name);
   };
 
   // ✅ Handle duration change
   const handleDurationChange = (e) => {
     setFormData((prev) => ({ ...prev, duration: e.target.value }));
+    clearError("duration");
   };
 
   // ✅ Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
+    const newErrors = {};
     if (!formData.title.trim()) {
-      toast.info("Title is required");
-      return;
+      newErrors.title = "Lesson title is required";
     }
 
     if (!formData.description.trim()) {
-      toast.info("Description is required");
-      return;
-    }
-
-    if (formData.description.trim().length < 50) {
-      toast.info("Description should be at least 50 characters long");
-      return;
+      newErrors.description = "Description is required";
+    } else if (formData.description.trim().length < 50) {
+      newErrors.description = "Description should be at least 50 characters long";
     }
 
     if (!formData.duration) {
-      toast.info("Duration is required");
-      return;
+      newErrors.duration = "Please select a duration";
     }
 
-    if (!formData.price) {
-      toast.info("Price is required");
-      return;
+    if (!formData.price || Number(formData.price) <= 0) {
+      newErrors.price = "Valid lesson price is required";
     }
 
     if (!selectedCategory) {
-      toast.info("Please select a category");
-      return;
+      newErrors.category = "Please select a category";
     }
 
     if (!coverImage) {
-      toast.info("Please upload a lesson cover image");
-      return;
+      newErrors.coverImage = "Please upload a lesson cover image";
     }
 
     if (images.length < 2) {
-      toast.info("Please upload at least 2 lesson images");
-      return;
-    }
-    if (images.length > 10) {
-      toast.info("You can upload a maximum of 10 images");
-      return;
+      newErrors.images = "Please upload at least 2 lesson images";
+    } else if (images.length > 10) {
+      newErrors.images = "You can upload a maximum of 10 images";
     }
 
     const hasAnyLocationType = isOnlineSelected || isInPersonSelected;
     if (!hasAnyLocationType) {
-      toast.info("Select at least one lesson location option");
-      return;
+      newErrors.locationType = "Select at least one lesson location option";
     }
 
     if (isInPersonSelected && !formData.location.trim()) {
-      toast.info("Location is required for in-person lessons");
+      newErrors.location = "Location is required for in-person lessons";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill in the required fields marked in red");
+      const firstField = Object.keys(newErrors)[0];
+      const el = document.getElementById(`field-${firstField}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const input = el.querySelector("input, textarea, select");
+        if (input && typeof input.focus === "function") input.focus();
+      }
       return;
     }
+
+    setErrors({});
 
     // Create FormData
     const lessonFormData = new FormData();
@@ -659,7 +674,7 @@ const CreateLesson = () => {
             {/* LEFT COLUMN: LESSON FORM */}
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-title" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.title ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Lesson Title *</label>
                 <input
                   type="text"
@@ -668,13 +683,14 @@ const CreateLesson = () => {
                   onChange={handleChange}
                   disabled={loading}
                   maxLength="300"
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50"
+                  className={`w-full bg-white border ${errors.title ? "border-red-400" : "border-gray-200"} rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50`}
                 />
+                {errors.title && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.title}</p>}
                 <p className="text-xs text-gray-500 mt-1">{formData.title.length}/300 characters</p>
               </div>
 
               {/* Description */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-description" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.description ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Description *</label>
                 <textarea
                   name="description"
@@ -682,8 +698,9 @@ const CreateLesson = () => {
                   value={formData.description}
                   onChange={handleChange}
                   disabled={loading}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50 resize-none"
+                  className={`w-full bg-white border ${errors.description ? "border-red-400" : "border-gray-200"} rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50 resize-none`}
                 ></textarea>
+                {errors.description && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.description}</p>}
                 <div className="flex justify-between text-xs mt-2">
                   <div className={formData.description.length >= 50 ? "text-green-600" : "text-[#008494]"}>
                     {formData.description.length >= 50 ? "✓ Long enough" : `Minimum 50 characters (${formData.description.length}/50)`}
@@ -695,14 +712,14 @@ const CreateLesson = () => {
               </div>
 
               {/* Duration */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-duration" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.duration ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Lesson Duration *</label>
                 <select
                   name="duration"
                   value={formData.duration}
                   onChange={handleDurationChange}
                   disabled={loading}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50"
+                  className={`w-full bg-white border ${errors.duration ? "border-red-400" : "border-gray-200"} rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-0 focus:border-black disabled:bg-gray-100 disabled:opacity-50`}
                 >
                   <option value="">Select duration</option>
                   {durationOptions.map((option) => (
@@ -711,20 +728,22 @@ const CreateLesson = () => {
                     </option>
                   ))}
                 </select>
+                {errors.duration && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.duration}</p>}
               </div>
 
               {/* Price */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-price" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.price ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Lesson price *</label>
                 <div className="grid grid-cols-[1fr_120px] gap-2">
                   <input type="number" name="price" value={formData.price} onChange={handleChange}
                     disabled={loading} step="any" min="0.01"
-                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black" />
+                    className={`w-full bg-white border ${errors.price ? "border-red-400" : "border-gray-200"} rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black`} />
                   <select value={lessonCurrency} onChange={(event) => setLessonCurrency(event.target.value)} disabled={loading}
                     className="bg-white border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-black cursor-pointer">
                     {availableCurrencies.map((code) => <option key={code} value={code}>{code}</option>)}
                   </select>
                 </div>
+                {errors.price && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.price}</p>}
               </div>
 
               {/* Capacity & Discount */}
@@ -781,9 +800,9 @@ const CreateLesson = () => {
               </div>
 
               {/* Lesson Cover Image */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-coverImage" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.coverImage ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Lesson Cover Image *</label>
-                <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
+                <div className={`bg-white border ${errors.coverImage ? "border-red-400" : "border-gray-200"} rounded-xl p-4 space-y-4`}>
                   <div className=" flex items-center justify-center">
                   {/* Upload Button */}
                   <label className="flex items-center justify-center gap-2 text-gray-700  rounded-md px-4 py-2 text-base hover:bg-gray-50 cursor-pointer w-fit disabled:opacity-50 transition-colors">
@@ -793,7 +812,10 @@ const CreateLesson = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleCoverImageUpload}
+                      onChange={(e) => {
+                        handleCoverImageUpload(e);
+                        clearError("coverImage");
+                      }}
                       disabled={loading}
                       className="hidden"
                     />
@@ -848,33 +870,41 @@ const CreateLesson = () => {
                     </div>
                   )}
                 </div>
+                {errors.coverImage && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.coverImage}</p>}
               </div>
 
               {/* Images */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-images" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.images ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Lesson Images *</label>
-                <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-center">
+                <div className={`bg-white border ${errors.images ? "border-red-400" : "border-gray-200"} rounded-xl p-4 flex items-center justify-center`}>
                   <ImageUploader
                     images={images}
-                    onImagesChange={setImages}
+                    onImagesChange={(imgs) => {
+                      setImages(imgs);
+                      if (imgs.length >= 2) clearError("images");
+                    }}
                     maxImages={10}
                     minImages={2}
                     disabled={loading}
                     label="Upload Images (min 2, max 10)"
                   />
                 </div>
+                {errors.images && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.images}</p>}
               </div>
 
               {/* Lesson Location */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-locationType" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.locationType || errors.location ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Lesson Location *</label>
-                <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+                <div className={`bg-white border ${errors.locationType || errors.location ? "border-red-400" : "border-gray-200"} rounded-xl p-4 space-y-3`}>
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={isOnlineSelected}
-                        onChange={() => setIsOnlineSelected((prev) => !prev)}
+                        onChange={() => {
+                          setIsOnlineSelected((prev) => !prev);
+                          clearError("locationType");
+                        }}
                         disabled={loading}
                         className="w-4 h-4 accent-black"
                       />
@@ -884,7 +914,10 @@ const CreateLesson = () => {
                       <input
                         type="checkbox"
                         checked={isInPersonSelected}
-                        onChange={() => setIsInPersonSelected((prev) => !prev)}
+                        onChange={() => {
+                          setIsInPersonSelected((prev) => !prev);
+                          clearError("locationType");
+                        }}
                         disabled={loading}
                         className="w-4 h-4 accent-black"
                       />
@@ -893,36 +926,41 @@ const CreateLesson = () => {
                   </div>
 
                   {isInPersonSelected && (
-                    <div>
+                    <div id="field-location" className="pt-2">
                       <LocationAutocomplete
                         value={locationFilter}
                         onChange={(val) => {
                           setLocationFilter(val);
                           setFormData((prev) => ({ ...prev, location: val }));
                           setPlaceId("");
+                          if (val.trim()) clearError("location");
                         }}
                         onSelectDetails={handleLocationSelect}
                         placeholder={`Enter location for in-person lessons`}
-                        className="w-full px-0 py-0 text-sm"
+                        className={`w-full px-0 py-0 text-sm ${errors.location ? "border border-red-500 rounded-lg p-2" : ""}`}
                       />
                     </div>
                   )}
                 </div>
+                {(errors.locationType || errors.location) && (
+                  <p className="text-xs text-red-500 font-medium mt-1.5">{errors.locationType || errors.location}</p>
+                )}
               </div>
 
-
-
               {/* Category */}
-              <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
+              <div id="field-category" className={`bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border transition-colors ${errors.category ? "border-red-500 ring-1 ring-red-500 bg-red-50/20" : "border-gray-100"}`}>
                 <label className="block mb-2 text-sm font-semibold text-gray-900">Category *</label>
-                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className={`bg-white border ${errors.category ? "border-red-400" : "border-gray-200"} rounded-xl p-4`}>
                   {categories.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {categories.map((cat, idx) => (
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => setSelectedCategory(cat.name)}
+                          onClick={() => {
+                            setSelectedCategory(cat.name);
+                            clearError("category");
+                          }}
                           disabled={loading}
                           className={`px-3 py-1 rounded-full border text-sm transition-all disabled:opacity-50 ${
                             selectedCategory === cat.name
@@ -938,6 +976,7 @@ const CreateLesson = () => {
                     <p className="text-gray-500 text-sm">Loading categories...</p>
                   )}
                 </div>
+                {errors.category && <p className="text-xs text-red-500 font-medium mt-1.5">{errors.category}</p>}
               </div>
 
                        <div className="bg-[#F7F7F7] rounded-2xl p-4 md:p-5 border border-gray-100">
@@ -989,7 +1028,7 @@ const CreateLesson = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !isFormValid()}
+                disabled={loading}
                 className="w-fit bg-black text-white font-medium px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? (

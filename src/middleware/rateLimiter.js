@@ -24,3 +24,40 @@ export const apiLimiter = rateLimit({
     message: "Too many requests. Please slow down.",
   },
 });
+
+// Limiter for checkout initiation & sensitive Stripe Connect onboarding
+export const checkoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Limit each IP to 30 checkout/session initiations per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: false,
+    message: "Too many booking or payment attempts. Please wait a few minutes before trying again.",
+  },
+});
+
+// Limiter for withdrawal creation
+export const withdrawalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 withdrawal submissions per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: false,
+    message: "Too many withdrawal requests. Please wait a while before requesting again.",
+  },
+});
+
+// Limiter for chat message flooding
+export const chatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // Limit each IP to 60 messages per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: false,
+    message: "You are sending messages too quickly. Please wait a moment.",
+  },
+});
+
