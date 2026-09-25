@@ -149,7 +149,10 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
               <span className="italic">Skill</span>
               <span className="not-italic">Slide</span>
             </span>
-            <span className="text-[12px] sm:text-[15px] md:text-[18px] font-normal italic tracking-wide text-[#1A2B49] leading-none mt-0.5 sm:mt-1 whitespace-nowrap">
+            <span
+              style={{ color: "#1E3A8A" }}
+              className="text-[12px] sm:text-[15px] md:text-[18px] font-normal italic tracking-wide text-[#1E3A8A] leading-none mt-0.5 sm:mt-1 whitespace-nowrap"
+            >
               Learn anything, from anywhere
             </span>
           </div>
