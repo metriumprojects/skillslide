@@ -994,7 +994,7 @@ export function Calendar({
       {createPortal(
         <>
           {/* Fixed Bottom Bar */}
-          <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="xl:hidden fixed bottom-[58px] left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
             <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
               {/* Left Info: Price & Details */}
               <div
@@ -1046,7 +1046,7 @@ export function Calendar({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setIsModalOpen(false)}
-                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 xl:hidden"
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] xl:hidden"
                 />
 
                 {/* Bottom Sheet Container with Drag-to-Dismiss */}
@@ -1063,7 +1063,7 @@ export function Calendar({
                       setIsModalOpen(false);
                     }
                   }}
-                  className="fixed bottom-0 left-0 right-0 max-h-[92vh] bg-white rounded-t-[28px] shadow-2xl z-50 flex flex-col xl:hidden overflow-hidden"
+                  className="fixed bottom-0 left-0 right-0 max-h-[92vh] bg-white rounded-t-[28px] shadow-2xl z-[70] flex flex-col xl:hidden overflow-hidden"
                 >
                   {/* Top Drag Handle & Title Bar */}
                   <div className="pt-2.5 pb-2 px-5 border-b border-gray-100 shrink-0">

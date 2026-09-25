@@ -56,14 +56,14 @@ export default function Profile() {
   const tab =
     normalizedTab === "Bookmarks"
       ? "My Bookmarks"
-      : normalizedTab || (userInfo?.role === "user" ? "All My Bookings" : "Revenue");
+      : normalizedTab || "My Profile";
 
   useEffect(() => {
     if (userInfo) {
-      // Set initial tab from query param or default based on role
+      // Set initial tab from query param or default to My Profile
       if (!searchParams.get("tab") || searchParams.get("tab") === "Student Dashboard" || searchParams.get("tab") === "Dashboard") {
         setSearchParams({
-          tab: userInfo.role === "user" ? "All My Bookings" : "Revenue",
+          tab: "My Profile",
         });
       }
       // Set initial profile image

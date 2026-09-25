@@ -133,15 +133,15 @@ export default function CurriculumBooking() {
 
   if (!singleCurriculum) {
     return (
-      <MainLayout width="100%" hideMobileMenu contentClassName="lg:overflow-x-visible">
+      <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
         <BookingPageSkeleton isCurriculum={true} />
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout width="100%" hideMobileMenu contentClassName="lg:overflow-x-visible">
-      <div className="w-full min-h-screen pb-24 xl:pb-8">
+    <MainLayout width="100%" contentClassName="lg:overflow-x-visible">
+      <div className="w-full min-h-screen pb-44 xl:pb-8">
         <div className="w-full">
           {/* Top section with Grey Bar and Title */}
           <div className="w-full pt-[20px] sm:pt-[24px]">

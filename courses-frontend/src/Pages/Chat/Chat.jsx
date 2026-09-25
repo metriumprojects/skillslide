@@ -303,18 +303,18 @@ export default function Chat() {
 
   return (
     <MainLayout width="100%">
-      <div className="flex md:h-full border-2 border-gray-300 overflow-hidden shadow-lg bg-white h-[88vh] relative my-[32px]">
+      <div className="flex md:h-full border-2 border-gray-300 overflow-hidden shadow-lg bg-white h-[calc(100dvh-150px)] md:h-[88vh] relative my-2 md:my-[32px]">
         {/* Mobile Sidebar Overlay */}
         {showMobileSidebar && (
           <div 
-            className="fixed inset-0 bg-black/20 z-40 md:hidden"
+            className="fixed inset-0 bottom-[58px] bg-black/20 z-40 md:hidden"
             onClick={() => setShowMobileSidebar(false)}
           />
         )}
 
         {/* Sidebar - Desktop and Mobile */}
-        <div className={`h-screen md:h-[90vh]
-          fixed md:static inset-y-0 left-0 z-50
+        <div className={`h-[calc(100dvh-58px)] md:h-[90vh]
+          fixed md:static top-0 bottom-[58px] left-0 z-40
           w-full md:w-1/3 lg:w-1/4
           transform transition-transform duration-300 ease-in-out
           md:transform-none md:border-r-2 border-gray-300 bg-white
@@ -329,7 +329,7 @@ export default function Chat() {
           />
         </div>
 
-        <div className="flex-1 flex flex-col h-[85vh] md:h-[90vh] w-full">
+        <div className="flex-1 flex flex-col h-full w-full">
           {currentError && (
             <div className="px-4 py-2 text-sm text-red-600 bg-red-50 border-b border-red-200">
               {currentError}
