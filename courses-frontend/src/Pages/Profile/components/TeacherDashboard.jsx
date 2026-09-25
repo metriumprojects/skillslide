@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/free-mode";
 import { FaUser, FaChartLine, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -263,36 +259,41 @@ export default function LessonsDashboard() {
 
   return (
     <div className="w-full">
-      {/* ✅ Tab Navigation */}
-      <div className="w-fit max-w-full rounded-full border border-black bg-white p-1 font-medium text-black mt-[32px] mb-[16px]">
-        <Swiper
-          modules={[FreeMode]}
-          freeMode={{ enabled: true, momentum: true }}
-          slidesPerView="auto"
-          spaceBetween={4}
-          grabCursor
-          className="w-full"
+      {/* Tab Navigation */}
+      <div className="flex gap-6 justify-start text-sm sm:text-base font-medium mt-[32px] mb-[32px] overflow-x-auto hide-scrollbar">
+        <button 
+          type="button"
+          onClick={() => setActiveTab('upcoming')}
+          className={`pb-3 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'upcoming' 
+              ? "border-b-2 border-black text-black font-semibold"
+              : "text-gray-500 hover:text-black"
+          }`}
         >
-          {[
-            { value: "upcoming", label: "Upcoming Lessons" },
-            { value: "past", label: "Past Lessons" },
-            { value: "canceled", label: "Canceled Lessons" },
-          ].map((item) => (
-            <SwiperSlide key={item.value} className="!w-auto">
-              <button
-                type="button"
-                onClick={() => setActiveTab(item.value)}
-                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === item.value
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-black hover:bg-gray-100"
-                }`}
-              >
-                {item.label}
-              </button>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+          Upcoming Lessons
+        </button>
+        <button 
+          type="button"
+          onClick={() => setActiveTab('past')}
+          className={`pb-3 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'past' 
+              ? "border-b-2 border-black text-black font-semibold"
+              : "text-gray-500 hover:text-black"
+          }`}
+        >
+          Past Lessons
+        </button>
+        <button 
+          type="button"
+          onClick={() => setActiveTab('canceled')}
+          className={`pb-3 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'canceled' 
+              ? "border-b-2 border-black text-black font-semibold"
+              : "text-gray-500 hover:text-black"
+          }`}
+        >
+          Canceled Lessons
+        </button>
       </div>
 
 
