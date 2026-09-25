@@ -26,7 +26,7 @@ const MainLayout = ({
         onSearchToggle={onSearchToggle}
       />
     )}
-      <div className={`min-h-[98vh] lg:mx-0 2xl:mx-0 w-full mx-auto ${contentClassName}`} style={{ overflowX: 'clip' }}>
+      <div className={`min-h-[98vh] lg:mx-0 2xl:mx-0 overflow-x-hidden w-full mx-auto ${contentClassName}`}>
       <main
         className={`mx-auto px-3 md:px-10 py-0 pb-[32px] ${
           !hideMobileMenu ? "pb-24 lg:pb-[32px]" : ""
