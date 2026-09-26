@@ -404,8 +404,11 @@ const userSlice = createSlice({
       })
       // Logout user
       .addCase(LogoutUser.pending, (state) => {
-        state.loading = true;
+        state.loading = false;
+        state.userInfo = null;
+        state.user = null;
         state.error = null;
+        clearClientSession();
       })
       .addCase(LogoutUser.fulfilled, (state, action) => {
         state.loading = false;
