@@ -107,13 +107,19 @@ button:focus-visible {
   scrollbar-width: none;
 }
 
-/* Mobile Tawk.to chat widget float on top right in icon row */
+/* Mobile Tawk.to chat widget float on top right aligned with S logo (36px x 36px) */
 @media (max-width: 768px) {
   #tawk-bubble-container,
   .tawk-min-container,
-  div[id*="tawk-bubble"] {
-    top: 18px !important;
+  div[id*="tawk-bubble"],
+  #min-widget iframe {
+    top: 20px !important;
     bottom: auto !important;
-    right: 14px !important;
+    right: 12px !important;
+    left: auto !important;
+    inset: 20px 12px auto auto !important;
+    transform: scale(0.6) !important;
+    transform-origin: top right !important;
+    z-index: 1000 !important;
   }
 }

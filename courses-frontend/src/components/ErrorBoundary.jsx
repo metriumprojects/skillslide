@@ -13,13 +13,37 @@ export class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught an unhandled error:", error, errorInfo);
+    if (typeof window !== "undefined") {
+      window.__LAST_REACT_ERROR__ = { error, errorInfo };
+      
+      // Handle stale Vite dynamic chunk 404s after new Render deployment
+      const errMsg = error?.message || "";
+      if (
+        errMsg.includes("dynamically imported module") ||
+        errMsg.includes("Failed to fetch dynamically imported module") ||
+        error?.name === "ChunkLoadError"
+      ) {
+        const retried = sessionStorage.getItem("chunk_retry_reload");
+        if (!retried) {
+          sessionStorage.setItem("chunk_retry_reload", "1");
+          window.location.reload();
+          return;
+        }
+      }
+    }
   }
 
   handleReload = () => {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("chunk_retry_reload");
+    }
     window.location.reload();
   };
 
   handleGoHome = () => {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("chunk_retry_reload");
+    }
     window.location.href = "/";
   };
 

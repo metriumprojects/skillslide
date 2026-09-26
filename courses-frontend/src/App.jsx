@@ -7,14 +7,13 @@ import PrivateRoute from "./redux/PrivateRoute";
 import { SearchProvider } from "./context/SearchContext";
 import TopProgressBar from "./components/TopProgressBar";
 import ChatSkeleton from "./components/ChatSkeleton";
+import Home from "./Pages/Home/Home";
 import { preloadCriticalRoutes } from "./utils/routePreloader";
 
 // Suspense fallback with sleek top progress indicator
 const Loading = () => <TopProgressBar />;
 
-
 // Lazy load all components
-const Home = lazy(() => import("./Pages/Home/Home"));
 const Login = lazy(() => import("./Pages/Auth/Login"));
 const Register = lazy(() => import("./Pages/Auth/Register"));
 const CurriculumBooking = lazy(() => import("./Pages/Curriculum-Booking/CurriculumBooking"));

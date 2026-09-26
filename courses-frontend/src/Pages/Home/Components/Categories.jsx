@@ -10,6 +10,7 @@ import LogoIcon from "../../../components/LogoIcon";
 import HeaderSearchBar from "../../../components/HeaderSearchBar";
 import UserAvatarPlaceholder from "../../../components/UserAvatarPlaceholder";
 import { preloadRoute } from "../../../utils/routePreloader";
+import { motion } from "framer-motion";
 
 export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, setShowProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
   const navigate = useNavigate();

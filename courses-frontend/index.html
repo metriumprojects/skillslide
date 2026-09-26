@@ -64,7 +64,7 @@
         }
       };
 
-      // Defer Tawk.to until after page load + idle to avoid blocking initial render
+      // Defer Tawk.to until after page load to avoid blocking initial render
       function loadTawk() {
         var s1 = document.createElement("script");
         s1.async = true;
@@ -73,13 +73,57 @@
         s1.setAttribute("crossorigin", "*");
         document.head.appendChild(s1);
       }
+
       if (document.readyState === "complete") {
-        (window.requestIdleCallback || setTimeout)(loadTawk, 2000);
+        setTimeout(loadTawk, 2000);
       } else {
         window.addEventListener("load", function () {
-          (window.requestIdleCallback || setTimeout)(loadTawk, 2000);
+          setTimeout(loadTawk, 2000);
         });
       }
+
+      // Automatically sync Tawk icon size (36px, same as S logo) and top-right alignment on mobile
+      function syncMobileTawk() {
+        var isMobile = window.innerWidth <= 768;
+        var minWidget = document.querySelector("#min-widget");
+        if (minWidget) {
+          minWidget.style.setProperty("transform", "none", "important");
+          minWidget.style.setProperty("position", "static", "important");
+        }
+        var minIframe = document.querySelector("#min-widget iframe");
+        if (!minIframe) return;
+
+        if (isMobile) {
+          minIframe.style.setProperty("top", "20px", "important");
+          minIframe.style.setProperty("right", "12px", "important");
+          minIframe.style.setProperty("bottom", "auto", "important");
+          minIframe.style.setProperty("left", "auto", "important");
+          minIframe.style.setProperty("inset", "20px 12px auto auto", "important");
+          minIframe.style.setProperty("transform", "scale(0.6)", "important");
+          minIframe.style.setProperty("transform-origin", "top right", "important");
+          minIframe.style.setProperty("z-index", "1000", "important");
+        } else {
+          minIframe.style.removeProperty("top");
+          minIframe.style.removeProperty("right");
+          minIframe.style.removeProperty("bottom");
+          minIframe.style.removeProperty("left");
+          minIframe.style.removeProperty("inset");
+          minIframe.style.removeProperty("transform");
+          minIframe.style.removeProperty("transform-origin");
+          minIframe.style.removeProperty("z-index");
+        }
+      }
+
+      window.addEventListener("resize", syncMobileTawk);
+      window.addEventListener("orientationchange", syncMobileTawk);
+
+      window.Tawk_API.onLoad = syncMobileTawk;
+      window.Tawk_API.onChatMinimized = syncMobileTawk;
+
+      var tawkObserver = new MutationObserver(function() {
+        syncMobileTawk();
+      });
+      tawkObserver.observe(document.body, { childList: true, subtree: true });
     </script>
     <!--End of Tawk.to Script-->
     <script type="module" src="/src/main.jsx"></script>
