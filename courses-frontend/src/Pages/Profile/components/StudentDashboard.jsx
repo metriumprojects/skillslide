@@ -80,6 +80,10 @@ export default function StudentDashboard() {
         setPastTotal(response.payload.total);
       }
     });
+
+    return () => {
+      setOpeningManageId(null);
+    };
   }, [dispatch, upcomingPage, upcomingLimit, pastPage, pastLimit]);
 
   // Function to convert UTC time to local time

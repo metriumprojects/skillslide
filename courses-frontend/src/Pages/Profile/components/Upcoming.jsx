@@ -27,6 +27,9 @@ export default function Upcoming() {
 
   useEffect(() => {
     dispatch(getUserFavorites());
+    return () => {
+      setOpeningCourseId(null);
+    };
   }, [dispatch]);
 
   const curriculumFavorites = useMemo(() => {

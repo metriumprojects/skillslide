@@ -409,6 +409,11 @@ const bookingSlice = createSlice({
     },
     invalidateBookingCache: (state) => {
       state.lastFetched = {};
+    },
+    clearCurriBooking: (state) => {
+      state.getcuridata = null;
+      state.getcuriBookingdata = [];
+      state.teacherId = null;
     }
   },
 
@@ -572,19 +577,23 @@ const bookingSlice = createSlice({
         state.loading = true;
         state.loadingStates.userUnscheduledBookings = true;
         state.error = null;
+        state.getcuridata = null;
+        state.getcuriBookingdata = [];
+        state.teacherId = null;
       })
       .addCase(getcuriBooking.fulfilled, (state, action) => {
         state.loading = false;
         state.loadingStates.userUnscheduledBookings = false;
-        state.getcuriBookingdata = action.payload.booking.lessonPosition || []
-        state.getcuridata = action.payload.booking
-        state.teacherId = action.payload.booking.teacher._id
-;
+        state.getcuriBookingdata = action.payload?.booking?.lessonPosition || [];
+        state.getcuridata = action.payload?.booking || null;
+        state.teacherId = action.payload?.booking?.teacher?._id || action.payload?.booking?.teacher || null;
       })
       .addCase(getcuriBooking.rejected, (state, action) => {
         state.loading = false;
         state.loadingStates.userUnscheduledBookings = false;
         state.error = action.payload;
+        state.getcuridata = null;
+        state.getcuriBookingdata = [];
       });
         builder
     .addCase(userMainUpcomingBookings.pending, (state) => {
@@ -690,5 +699,5 @@ const bookingSlice = createSlice({
   },
 });
 
-export const { clearBookingMessage, clearBookingData, setLoadingState, invalidateBookingCache } = bookingSlice.actions;
+export const { clearBookingMessage, clearBookingData, setLoadingState, invalidateBookingCache, clearCurriBooking } = bookingSlice.actions;
 export default bookingSlice.reducer;

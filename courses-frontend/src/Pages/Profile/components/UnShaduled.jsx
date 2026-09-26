@@ -23,6 +23,9 @@ export default function UnShaduled() {
   useEffect(() => {
     dispatch(userUnscheduledBookings({ page: 1, limit: 20 }));
     dispatch(getUserFavorites());
+    return () => {
+      setOpeningCourseId(null);
+    };
   }, [dispatch]);
 
   const curriculumFavorites = Array.isArray(favorites)
@@ -43,6 +46,7 @@ export default function UnShaduled() {
     if (openingCourseId) return;
     setOpeningCourseId(course._id);
     preloadRoute("afterPaymentCurri");
+    localStorage.setItem("bookId", course._id);
     navigate(`/after-payment-curri/${course._id}?manage=true`);
   };
 

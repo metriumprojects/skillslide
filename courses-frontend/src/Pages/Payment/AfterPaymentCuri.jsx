@@ -3,7 +3,7 @@ import { BiSolidZap } from "react-icons/bi";
 import MainLayout from "../../components/MainLayout";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState, useRef } from "react";
-import { CancelBooking, confirmBooking, getcuriBooking, ReShaduleCurriLessonBooking, ReShaduleLessonBooking } from "../../redux/reducers/BookingReducer";
+import { CancelBooking, confirmBooking, getcuriBooking, ReShaduleCurriLessonBooking, ReShaduleLessonBooking, clearCurriBooking } from "../../redux/reducers/BookingReducer";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getLessonAvailability, getTeacherAvailability, getTeacherUnAvailability } from "../../redux/reducers/AvailabilityReducer";
 import { MyCalendar } from "./MyCalendar";
@@ -23,7 +23,7 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
   const isManage = searchParams.get("manage") === "true" || !!bookIdOverride;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { getcuriBookingdata, teacherId, getcuridata } = useSelector((state) => state.book);
+  const { getcuriBookingdata, teacherId, getcuridata, loading, error } = useSelector((state) => state.book);
   const {
     weeklyAvailability,
     dateAvailability,
@@ -48,13 +48,86 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
   
   // Ref to track if confirmBooking has been called
   const confirmBookingCalled = useRef(false);
+  const prevBookIdRef = useRef(bookId);
   
   // Ref to prevent duplicate message sends
   const messageSendInProgress = useRef(false);
 
   useEffect(() => {
-    dispatch(getcuriBooking(bookId));
-  }, [dispatch, bookId]);
+    if (prevBookIdRef.current !== bookId) {
+      confirmBookingCalled.current = false;
+      prevBookIdRef.current = bookId;
+    }
+
+    // Immediately clear stale booking data so older lesson is never displayed
+    dispatch(clearCurriBooking());
+    setSelectedDates({});
+    setSelectedTimes({});
+    setIsRescheduling(false);
+    setReschedulingLesson(null);
+    setActivePendingLessonId(null);
+
+    if (!bookId) return;
+
+    if (isManage) {
+      setBookingConfirmInProgress(false);
+      dispatch(getcuriBooking(bookId));
+      return () => {
+        dispatch(clearCurriBooking());
+      };
+    }
+
+    if (confirmBookingCalled.current) {
+      dispatch(getcuriBooking(bookId));
+      return () => {
+        dispatch(clearCurriBooking());
+      };
+    }
+
+    // After-payment flow
+    const bookingDateTimeData = localStorage.getItem('bookingDateTime');
+    let bookingData = {
+      bookingId: bookId,
+      type: "succeeded"
+    };
+
+    if (bookingDateTimeData) {
+      try {
+        const parsedData = JSON.parse(bookingDateTimeData);
+        if (parsedData.group !== undefined) {
+          bookingData.group = parsedData.group;
+        } else {
+          bookingData.group = false;
+        }
+        if (parsedData.usecapacity !== undefined) {
+          bookingData.usecapacity = parsedData.usecapacity;
+        }
+        if (parsedData.slotId) {
+          bookingData.slotId = parsedData.slotId;
+        }
+        if (parsedData.discount !== undefined) {
+          bookingData.discount = parsedData.discount;
+        }
+      } catch (err) {
+        bookingData.group = false;
+      }
+    } else {
+      bookingData.group = false;
+    }
+
+    confirmBookingCalled.current = true;
+    setBookingConfirmInProgress(true);
+    dispatch(confirmBooking(bookingData)).then(async () => {
+      await dispatch(getcuriBooking(bookId));
+      setBookingConfirmInProgress(false);
+    }).catch(() => {
+      setBookingConfirmInProgress(false);
+    });
+
+    return () => {
+      dispatch(clearCurriBooking());
+    };
+  }, [bookId, dispatch, isManage]);
 
   const activeTeacherId =
     getcuridata?.teacher?._id ||
@@ -497,71 +570,7 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
     }
   };
 
-  useEffect(() => {
-    // If accessed in manage mode, skip confirmBooking and fetch existing booking directly
-    if (isManage) {
-      dispatch(getcuriBooking(bookId)).then(() => {
-        setBookingConfirmInProgress(false);
-      }).catch(() => {
-        setBookingConfirmInProgress(false);
-      });
-      return;
-    }
 
-    // Prevent multiple calls using ref - only call once on component mount
-    if (confirmBookingCalled.current) {
-      return;
-    }
-    
-    // Get booking data from localStorage
-    const bookingDateTimeData = localStorage.getItem('bookingDateTime');
-    
-    let bookingData = {
-      bookingId: bookId,
-      type: "succeeded"
-    };
-
-    // Parse and include booking metadata if available
-    if (bookingDateTimeData) {
-      try {
-        const parsedData = JSON.parse(bookingDateTimeData);
-        
-        // Add all relevant fields from localStorage
-        if (parsedData.group !== undefined) {
-          bookingData.group = parsedData.group;
-        } else {
-          bookingData.group = false;
-        }
-        
-        // Add usecapacity if it exists
-        if (parsedData.usecapacity !== undefined) {
-          bookingData.usecapacity = parsedData.usecapacity;
-        }
-        
-        // Also add other useful fields if they exist
-        if (parsedData.slotId) {
-          bookingData.slotId = parsedData.slotId;
-        }
-        
-        if (parsedData.discount !== undefined) {
-          bookingData.discount = parsedData.discount;
-        }
-        
-      } catch (error) {
-        bookingData.group = false;
-      }
-    } else {
-      bookingData.group = false;
-    }
-
-    confirmBookingCalled.current = true;
-    dispatch(confirmBooking(bookingData)).then(async () => {
-      await dispatch(getcuriBooking(bookId));
-      setBookingConfirmInProgress(false);
-    }).catch(() => {
-      setBookingConfirmInProgress(false);
-    });
-  }, [bookId, dispatch, isManage]);
 
   // message
     const handleSend = async () => {
@@ -605,6 +614,90 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
         messageSendInProgress.current = false;
       }
     };
+
+  const isDataReady = Boolean(getcuridata && (getcuridata._id === bookId || !bookId));
+
+  if (!isDataReady) {
+    if (!loading && error) {
+      return (
+        <MainLayout width="100%">
+          <div className="w-full pt-[40px] pb-16 min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+            <CalendarX size={48} className="text-gray-400 mb-4" />
+            <h2 className="text-xl sm:text-2xl font-bold text-[#1A2B49] mb-2">Booking Not Found</h2>
+            <p className="text-gray-500 max-w-md mb-6 text-sm">{error || "We couldn't load the details for this lesson booking."}</p>
+            <Link to="/profile" className="bg-[#1A2B49] hover:bg-[#051842] text-white px-6 py-2.5 rounded-full text-sm font-medium transition-colors">
+              Return to My Bookings
+            </Link>
+          </div>
+        </MainLayout>
+      );
+    }
+
+    return (
+      <MainLayout width="100%">
+        <div className="w-full pt-[20px] sm:pt-[24px] pb-10 min-h-[77vh]">
+          {/* Breadcrumb Skeleton */}
+          <div className="-mx-3 md:-mx-10 px-3 md:px-10 bg-[#F5F5F5] py-2.5 mb-[30px]">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-12 bg-gray-200 rounded animate-pulse" />
+              <ChevronRight size={14} className="text-gray-300 shrink-0" />
+              <div className="h-4 w-28 bg-gray-200 rounded animate-pulse" />
+              <ChevronRight size={14} className="text-gray-300 shrink-0" />
+              <div className="h-4 w-36 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+
+          {/* Skeleton Layout */}
+          <div className="w-full mb-8">
+            <div className="h-6 w-36 bg-gray-200 rounded-md animate-pulse mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-4xl items-start">
+              {/* Left Column: Lesson Card Skeleton */}
+              <div className="w-full flex flex-col [&>article]:mb-3 md:[&>article]:mb-7">
+                <article className="min-w-0">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-gray-200 animate-pulse" />
+                  <div className="pt-3 space-y-2.5">
+                    <div className="h-5 w-3/4 bg-gray-200 rounded-lg animate-pulse" />
+                    <div className="h-4 w-1/3 bg-gray-200 rounded-lg animate-pulse" />
+                    <div className="flex items-center gap-2 pt-2">
+                      <div className="h-6 w-6 rounded-full bg-gray-200 animate-pulse" />
+                      <div className="h-4 w-28 bg-gray-200 rounded-full animate-pulse" />
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              {/* Right Column: Scheduled Card Skeleton */}
+              <div className="w-full flex flex-col gap-4">
+                <div className="bg-green-50/60 border border-green-100 rounded-2xl p-4 flex items-center gap-3 animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-green-100/80 shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-4 w-1/3 bg-green-200/70 rounded" />
+                    <div className="h-3 w-2/3 bg-green-100 rounded" />
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 shadow-[0_0_16px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.06)] flex flex-col space-y-4 animate-pulse">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div className="h-5 w-24 bg-gray-200 rounded-full" />
+                    <div className="h-4 w-16 bg-gray-200 rounded" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-5 w-3/5 bg-gray-200 rounded" />
+                    <div className="h-4 w-4/5 bg-gray-200 rounded" />
+                    <div className="h-4 w-1/2 bg-gray-200 rounded" />
+                  </div>
+                  <div className="pt-3 flex gap-2">
+                    <div className="h-8 w-24 bg-gray-200 rounded-full" />
+                    <div className="h-8 w-24 bg-gray-200 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout width="100%">

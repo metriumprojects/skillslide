@@ -5,13 +5,16 @@ import AfterPaymentCurri from "../Payment/AfterPaymentCuri";
 export default function ManageLesson() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const bookId = localStorage.getItem("bookId") || id;
+  const bookId = id || localStorage.getItem("bookId");
 
   useEffect(() => {
+    if (id) {
+      localStorage.setItem("bookId", id);
+    }
     if (bookId) {
       navigate(`/after-payment-curri/${bookId}?manage=true`, { replace: true });
     }
-  }, [bookId, navigate]);
+  }, [bookId, id, navigate]);
 
   return <AfterPaymentCurri bookIdOverride={bookId} />;
 }
