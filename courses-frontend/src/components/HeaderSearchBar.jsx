@@ -36,6 +36,45 @@ export default function HeaderSearchBar() {
   const typeMenuDropdownRef = useRef(null);
   const popupRef = useRef(null);
   const [typeMenuPos, setTypeMenuPos] = useState({ top: 0, left: 0 });
+  const typeMenuTimerRef = useRef(null);
+
+  const updateTypeMenuPosition = () => {
+    if (typeFilterRef.current) {
+      const rect = typeFilterRef.current.getBoundingClientRect();
+      const menuWidth = 144;
+      let left = rect.left;
+      if (left + menuWidth > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - menuWidth - 12);
+      }
+      setTypeMenuPos({
+        top: rect.bottom + 6,
+        left: Math.max(8, left),
+      });
+    }
+  };
+
+  const handleTypeMouseEnter = () => {
+    if (window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+      if (typeMenuTimerRef.current) clearTimeout(typeMenuTimerRef.current);
+      updateTypeMenuPosition();
+      setShowTypeFilterMenu(true);
+    }
+  };
+
+  const handleTypeMouseLeave = () => {
+    if (window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+      if (typeMenuTimerRef.current) clearTimeout(typeMenuTimerRef.current);
+      typeMenuTimerRef.current = setTimeout(() => {
+        setShowTypeFilterMenu(false);
+      }, 180);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typeMenuTimerRef.current) clearTimeout(typeMenuTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const handleFocusSearch = () => {
@@ -55,26 +94,12 @@ export default function HeaderSearchBar() {
 
   useEffect(() => {
     if (!showTypeFilterMenu) return;
-    const updatePosition = () => {
-      if (typeFilterRef.current) {
-        const rect = typeFilterRef.current.getBoundingClientRect();
-        const menuWidth = 144;
-        let left = rect.left;
-        if (left + menuWidth > window.innerWidth - 12) {
-          left = Math.max(12, window.innerWidth - menuWidth - 12);
-        }
-        setTypeMenuPos({
-          top: rect.bottom + 6,
-          left: Math.max(8, left),
-        });
-      }
-    };
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    updateTypeMenuPosition();
+    window.addEventListener("resize", updateTypeMenuPosition);
+    window.addEventListener("scroll", updateTypeMenuPosition, true);
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updateTypeMenuPosition);
+      window.removeEventListener("scroll", updateTypeMenuPosition, true);
     };
   }, [showTypeFilterMenu]);
 
@@ -200,11 +225,19 @@ export default function HeaderSearchBar() {
         </div>
 
         {/* Type Filter */}
-        <div ref={typeFilterRef} className="relative shrink-0">
+        <div
+          ref={typeFilterRef}
+          className="relative shrink-0"
+          onMouseEnter={handleTypeMouseEnter}
+          onMouseLeave={handleTypeMouseLeave}
+        >
           <button
             type="button"
-            onClick={() => setShowTypeFilterMenu((current) => !current)}
-            className={`flex h-11.5 items-center gap-2 rounded-full border-[1.5px] px-5 text-sm font-medium transition-colors ${
+            onClick={() => {
+              updateTypeMenuPosition();
+              setShowTypeFilterMenu((current) => !current);
+            }}
+            className={`flex h-11.5 items-center gap-2 rounded-full border-[1.5px] px-5 text-sm font-medium transition-colors cursor-pointer ${
               selectedType ? "border-primary bg-primary text-white" : "border-black bg-white text-black"
             }`}
           >
@@ -219,12 +252,14 @@ export default function HeaderSearchBar() {
             createPortal(
               <div
                 ref={typeMenuDropdownRef}
+                onMouseEnter={handleTypeMouseEnter}
+                onMouseLeave={handleTypeMouseLeave}
                 style={{
                   position: "fixed",
                   top: `${typeMenuPos.top}px`,
                   left: `${typeMenuPos.left}px`,
                 }}
-                className="z-[9999] min-w-36 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-2xl space-y-1"
+                className="z-[9999] min-w-36 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-2xl space-y-1 before:absolute before:-top-2.5 before:left-0 before:w-full before:h-2.5 before:content-['']"
               >
                 {[
                   { value: "", label: "All" },

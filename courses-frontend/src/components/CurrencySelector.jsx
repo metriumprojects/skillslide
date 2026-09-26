@@ -41,23 +41,42 @@ export default function CurrencySelector({ className = "", buttonClassName = "",
   const wrapperRef = useRef(null);
   const dropdownRef = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const timeoutRef = useRef(null);
+
+  const updatePosition = () => {
+    if (wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const menuWidth = 144; // w-36 is 144px
+      let left = rect.left;
+      if (left + menuWidth > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - menuWidth - 12);
+      }
+      setDropdownPos({
+        top: rect.bottom + 6,
+        left: Math.max(8, left),
+      });
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      updatePosition();
+      setOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setOpen(false);
+      }, 180);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
-    const updatePosition = () => {
-      if (wrapperRef.current) {
-        const rect = wrapperRef.current.getBoundingClientRect();
-        const menuWidth = 144; // w-36 is 144px
-        let left = rect.left;
-        if (left + menuWidth > window.innerWidth - 12) {
-          left = Math.max(12, window.innerWidth - menuWidth - 12);
-        }
-        setDropdownPos({
-          top: rect.bottom + 6,
-          left: Math.max(8, left),
-        });
-      }
-    };
     updatePosition();
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
@@ -66,6 +85,12 @@ export default function CurrencySelector({ className = "", buttonClassName = "",
       window.removeEventListener("scroll", updatePosition, true);
     };
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -97,13 +122,21 @@ export default function CurrencySelector({ className = "", buttonClassName = "",
   };
 
   return (
-    <div ref={wrapperRef} className={`relative shrink-0 ${className}`}>
+    <div
+      ref={wrapperRef}
+      className={`relative shrink-0 ${className}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
         type="button"
         aria-label="Currency"
         aria-expanded={open}
         disabled={saving || rateMeta.loading}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          updatePosition();
+          setOpen((current) => !current);
+        }}
         className={`flex ${buttonClassName || "h-9"} items-center justify-center gap-1.5 rounded-full border-[1.5px] border-black bg-white px-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50 disabled:opacity-60 cursor-pointer`}
       >
         {getCurrencyIcon(currency, { size: 16, strokeWidth: 1.8 })}
@@ -121,12 +154,14 @@ export default function CurrencySelector({ className = "", buttonClassName = "",
         createPortal(
           <ul
             ref={dropdownRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{
               position: "fixed",
               top: `${dropdownPos.top}px`,
               left: `${dropdownPos.left}px`,
             }}
-            className="z-[9999] flex max-h-60 w-36 flex-col gap-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-2xl hide-scrollbar"
+            className="z-[9999] flex max-h-60 w-36 flex-col gap-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-2xl hide-scrollbar before:absolute before:-top-2.5 before:left-0 before:w-full before:h-2.5 before:content-['']"
           >
             {supportedCurrencies.map((code) => (
               <li key={code}>

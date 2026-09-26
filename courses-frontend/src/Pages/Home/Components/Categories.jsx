@@ -31,29 +31,54 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
   const moreMenuRef = useRef(null);
   const [profileMenuPos, setProfileMenuPos] = useState({ top: 0, left: 0 });
   const profileDropdownRef = useRef(null);
+  const profileTimerRef = useRef(null);
+
+  const updateProfilePosition = () => {
+    if (menuRef?.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      const menuWidth = 192; // w-48 is 192px
+      let left = rect.left;
+      if (left + menuWidth > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - menuWidth - 12);
+      }
+      setProfileMenuPos({
+        top: rect.bottom + 8,
+        left: Math.max(8, left),
+      });
+    }
+  };
+
+  const handleProfileMouseEnter = () => {
+    if (window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+      if (profileTimerRef.current) clearTimeout(profileTimerRef.current);
+      updateProfilePosition();
+      setShowProfileMenu?.(true);
+    }
+  };
+
+  const handleProfileMouseLeave = () => {
+    if (window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+      if (profileTimerRef.current) clearTimeout(profileTimerRef.current);
+      profileTimerRef.current = setTimeout(() => {
+        setShowProfileMenu?.(false);
+      }, 180);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (profileTimerRef.current) clearTimeout(profileTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!showProfileMenu) return;
-    const updatePosition = () => {
-      if (menuRef?.current) {
-        const rect = menuRef.current.getBoundingClientRect();
-        const menuWidth = 192; // w-48 is 192px
-        let left = rect.left;
-        if (left + menuWidth > window.innerWidth - 12) {
-          left = Math.max(12, window.innerWidth - menuWidth - 12);
-        }
-        setProfileMenuPos({
-          top: rect.bottom + 8,
-          left: Math.max(8, left),
-        });
-      }
-    };
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    updateProfilePosition();
+    window.addEventListener("resize", updateProfilePosition);
+    window.addEventListener("scroll", updateProfilePosition, true);
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updateProfilePosition);
+      window.removeEventListener("scroll", updateProfilePosition, true);
     };
   }, [showProfileMenu, menuRef]);
 
@@ -200,9 +225,17 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
             </Link>
 
             {/* 4. Profile Icon (on the right side of Messages) */}
-            <div className="relative flex items-center" ref={menuRef}>
+            <div
+              className="relative flex items-center"
+              ref={menuRef}
+              onMouseEnter={handleProfileMouseEnter}
+              onMouseLeave={handleProfileMouseLeave}
+            >
               <button
-                onClick={handleProfileClick}
+                onClick={() => {
+                  updateProfilePosition();
+                  handleProfileClick();
+                }}
                 className="h-11.5 w-11.5 rounded-full border-[1.5px] border-black bg-white focus:outline-none flex items-center justify-center shrink-0 cursor-pointer overflow-hidden hover:bg-gray-50 transition-colors"
                 aria-label="Open profile menu"
                 type="button"
@@ -219,6 +252,8 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                 createPortal(
                   <motion.div
                     ref={profileDropdownRef}
+                    onMouseEnter={handleProfileMouseEnter}
+                    onMouseLeave={handleProfileMouseLeave}
                     initial={{ opacity: 0, y: -6, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -228,7 +263,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                       top: `${profileMenuPos.top}px`,
                       left: `${profileMenuPos.left}px`,
                     }}
-                    className="profile-dropdown-portal w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.18)] border border-gray-100 z-[9999] overflow-hidden py-1"
+                    className="profile-dropdown-portal w-48 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.18)] border border-gray-100 z-[9999] overflow-hidden py-1 before:absolute before:-top-3 before:left-0 before:w-full before:h-3 before:content-['']"
                   >
                     <Link
                       to="/profile?tab=My Profile"

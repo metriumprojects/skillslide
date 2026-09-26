@@ -39,7 +39,7 @@ export default function Profile() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const { userInfo, loading } = useSelector((state) => state.auth);
-  const { hasPaymentSetup } = useTeacherPayoutCurrencies();
+  const { hasPaymentSetup, payoutCurrenciesLoading } = useTeacherPayoutCurrencies();
   const [profileImage, setProfileImage] = useState(userInfo?.image?.url);
   const fileInputRef = React.useRef(null);
 
@@ -191,7 +191,7 @@ export default function Profile() {
               </Swiper>
             </div>
 
-            {userInfo?.role === "teacher" && !hasPaymentSetup && (
+            {userInfo?.role === "teacher" && !payoutCurrenciesLoading && !hasPaymentSetup && (
               <button
                 type="button"
                 onClick={() => navigate("/withdraw-request")}
