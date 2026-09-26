@@ -11,7 +11,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserById } from "../../redux/reducers/AuthReducer";
 import { SlSocialYoutube } from "react-icons/sl";
-import { startChat } from "../../redux/reducers/ChatReducer";
 import { getTeacherLessons, getTeacherLessonsById } from "../../redux/reducers/LessonReducer";
 import Card from "../Home/Components/Card";
 import { getUserFavorites } from "../../redux/reducers/FavoriteReducer";
@@ -20,10 +19,12 @@ import { getAllCurriculumsByTecherId } from "../../redux/reducers/CurriculumRedu
 import PublicFvrt from "./components/PublicFvrt";
 import PublicUpcoming from "./components/PublicUpcoming";
 import UserAvatarPlaceholder from "../../components/UserAvatarPlaceholder";
+import { navigateToChat } from "../../utils/chatNavigation";
+import { preloadRoute } from "../../utils/routePreloader";
 
 export default function PublicProfile() {
   const { userbyid, userInfo } = useSelector((state) => state.auth);
-  const { startChatLoading } = useSelector((state) => state.chat);
+  const { rooms } = useSelector((state) => state.chat);
   const { Teacheridlessons } = useSelector((state) => state.lesson);
   const { favorites } = useSelector((state) => state.favorite);
   const { curriculums } = useSelector((state) => state.curriculum);
@@ -78,34 +79,13 @@ export default function PublicProfile() {
     }
   }, [dispatch, id, tab, lessonLimit, curriculumLimit, isTeacher]);
 
-  const handleStartChat = async () => {
-    if (!userInfo?._id) {
-      toast.info("Please log in to send a message.");
-      navigate("/login");
-      return;
-    }
-
-    if (userInfo?._id === id) {
-      toast.info("This is your profile.");
-      return;
-    }
-
-    try {
-      const data = await dispatch(startChat({ targetUserId: id })).unwrap();
-      const roomId = data?.room?._id;
-
-      if (!roomId) {
-        toast.error("Could not start the chat. Please try again.");
-        return;
-      }
-
-      toast.success("Chat ready.");
-      navigate(`/chat/${roomId}`);
-    } catch (error) {
-      const message =
-        typeof error === "string" ? error : "Failed to start chat.";
-      toast.error(message);
-    }
+  const handleStartChat = () => {
+    navigateToChat({
+      navigate,
+      targetUserId: id,
+      userInfo,
+      rooms,
+    });
   };
 
   const handleLoadMore = () => {
@@ -238,13 +218,14 @@ export default function PublicProfile() {
                   <button
                     type="button"
                     onClick={handleStartChat}
-                    disabled={startChatLoading}
-                    className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer disabled:opacity-60 shrink-0"
+                    onMouseEnter={() => preloadRoute("chat")}
+                    onTouchStart={() => preloadRoute("chat")}
+                    className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
-                    <span>{startChatLoading ? "Starting..." : "Send message"}</span>
+                    <span>Send message</span>
                   </button>
                 )}
               </div>
@@ -378,13 +359,14 @@ export default function PublicProfile() {
                 <button
                   type="button"
                   onClick={handleStartChat}
-                  disabled={startChatLoading}
-                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer disabled:opacity-60 shrink-0"
+                  onMouseEnter={() => preloadRoute("chat")}
+                  onTouchStart={() => preloadRoute("chat")}
+                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer shrink-0"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
-                  <span>{startChatLoading ? "Starting..." : "Send message"}</span>
+                  <span>Send message</span>
                 </button>
               )}
             </div>

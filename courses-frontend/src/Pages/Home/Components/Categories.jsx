@@ -4,12 +4,12 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategories } from "../../../redux/reducers/CategoryReducer";
 import { IoIosArrowDown } from "react-icons/io";
-import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import CurrencySelector from "../../../components/CurrencySelector";
 import LogoIcon from "../../../components/LogoIcon";
 import HeaderSearchBar from "../../../components/HeaderSearchBar";
 import UserAvatarPlaceholder from "../../../components/UserAvatarPlaceholder";
+import { preloadRoute } from "../../../utils/routePreloader";
 
 export default function CategoriesBar({ categories: propCategories = [], selectedCategory, onSelectCategory, userInfo, chatUnread, handleSearchClick, handleProfileClick, showProfileMenu, setShowProfileMenu, menuRef, handleLogout, Teacherlessons, handleTeacher }) {
   const navigate = useNavigate();
@@ -214,7 +214,12 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
         {userInfo ? (
           <>
             {/* 3. Messages (on the right side of USD) */}
-            <Link to={`/chat`} className={messageButtonClass("/chat")}>
+            <Link
+              to={`/chat`}
+              onMouseEnter={() => preloadRoute("chat")}
+              onTouchStart={() => preloadRoute("chat")}
+              className={messageButtonClass("/chat")}
+            >
               <MessageCircle strokeWidth={1.8} size={18} />
               <span>Messages</span>
               {chatUnread > 0 && (

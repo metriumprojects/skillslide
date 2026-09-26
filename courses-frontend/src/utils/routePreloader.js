@@ -65,5 +65,6 @@ export const preloadCriticalRoutes = () => {
     preloadRoute("curriculumLesson");
     preloadRoute("curriculumBooking");
     preloadRoute("afterPaymentCurri");
+    preloadRoute("chat");
   });
 };

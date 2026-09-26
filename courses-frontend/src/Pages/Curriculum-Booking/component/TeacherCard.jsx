@@ -2,11 +2,11 @@ import { BookOpen, Users, MapPin, Info, MessageCircle, Star, CheckCircle2, Chevr
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { startChat } from '../../../redux/reducers/ChatReducer';
 import { toast } from 'react-toastify';
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import { getCardImageUrl } from '../../../utils/imageUtils';
 import { preloadRoute } from '../../../utils/routePreloader';
+import { navigateToChat } from '../../../utils/chatNavigation';
 
 
 const TeacherCard = ({
@@ -27,7 +27,8 @@ const TeacherCard = ({
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-   const { userInfo } = useSelector((state) => state.auth);
+  const { userInfo } = useSelector((state) => state.auth);
+  const { rooms } = useSelector((state) => state.chat);
   const [isTeacherOpen, setIsTeacherOpen] = useState(true);
   
   const displayName = name || teacher?.name || teacher?.email;
@@ -40,39 +41,13 @@ const TeacherCard = ({
   const displayTimeZone = timeZone || teacher?.timeZone || resolvedTimeZone;
   const displayLocation = location || teacher?.location || "Online";
 
-  const handleStartChat = async () => {
-    if (!userInfo?._id) {
-      toast.info("Please log in to send a message.");
-      navigate("/login");
-      return;
-    }
-
-    if (!teacher?._id) {
-      toast.error("Teacher information not available");
-      return;
-    }
-
-    if (userInfo?._id === teacher._id) {
-      toast.info("This is your profile.");
-      return;
-    }
-
-    try {
-      const data = await dispatch(startChat({ targetUserId: teacher._id })).unwrap();
-      const roomId = data?.room?._id;
-
-      if (!roomId) {
-        toast.error("Could not start the chat. Please try again.");
-        return;
-      }
-
-      toast.success("Chat ready.");
-      navigate(`/chat/${roomId}`);
-    } catch (error) {
-      const message =
-        typeof error === "string" ? error : "Failed to start chat.";
-      toast.error(message);
-    }
+  const handleStartChat = () => {
+    navigateToChat({
+      navigate,
+      targetUserId: teacher?._id,
+      userInfo,
+      rooms,
+    });
   };
 
   if (layout === "column") {
@@ -175,6 +150,8 @@ const TeacherCard = ({
               <button
                 type="button"
                 onClick={handleStartChat}
+                onMouseEnter={() => preloadRoute("chat")}
+                onTouchStart={() => preloadRoute("chat")}
                 title={displayName ? `Message ${displayName}` : "Message Teacher"}
                 className="inline-flex items-center gap-2 bg-transparent hover:bg-[#008494] hover:border-[#008494] hover:text-white border border-[#1A2B49] text-[#1A2B49] px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-none mt-1 max-w-full"
               >
@@ -258,6 +235,8 @@ const TeacherCard = ({
           <button
             type="button"
             onClick={handleStartChat}
+            onMouseEnter={() => preloadRoute("chat")}
+            onTouchStart={() => preloadRoute("chat")}
             title="Message Teacher"
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-gray-300/80 bg-white/90 hover:bg-white flex items-center justify-center text-gray-600 hover:text-black hover:border-gray-400 transition-all shadow-sm shrink-0 cursor-pointer"
           >

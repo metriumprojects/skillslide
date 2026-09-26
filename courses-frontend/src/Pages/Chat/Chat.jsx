@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import MainLayout from "../../components/MainLayout";
@@ -11,8 +11,10 @@ import {
   fetchChatMessages,
   markRoomRead,
   sendChatMessage,
+  startChat,
   updateChatMessage,
 } from "../../redux/reducers/ChatReducer";
+import { ChatConversationSkeleton } from "../../components/ChatSkeleton";
 import { useCurrency } from "../../currency/CurrencyContext";
 import {
   Image as ImageIcon,
@@ -86,6 +88,9 @@ const extractLessonData = (message) => {
 export default function Chat() {
   const { formatPrice } = useCurrency();
   const { id: roomId } = useParams();
+  const [searchParams] = useSearchParams();
+  const targetUserId = searchParams.get("targetUserId") || searchParams.get("userId");
+  const [startingChat, setStartingChat] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.auth);
@@ -114,8 +119,8 @@ export default function Chat() {
 
   useEffect(() => {
     activeRoomRef.current = roomId;
-    setShowMobileSidebar(!roomId);
-  }, [roomId]);
+    setShowMobileSidebar(!roomId && !targetUserId);
+  }, [roomId, targetUserId]);
 
   useEffect(() => {
     viewerIdRef.current = viewerId;
@@ -125,6 +130,68 @@ export default function Chat() {
     if (!userInfo?._id) return;
     dispatch(fetchChatConnections());
   }, [dispatch, userInfo?._id]);
+
+  // Handle 0ms instant navigation with targetUserId
+  useEffect(() => {
+    if (!targetUserId || !userInfo?._id) return;
+
+    const targetIdStr = String(targetUserId);
+    const myIdStr = String(userInfo._id);
+
+    if (targetIdStr === myIdStr) {
+      toast.info("You cannot chat with yourself.");
+      navigate("/chat", { replace: true });
+      return;
+    }
+
+    // Check if room already exists in state
+    const existing = rooms.find((r) => {
+      const tId = String(r.teacher?._id || r.teacher || "");
+      const sId = String(r.student?._id || r.student || "");
+      return (
+        (tId === targetIdStr && sId === myIdStr) ||
+        (tId === myIdStr && sId === targetIdStr)
+      );
+    });
+
+    if (existing?._id) {
+      navigate(`/chat/${existing._id}`, { replace: true });
+      return;
+    }
+
+    // If rooms are still loading initially, let them resolve first
+    if (roomsLoading && rooms.length === 0) {
+      return;
+    }
+
+    let isSubscribed = true;
+    setStartingChat(true);
+
+    dispatch(startChat({ targetUserId }))
+      .unwrap()
+      .then((data) => {
+        if (!isSubscribed) return;
+        const newRoomId = data?.room?._id;
+        if (newRoomId) {
+          navigate(`/chat/${newRoomId}`, { replace: true });
+        } else {
+          navigate("/chat", { replace: true });
+        }
+      })
+      .catch((err) => {
+        if (!isSubscribed) return;
+        const errMsg = typeof err === "string" ? err : "Failed to start chat.";
+        toast.error(errMsg);
+        navigate("/chat", { replace: true });
+      })
+      .finally(() => {
+        if (isSubscribed) setStartingChat(false);
+      });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [dispatch, targetUserId, userInfo?._id, rooms, roomsLoading, navigate]);
 
   useEffect(() => {
     if (!roomId || !userInfo?._id) return;
@@ -337,64 +404,94 @@ export default function Chat() {
             </div>
           )}
 
-          {!roomId || !activeRoom ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3.5 font-semibold text-xl text-center p-6">
-              <button
-                onClick={() => setShowMobileSidebar(true)}
-                className="md:hidden absolute top-4 left-4 p-2 bg-primary text-white rounded-lg shadow-lg hover:bg-blue-700"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <MessageCircleMore className="text-primary" size={80} />
-              <span className="text-gray-800">Pick up where you left off</span>
-              <p className="text-gray-500 font-medium text-base">
-                Select one of your conversations to continue.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="p-4 border-b-2 border-gray-300 flex items-center gap-3 bg-white shadow-sm">
+          {targetUserId || startingChat ? (
+            <ChatConversationSkeleton statusText="Connecting to chat..." />
+          ) : roomId ? (
+            (!activeRoom && roomsLoading) ? (
+              <ChatConversationSkeleton statusText="Loading conversation..." />
+            ) : !activeRoom && !roomsLoading ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3.5 font-semibold text-xl text-center p-6">
                 <button
-                  className="md:hidden text-gray-600 p-2 hover:bg-gray-100 rounded-lg -ml-2"
                   onClick={() => setShowMobileSidebar(true)}
-                  aria-label="Open conversations"
+                  className="md:hidden absolute top-4 left-4 p-2 bg-primary text-white rounded-lg shadow-lg hover:bg-blue-700"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
-
-                <img
-                  src={activePeerAvatar}
-                  className="w-10 h-10 rounded-full object-cover shrink-0"
-                  alt={activePeerName}
-                />
-                <div className="flex flex-col min-w-0 flex-1">
-                  <h2 className="text-base md:text-lg font-semibold truncate">{activePeerName}</h2>
-                  {activeRoom?.curriculum?.title && (
-                    <span className="text-xs text-gray-500 truncate">
-                      {activeRoom.curriculum.title}
-                    </span>
-                  )}
-                </div>
+                <MessageCircleMore className="text-gray-400" size={64} />
+                <span className="text-gray-800">Conversation not found</span>
+                <p className="text-gray-500 font-medium text-base">
+                  This conversation may have been deleted or is unavailable.
+                </p>
               </div>
+            ) : (
+              <>
+                <div className="p-4 border-b-2 border-gray-300 flex items-center gap-3 bg-white shadow-sm">
+                  <button
+                    className="md:hidden text-gray-600 p-2 hover:bg-gray-100 rounded-lg -ml-2"
+                    onClick={() => setShowMobileSidebar(true)}
+                    aria-label="Open conversations"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
 
-              <div
-                ref={chatScrollRef}
-                className="flex-1 space-y-3 p-4 overflow-y-auto bg-gray-50"
-              >
-                {isMessagesLoading ? (
-                  <div className="text-center text-gray-500 py-4 text-sm">
-                    Loading messages...
+                  <img
+                    src={activePeerAvatar}
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                    alt={activePeerName}
+                  />
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <h2 className="text-base md:text-lg font-semibold truncate">{activePeerName}</h2>
+                    {activeRoom?.curriculum?.title && (
+                      <span className="text-xs text-gray-500 truncate">
+                        {activeRoom.curriculum.title}
+                      </span>
+                    )}
                   </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center text-gray-500 py-4 text-sm">
-                    Say hello to start the conversation.
-                  </div>
-                ) : (
-                  messages.map((msg) => {
+                </div>
+
+                <div
+                  ref={chatScrollRef}
+                  className="flex-1 space-y-3 p-4 overflow-y-auto bg-gray-50"
+                >
+                  {isMessagesLoading ? (
+                    <div className="space-y-4 animate-pulse pt-2">
+                      <div className="flex items-start gap-2.5 max-w-[85%] md:max-w-[70%]">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0 mt-1" />
+                        <div className="space-y-1.5">
+                          <div className="h-10 w-48 sm:w-60 bg-gray-200 rounded-2xl rounded-tl-sm p-3" />
+                          <div className="h-2 w-12 bg-gray-200 rounded ml-1" />
+                        </div>
+                      </div>
+                      <div className="flex items-end justify-end w-full">
+                        <div className="space-y-1.5 flex flex-col items-end max-w-[85%] md:max-w-[70%]">
+                          <div className="h-12 w-56 sm:w-72 bg-primary/20 rounded-2xl rounded-tr-sm p-3" />
+                          <div className="h-2 w-12 bg-gray-200 rounded mr-1" />
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5 max-w-[85%] md:max-w-[70%]">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0 mt-1" />
+                        <div className="space-y-1.5">
+                          <div className="h-14 w-52 sm:w-64 bg-gray-200 rounded-2xl rounded-tl-sm p-3" />
+                          <div className="h-2 w-16 bg-gray-200 rounded ml-1" />
+                        </div>
+                      </div>
+                      <div className="flex items-end justify-end w-full">
+                        <div className="space-y-1.5 flex flex-col items-end max-w-[85%] md:max-w-[70%]">
+                          <div className="h-9 w-32 sm:w-44 bg-primary/20 rounded-2xl rounded-tr-sm p-3" />
+                          <div className="h-2 w-10 bg-gray-200 rounded mr-1" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center text-gray-500 py-4 text-sm">
+                      Say hello to start the conversation.
+                    </div>
+                  ) : (
+                    messages.map((msg) => {
                     const senderId =
                       msg?.userId?._id || msg?.userId || msg?.user?._id;
                     const isMine =
@@ -550,6 +647,24 @@ export default function Chat() {
                 </div>
               </div>
             </>
+          )) : roomsLoading && rooms.length === 0 ? (
+            <ChatConversationSkeleton statusText="Loading conversations..." />
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3.5 font-semibold text-xl text-center p-6">
+              <button
+                onClick={() => setShowMobileSidebar(true)}
+                className="md:hidden absolute top-4 left-4 p-2 bg-primary text-white rounded-lg shadow-lg hover:bg-blue-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <MessageCircleMore className="text-primary" size={80} />
+              <span className="text-gray-800">Pick up where you left off</span>
+              <p className="text-gray-500 font-medium text-base">
+                Select one of your conversations to continue.
+              </p>
+            </div>
           )}
         </div>
       </div>

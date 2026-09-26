@@ -2,6 +2,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Calendar, Home, LogIn, MessageSquare, Search, User } from "lucide-react";
+import { preloadRoute } from "../utils/routePreloader";
 
 export default function MobileMenu() {
   const navigate = useNavigate();
@@ -140,6 +141,12 @@ export default function MobileMenu() {
               key={tab.id}
               type="button"
               onClick={tab.onClick}
+              onTouchStart={() => {
+                if (tab.id === "messages") preloadRoute("chat");
+              }}
+              onMouseEnter={() => {
+                if (tab.id === "messages") preloadRoute("chat");
+              }}
               className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 transition-all duration-150 cursor-pointer active:scale-95 select-none ${
                 active ? "text-[#FA4F2E]" : "text-gray-500 hover:text-gray-900"
               }`}

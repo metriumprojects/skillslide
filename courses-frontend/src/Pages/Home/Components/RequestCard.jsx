@@ -3,8 +3,9 @@ import { Heart, Plus, Loader2 } from "lucide-react";
 import { BiSolidZap } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { startChat } from "../../../redux/reducers/ChatReducer";
 import { toast } from "react-toastify";
+import { navigateToChat } from "../../../utils/chatNavigation";
+import { preloadRoute } from "../../../utils/routePreloader";
 
 // Optimize Cloudinary URLs to load small thumbnails instead of full images
 const getOptimizedUrl = (url, width = 256) => {
@@ -29,7 +30,7 @@ const RequestCard = memo(function RequestCard({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { startChatLoading } = useSelector((state) => state.chat);
+  const { rooms } = useSelector((state) => state.chat);
   const formattedDate = (() => {
     const timestamp = req?.updatedAt || req?.createdAt;
     if (!timestamp) return "Date not available";
@@ -58,38 +59,13 @@ const RequestCard = memo(function RequestCard({
     return "Online";
   };
 
-  const handleMessageCreator = async () => {
-    if (!req?.user?._id) {
-      toast.error("User information not available");
-      return;
-    }
-
-    if (!userInfo?._id) {
-      toast.info("Please log in to send a message.");
-      navigate("/login");
-      return;
-    }
-
-    if (userInfo?._id === req.user._id) {
-      toast.info("You cannot message yourself.");
-      return;
-    }
-
-    try {
-      const data = await dispatch(startChat({ targetUserId: req.user._id })).unwrap();
-      const roomId = data?.room?._id;
-
-      if (!roomId) {
-        toast.error("Could not start the chat. Please try again.");
-        return;
-      }
-
-      toast.success("Chat ready.");
-      navigate(`/chat/${roomId}`);
-    } catch (error) {
-      const message = typeof error === "string" ? error : "Failed to start chat.";
-      toast.error(message);
-    }
+  const handleMessageCreator = () => {
+    navigateToChat({
+      navigate,
+      targetUserId: req?.user?._id,
+      userInfo,
+      rooms,
+    });
   };
 
   return (
@@ -177,10 +153,11 @@ const RequestCard = memo(function RequestCard({
             <div className="flex flex-wrap items-center justify-start gap-2 pt-2 sm:pt-3">
               <button 
                 onClick={handleMessageCreator}
-                disabled={startChatLoading}
-                className="bg-[#E9EAEE] text-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm hover:bg-gray-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                onMouseEnter={() => preloadRoute("chat")}
+                onTouchStart={() => preloadRoute("chat")}
+                className="bg-[#E9EAEE] text-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
               >
-                {startChatLoading ? "Starting..." : "Message"}
+                Message
               </button>
 
               <button
@@ -217,10 +194,11 @@ const RequestCard = memo(function RequestCard({
             <div className="flex flex-wrap items-center justify-start gap-2 pt-2 sm:pt-3">
               <button 
                 onClick={handleMessageCreator}
-                disabled={startChatLoading}
-                className="bg-[#E9EAEE] text-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm hover:bg-gray-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                onMouseEnter={() => preloadRoute("chat")}
+                onTouchStart={() => preloadRoute("chat")}
+                className="bg-[#E9EAEE] text-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
               >
-                {startChatLoading ? "Starting..." : "Message"}
+                Message
               </button>
               <button
                 onClick={() => onSave(req?._id)}

@@ -3,12 +3,13 @@ import { FaUser, FaChartLine, FaClock, FaChevronLeft, FaChevronRight } from "rea
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { CancelBooking, CompleteLessons, teacherMainUpcomingBookings, teacherPastLessons } from "../../../redux/reducers/BookingReducer";
-import { startChat } from "../../../redux/reducers/ChatReducer";
 import ReviewModal from "./ReviewModal";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import ButtonSpinner from "../../../components/ButtonSpinner";
+import { navigateToChat } from "../../../utils/chatNavigation";
+import { preloadRoute } from "../../../utils/routePreloader";
 
 export default function LessonsDashboard() {
   const { formatPrice } = useCurrency();
@@ -43,7 +44,7 @@ export default function LessonsDashboard() {
     loadingStates 
   } = useSelector((state) => state.book);
   const { userInfo } = useSelector((state) => state.auth);
-  const { startChatLoading } = useSelector((state) => state.chat);
+  const { rooms } = useSelector((state) => state.chat);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -220,46 +221,24 @@ export default function LessonsDashboard() {
     setOpenReview(true);
   };
 
-  const handleMessageStudent = async (lesson) => {
+  const handleMessageStudent = (lesson) => {
     if (!lesson) {
       toast.error("Lesson information not available");
       return;
     }
 
-    // Try different possible student ID fields
     const studentId = lesson.userId;
-    
     if (!studentId) {
       toast.error("Student information not available");
       return;
     }
 
-    if (!userInfo?._id) {
-      toast.info("Please log in to send a message.");
-      navigate("/login");
-      return;
-    }
-
-    if (userInfo?._id === studentId) {
-      toast.info("You cannot message yourself.");
-      return;
-    }
-
-    try {
-      const data = await dispatch(startChat({ targetUserId: studentId })).unwrap();
-      const roomId = data?.room?._id;
-
-      if (!roomId) {
-        toast.error("Could not start the chat. Please try again.");
-        return;
-      }
-
-      toast.success("Chat ready.");
-      navigate(`/chat/${roomId}`);
-    } catch (error) {
-      const message = typeof error === "string" ? error : "Failed to start chat.";
-      toast.error(message);
-    }
+    navigateToChat({
+      navigate,
+      targetUserId: studentId,
+      userInfo,
+      rooms,
+    });
   };
 
 
@@ -378,10 +357,11 @@ export default function LessonsDashboard() {
                         <td className="p-3 flex flex-wrap gap-3">
                           <button 
                             onClick={() => handleMessageStudent(lesson)}
-                            disabled={startChatLoading}
-                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60 cursor-pointer"
+                            onMouseEnter={() => preloadRoute("chat")}
+                            onTouchStart={() => preloadRoute("chat")}
+                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
                           >
-                            {startChatLoading ? "Starting..." : "Message Student"}
+                            Message Student
                           </button>
                           <button 
                             onClick={() => handleCancel(lesson)}
@@ -476,10 +456,11 @@ export default function LessonsDashboard() {
                             <div className="flex flex-wrap gap-3">
                               <button 
                                 onClick={() => handleMessageStudent(lesson)}
-                                disabled={startChatLoading}
-                                className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60"
+                                onMouseEnter={() => preloadRoute("chat")}
+                                onTouchStart={() => preloadRoute("chat")}
+                                className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
                               >
-                                {startChatLoading ? "Starting..." : "Message Student"}
+                                Message Student
                               </button>
                               <button 
                                 onClick={() => handleCancel(lesson)}
@@ -588,10 +569,11 @@ export default function LessonsDashboard() {
                         <td className="p-3">
                           <button 
                             onClick={() => handleMessageStudent(lesson)}
-                            disabled={startChatLoading}
-                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60"
+                            onMouseEnter={() => preloadRoute("chat")}
+                            onTouchStart={() => preloadRoute("chat")}
+                            className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer"
                           >
-                            {startChatLoading ? "Starting..." : "Message Student"}
+                            Message Student
                           </button>
                         </td>
                       </tr>

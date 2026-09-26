@@ -3,13 +3,13 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { CancelBooking, userMainUpcomingBookings, userPastLessons } from "../../../redux/reducers/BookingReducer";
-import { startChat } from "../../../redux/reducers/ChatReducer";
 import ReviewModal from "./ReviewModal";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
+import { navigateToChat } from "../../../utils/chatNavigation";
 
 export default function StudentDashboard() {
   const { formatPrice } = useCurrency();
@@ -21,7 +21,7 @@ export default function StudentDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
-  const { startChatLoading } = useSelector((state) => state.chat);
+  const { rooms } = useSelector((state) => state.chat);
   
   // Pagination states for upcoming lessons
   const [upcomingPage, setUpcomingPage] = useState(1);
@@ -195,40 +195,18 @@ export default function StudentDashboard() {
     setOpenReview(true);
   };
 
-  const handleMessageTeacher = async (lesson) => {
+  const handleMessageTeacher = (lesson) => {
     if (!lesson?.userId) {
       toast.error("Teacher information not available");
       return;
     }
 
-    const teacherId = lesson.userId;
-
-    if (!userInfo?._id) {
-      toast.info("Please log in to send a message.");
-      navigate("/login");
-      return;
-    }
-
-    if (userInfo?._id === teacherId) {
-      toast.info("You cannot message yourself.");
-      return;
-    }
-
-    try {
-      const data = await dispatch(startChat({ targetUserId: teacherId })).unwrap();
-      const roomId = data?.room?._id;
-
-      if (!roomId) {
-        toast.error("Could not start the chat. Please try again.");
-        return;
-      }
-
-      toast.success("Chat ready.");
-      navigate(`/chat/${roomId}`);
-    } catch (error) {
-      const message = typeof error === "string" ? error : "Failed to start chat.";
-      toast.error(message);
-    }
+    navigateToChat({
+      navigate,
+      targetUserId: lesson.userId,
+      userInfo,
+      rooms,
+    });
   };
 
   // Calculate total pages for pagination
@@ -334,10 +312,11 @@ export default function StudentDashboard() {
                           <div className="flex gap-2 flex-wrap">
                             <button 
                               onClick={() => handleMessageTeacher(lesson)}
-                              disabled={startChatLoading}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60 cursor-pointer hover:bg-gray-300"
+                              onMouseEnter={() => preloadRoute("chat")}
+                              onTouchStart={() => preloadRoute("chat")}
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
                             >
-                              {startChatLoading ? "Starting..." : "Message"}
+                              Message
                             </button>
                             <button 
                               onClick={() => handleCancel(lesson)}
@@ -462,10 +441,11 @@ export default function StudentDashboard() {
                           ) : (
                             <button 
                               onClick={() => handleMessageTeacher(lesson)}
-                              disabled={startChatLoading}
-                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors disabled:opacity-60"
+                              onMouseEnter={() => preloadRoute("chat")}
+                              onTouchStart={() => preloadRoute("chat")}
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-colors cursor-pointer hover:bg-gray-300"
                             >
-                              {startChatLoading ? "Starting..." : "Message"}
+                              Message
                             </button>
                           )}
                         </td>

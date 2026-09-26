@@ -6,6 +6,7 @@ import { getUser } from "./redux/reducers/AuthReducer";
 import PrivateRoute from "./redux/PrivateRoute";
 import { SearchProvider } from "./context/SearchContext";
 import TopProgressBar from "./components/TopProgressBar";
+import ChatSkeleton from "./components/ChatSkeleton";
 import { preloadCriticalRoutes } from "./utils/routePreloader";
 
 // Suspense fallback with sleek top progress indicator
@@ -117,8 +118,22 @@ const App = () => {
                 <Route path="/manage-lesson/:id" element={<ManageLesson />} />
 
                 {/* chat */}
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/chat/:id" element={<Chat />} />
+                <Route
+                  path="/chat"
+                  element={
+                    <Suspense fallback={<ChatSkeleton />}>
+                      <Chat />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/chat/:id"
+                  element={
+                    <Suspense fallback={<ChatSkeleton />}>
+                      <Chat />
+                    </Suspense>
+                  }
+                />
 
                 {/* Payment */}
                 <Route path="/after-payment" element={<AfterPayment />} />
