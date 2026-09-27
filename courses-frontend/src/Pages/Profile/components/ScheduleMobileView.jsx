@@ -1,18 +1,20 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import moment from "moment-timezone";
 import { HiDotsHorizontal } from "react-icons/hi";
+import { FaRegClock, FaBookOpen } from "react-icons/fa";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { MobileScheduleSkeleton } from "../../../components/ProfileTabSkeletons";
 
 /**
  * Responsive stacked card view for mobile (<768px)
- * Features:
- * - Prominent Time & Date display front and center
- * - LESSON vs CURRICULUM badge in the top row
- * - Multi-line details: Lesson title, Curriculum name, and Teacher on separate lines
- * - Grey bubble container (bg-[#F5F5F5] rounded-2xl), zero grey divider lines
- * - White fill with text-color border buttons with 44px tap accessibility
+ * Clean, hierarchy-focused layout:
+ * - Time as secondary label in top row with status badge
+ * - Lesson title as primary bold text
+ * - Curriculum subtitle with book icon visual anchor
+ * - Teacher name on its own line
+ * - Price aligned with tight, consistent action buttons in bottom row
+ * - No redundant "CURRICULUM", "AMOUNT", or repeated date labels
  */
 export default function ScheduleMobileView({
   lessons = [],
@@ -179,11 +181,6 @@ export default function ScheduleMobileView({
               // Teacher name
               const teacherName = lesson.name || "Unknown Teacher";
 
-              // Prominent formatted date
-              const fullFormattedDate = lesson.scheduledAt
-                ? moment.utc(lesson.scheduledAt).local().format("dddd, MMM D, YYYY")
-                : timeDisplay.date || "Date not set";
-
               // Status badge styling with high WCAG contrast
               let statusBadge;
               if (activeTab === "upcoming") {
@@ -215,61 +212,48 @@ export default function ScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: LESSON vs CURRICULUM text on left, Status badge on right */}
+                  {/* Top row: Time on left (secondary label), Status badge on right */}
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                      {isCurriculum ? "Curriculum" : "Lesson"}
-                    </span>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                      <FaRegClock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span>{timeDisplay.time || "Time not set"}</span>
+                    </div>
                     <div className="shrink-0">{statusBadge}</div>
                   </div>
 
-                  {/* Prominent Time & Date (Large and upfront) */}
-                  <div className="mb-3">
-                    <div className="text-xl sm:text-2xl font-black text-[#1A2B49] leading-tight tracking-tight">
-                      {timeDisplay.time || "Time not set"}
-                    </div>
-                    <div className="text-xs font-semibold text-gray-500 mt-0.5">
-                      {fullFormattedDate}
-                    </div>
-                  </div>
-
-                  {/* Lesson Title (Prominent, bold) */}
+                  {/* Primary bold text: Lesson Title */}
                   <h4 className="text-base font-bold text-[#1A2B49] leading-snug break-words">
                     {title}
                   </h4>
 
-                  {/* Curriculum Title (If curriculum session, on its own line) */}
+                  {/* Curriculum subtitle with book icon visual anchor */}
                   {isCurriculum && lesson.curriculumTitle && (
-                    <p className="text-xs text-gray-500 font-medium mt-1 break-words">
-                      {lesson.curriculumTitle}
-                    </p>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium mt-1 break-words">
+                      <FaBookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>{lesson.curriculumTitle}</span>
+                    </div>
                   )}
 
-                  {/* Teacher Name (On separate next line as requested) */}
+                  {/* Teacher Name (on separate next line) */}
                   <p className="text-xs text-gray-500 mt-1">
                     Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
                   </p>
 
-                  {/* Bottom row: Amount on left, Actions on right (zero grey lines) */}
-                  <div className="mt-4 pt-1 flex items-center justify-between gap-3">
-                    {/* Amount */}
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
-                        Amount
-                      </span>
-                      <span className="text-base font-bold text-[#1A2B49]">
-                        {formatPrice(lesson.amount, lesson.currency || "USD")}
-                      </span>
-                    </div>
+                  {/* Bottom row: Bold price on left, tightened buttons on right */}
+                  <div className="mt-3.5 flex items-center justify-between gap-3">
+                    {/* Clean price without redundant 'AMOUNT' label */}
+                    <span className="text-base font-bold text-[#1A2B49] tracking-tight shrink-0">
+                      {formatPrice(lesson.amount, lesson.currency || "USD")}
+                    </span>
 
-                    {/* Actions */}
+                    {/* Actions: Same height, consistent padding, clean alignment */}
                     <div className="flex items-center gap-2 relative">
-                      {/* Primary Action Button (fill white with text color border, min 44px tap target) */}
+                      {/* Primary Action Button */}
                       {isPastCompletedNeedsReview ? (
                         <button
                           type="button"
                           onClick={() => handleReview && handleReview(lesson)}
-                          className="min-h-[44px] px-5 py-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
+                          className="h-9 px-4 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
                         >
                           Leave a review
                         </button>
@@ -279,13 +263,13 @@ export default function ScheduleMobileView({
                           onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
                           onMouseEnter={() => preloadRoute("chat")}
                           onTouchStart={() => preloadRoute("chat")}
-                          className="min-h-[44px] px-5 py-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
+                          className="h-9 px-4 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
                         >
                           Message
                         </button>
                       )}
 
-                      {/* "⋯" Overflow Menu Trigger (fill white with text color border, min 44x44px tap target) */}
+                      {/* "⋯" Overflow Menu Trigger (h-9 w-9, matching height to Message button) */}
                       {activeTab === "upcoming" ? (
                         <div className="relative" ref={isMenuOpen ? activeMenuRef : null}>
                           <button
@@ -293,9 +277,9 @@ export default function ScheduleMobileView({
                             aria-label="More lesson actions"
                             aria-expanded={isMenuOpen}
                             onClick={(e) => toggleMenu(cardId, e)}
-                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs"
+                            className="w-9 h-9 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs shrink-0"
                           >
-                            <HiDotsHorizontal className="w-5 h-5 text-[#1A2B49]" />
+                            <HiDotsHorizontal className="w-4 h-4 text-[#1A2B49]" />
                           </button>
 
                           {/* Accessible floating dropdown menu */}
@@ -357,9 +341,9 @@ export default function ScheduleMobileView({
                             aria-label="More lesson actions"
                             aria-expanded={isMenuOpen}
                             onClick={(e) => toggleMenu(cardId, e)}
-                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs"
+                            className="w-9 h-9 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs shrink-0"
                           >
-                            <HiDotsHorizontal className="w-5 h-5 text-[#1A2B49]" />
+                            <HiDotsHorizontal className="w-4 h-4 text-[#1A2B49]" />
                           </button>
 
                           {isMenuOpen && (
