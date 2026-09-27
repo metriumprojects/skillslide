@@ -504,6 +504,7 @@ export default function StudentDashboard() {
               getTimeDisplay={getTimeDisplay}
               handleMessageTeacher={handleMessageTeacher}
               handleReview={handleReview}
+              onManageLesson={handleManageLesson}
               emptyTitle="No past lessons"
               emptySubtitle="Completed or attended lessons will appear here."
             />

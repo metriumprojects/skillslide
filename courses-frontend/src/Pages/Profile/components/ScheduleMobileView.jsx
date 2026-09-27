@@ -1,20 +1,24 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useMemo } from "react";
 import moment from "moment-timezone";
-import { HiDotsHorizontal } from "react-icons/hi";
-import { FaRegClock, FaBookOpen } from "react-icons/fa";
+import {
+  FaRegClock,
+  FaBookOpen,
+  FaRegCommentAlt,
+  FaCalendarTimes,
+  FaClipboardList,
+  FaStar,
+} from "react-icons/fa";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { MobileScheduleSkeleton } from "../../../components/ProfileTabSkeletons";
 
 /**
  * Responsive stacked card view for mobile (<768px)
- * Clean, hierarchy-focused layout:
- * - Time as secondary label in top row with status badge
- * - Lesson title as primary bold text
- * - Curriculum subtitle with book icon visual anchor
- * - Teacher name on its own line
- * - Price aligned with tight, consistent action buttons in bottom row
- * - No redundant "CURRICULUM", "AMOUNT", or repeated date labels
+ * Layout & Hierarchy:
+ * - Top row: Large bold time (primary element) + small muted timezone on left; Status badge on right
+ * - Lesson title: Bold, second-largest text, max 2 lines with ellipsis, tappable for details
+ * - Meta row: Curriculum type + teacher name with book icon on left; Amount as small muted text on right
+ * - Action row: Below a divider line, three equal-width ~32px pill buttons (Message, Cancel with danger tint, Manage)
  */
 export default function ScheduleMobileView({
   lessons = [],
@@ -31,40 +35,7 @@ export default function ScheduleMobileView({
   emptyTitle = "No lessons scheduled",
   emptySubtitle = "When you book a lesson or curriculum, it will appear here.",
 }) {
-  // Track active overflow menu ID (uses unique _cardUid)
-  const [activeMenuId, setActiveMenuId] = useState(null);
-
-  const activeMenuRef = useRef(null);
-
-  // Close overflow menu on outside click or escape
-  useEffect(() => {
-    if (!activeMenuId) return;
-
-    const handleClickOutside = (e) => {
-      if (activeMenuRef.current && !activeMenuRef.current.contains(e.target)) {
-        setActiveMenuId(null);
-      }
-    };
-
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        setActiveMenuId(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [activeMenuId]);
-
   // Group lessons by scheduled date for clear mobile sections
-  // Assigns guaranteed unique _cardUid to each lesson instance
   const groupedLessons = useMemo(() => {
     if (!Array.isArray(lessons) || lessons.length === 0) return [];
 
@@ -106,7 +77,6 @@ export default function ScheduleMobileView({
         groups.push(newGroup);
       }
 
-      // Unique card ID to prevent multi-card menu collisions across sessions
       const cardUid = `${lesson.bookingId || "bk"}_${lesson.lId || lesson._id || "ls"}_${lesson.scheduledAt || ""}_${originalIndex}`;
 
       map.get(dateKey).items.push({
@@ -117,11 +87,6 @@ export default function ScheduleMobileView({
 
     return groups;
   }, [lessons]);
-
-  const toggleMenu = (id, e) => {
-    e.stopPropagation();
-    setActiveMenuId((prev) => (prev === id ? null : id));
-  };
 
   if (isLoading) {
     return <MobileScheduleSkeleton count={3} />;
@@ -152,7 +117,7 @@ export default function ScheduleMobileView({
     <div className="space-y-5">
       {groupedLessons.map((group) => (
         <section key={group.dateKey} aria-label={group.label}>
-          {/* Date header */}
+          {/* Section Date header */}
           <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 tracking-wide">
               <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
@@ -168,18 +133,38 @@ export default function ScheduleMobileView({
             {group.items.map((lesson, idx) => {
               const cardId = lesson._cardUid || `card-${idx}`;
               const cancelIdKey = lesson.bookingId || lesson._id;
-              const timeDisplay = getTimeDisplay(lesson.scheduledAt);
               const isCurriculum =
                 lesson.type === "curriculum" ||
                 !!lesson.curriculumTitle ||
                 lesson.isCurriculum === true;
-              const isMenuOpen = activeMenuId === cardId;
+
+              // Extract time and timezone parts
+              let timeStr = "";
+              let tzStr = "";
+
+              if (lesson.scheduledAt) {
+                try {
+                  const localMoment = moment.utc(lesson.scheduledAt).local();
+                  timeStr = localMoment.format("h:mm A");
+                  tzStr = moment.tz(moment.tz.guess()).zoneAbbr() || "";
+                } catch {
+                  const td = getTimeDisplay(lesson.scheduledAt);
+                  timeStr = td.time || "Time not set";
+                }
+              } else {
+                const td = getTimeDisplay(lesson.scheduledAt);
+                timeStr = td.time || "Time not set";
+              }
 
               // Title fallback
               const title = lesson.lessonTitle || lesson.curriculumTitle || "Scheduled Session";
 
               // Teacher name
               const teacherName = lesson.name || "Unknown Teacher";
+
+              // Meta row text: Curriculum type + Teacher name
+              const curriculumLabel = lesson.curriculumTitle || (isCurriculum ? "Curriculum" : "Single Lesson");
+              const metaText = `${curriculumLabel} · ${teacherName}`;
 
               // Status badge styling with high WCAG contrast
               let statusBadge;
@@ -203,7 +188,7 @@ export default function ScheduleMobileView({
                 );
               }
 
-              // Determine primary vs secondary actions
+              // Determine primary vs secondary actions for past tab
               const isPastCompletedNeedsReview =
                 activeTab === "past" && lesson?.status === "completed" && lesson?.review === false;
 
@@ -212,163 +197,138 @@ export default function ScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: Time on left (secondary label), Status badge on right */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-                      <FaRegClock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span>{timeDisplay.time || "Time not set"}</span>
+                  {/* Top row: Large bold time (primary element) + small muted timezone on left; Status badge on right */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
+                        {timeStr}
+                      </span>
+                      {tzStr && (
+                        <span className="text-xs font-semibold text-gray-400 uppercase">
+                          {tzStr}
+                        </span>
+                      )}
                     </div>
                     <div className="shrink-0">{statusBadge}</div>
                   </div>
 
-                  {/* Primary bold text: Lesson Title */}
-                  <h4 className="text-base font-bold text-[#1A2B49] leading-snug break-words">
+                  {/* Lesson title: Bold, second-largest text, max 2 lines ellipsis, tappable for details */}
+                  <h4
+                    onClick={() => onManageLesson && onManageLesson(lesson)}
+                    role="button"
+                    tabIndex={0}
+                    title={title}
+                    className="text-base font-bold text-[#1A2B49] leading-snug line-clamp-2 mt-2 cursor-pointer hover:text-primary transition-colors text-left"
+                  >
                     {title}
                   </h4>
 
-                  {/* Curriculum subtitle with book icon visual anchor */}
-                  {isCurriculum && lesson.curriculumTitle && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium mt-1 break-words">
-                      <FaBookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>{lesson.curriculumTitle}</span>
+                  {/* Meta row: Curriculum type + Teacher name with book icon on left; Amount as small muted text on right */}
+                  <div className="flex items-center justify-between gap-3 mt-1.5 text-xs text-gray-500">
+                    <div className="flex items-center gap-1.5 min-w-0 truncate">
+                      <FaBookOpen className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span className="truncate">{metaText}</span>
                     </div>
-                  )}
-
-                  {/* Teacher Name (on separate next line) */}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
-                  </p>
-
-                  {/* Bottom row: Bold price on left, tightened buttons on right */}
-                  <div className="mt-3.5 flex items-center justify-between gap-3">
-                    {/* Clean price without redundant 'AMOUNT' label */}
-                    <span className="text-base font-bold text-[#1A2B49] tracking-tight shrink-0">
+                    <span className="shrink-0 text-xs font-medium text-gray-400">
                       {formatPrice(lesson.amount, lesson.currency || "USD")}
                     </span>
+                  </div>
 
-                    {/* Actions: Same height, consistent padding, clean alignment */}
-                    <div className="flex items-center gap-2 relative">
-                      {/* Primary Action Button */}
-                      {isPastCompletedNeedsReview ? (
+                  {/* Action row: Below a divider line, three equal-width buttons (~32px, pill-shaped) */}
+                  {activeTab === "upcoming" ? (
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
+                      {/* Message */}
+                      <button
+                        type="button"
+                        onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
+                        onMouseEnter={() => preloadRoute("chat")}
+                        onTouchStart={() => preloadRoute("chat")}
+                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                      >
+                        <FaRegCommentAlt className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                        <span className="truncate">Message</span>
+                      </button>
+
+                      {/* Cancel (subtle red/danger tint) */}
+                      <button
+                        type="button"
+                        disabled={cancellingId === cancelIdKey}
+                        onClick={() => handleCancel && handleCancel(lesson)}
+                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
+                      >
+                        {cancellingId === cancelIdKey ? (
+                          <>
+                            <ButtonSpinner size={12} />
+                            <span className="truncate">Cancelling</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaCalendarTimes className="w-3 h-3 text-rose-500 shrink-0" />
+                            <span className="truncate">Cancel</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Manage */}
+                      <button
+                        type="button"
+                        disabled={openingManageId === cancelIdKey}
+                        onClick={() => onManageLesson && onManageLesson(lesson)}
+                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
+                      >
+                        {openingManageId === cancelIdKey ? (
+                          <>
+                            <span className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent shrink-0" />
+                            <span className="truncate">Opening</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaClipboardList className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                            <span className="truncate">Manage</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    /* Past lessons action row */
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
+                      {/* Message */}
+                      <button
+                        type="button"
+                        onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
+                        onMouseEnter={() => preloadRoute("chat")}
+                        onTouchStart={() => preloadRoute("chat")}
+                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                      >
+                        <FaRegCommentAlt className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                        <span className="truncate">Message</span>
+                      </button>
+
+                      {/* Leave Review if completed and unreviewed */}
+                      {isPastCompletedNeedsReview && (
                         <button
                           type="button"
                           onClick={() => handleReview && handleReview(lesson)}
-                          className="h-9 px-4 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
+                          className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-amber-50 text-amber-700 border border-amber-300 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
                         >
-                          Leave a review
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
-                          onMouseEnter={() => preloadRoute("chat")}
-                          onTouchStart={() => preloadRoute("chat")}
-                          className="h-9 px-4 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
-                        >
-                          Message
+                          <FaStar className="w-3 h-3 text-amber-500 shrink-0" />
+                          <span className="truncate">Review</span>
                         </button>
                       )}
 
-                      {/* "⋯" Overflow Menu Trigger (h-9 w-9, matching height to Message button) */}
-                      {activeTab === "upcoming" ? (
-                        <div className="relative" ref={isMenuOpen ? activeMenuRef : null}>
-                          <button
-                            type="button"
-                            aria-label="More lesson actions"
-                            aria-expanded={isMenuOpen}
-                            onClick={(e) => toggleMenu(cardId, e)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs shrink-0"
-                          >
-                            <HiDotsHorizontal className="w-4 h-4 text-[#1A2B49]" />
-                          </button>
-
-                          {/* Accessible floating dropdown menu */}
-                          {isMenuOpen && (
-                            <div
-                              role="menu"
-                              className="absolute right-0 bottom-full mb-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-200 py-1.5 z-40 animate-fadeIn"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {/* Cancel curriculum / Cancel lesson */}
-                              <button
-                                type="button"
-                                role="menuitem"
-                                disabled={cancellingId === cancelIdKey}
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  handleCancel && handleCancel(lesson);
-                                }}
-                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
-                              >
-                                {cancellingId === cancelIdKey ? (
-                                  <>
-                                    <ButtonSpinner size={14} />
-                                    <span>Cancelling...</span>
-                                  </>
-                                ) : (
-                                  <span>{isCurriculum ? "Cancel curriculum" : "Cancel lesson"}</span>
-                                )}
-                              </button>
-
-                              {/* Manage curriculum / Manage lesson */}
-                              <button
-                                type="button"
-                                role="menuitem"
-                                disabled={openingManageId === cancelIdKey}
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  onManageLesson && onManageLesson(lesson);
-                                }}
-                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-[#1A2B49] hover:bg-gray-100 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
-                              >
-                                {openingManageId === cancelIdKey ? (
-                                  <>
-                                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                                    <span>Opening...</span>
-                                  </>
-                                ) : (
-                                  <span>{isCurriculum ? "Manage curriculum" : "Manage lesson"}</span>
-                                )}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : isPastCompletedNeedsReview ? (
-                        /* In past tab, if Leave a Review is primary, Message is accessible in overflow */
-                        <div className="relative" ref={isMenuOpen ? activeMenuRef : null}>
-                          <button
-                            type="button"
-                            aria-label="More lesson actions"
-                            aria-expanded={isMenuOpen}
-                            onClick={(e) => toggleMenu(cardId, e)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs shrink-0"
-                          >
-                            <HiDotsHorizontal className="w-4 h-4 text-[#1A2B49]" />
-                          </button>
-
-                          {isMenuOpen && (
-                            <div
-                              role="menu"
-                              className="absolute right-0 bottom-full mb-2 w-44 bg-white rounded-2xl shadow-xl border border-gray-200 py-1.5 z-40 animate-fadeIn"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                type="button"
-                                role="menuitem"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  handleMessageTeacher && handleMessageTeacher(lesson);
-                                }}
-                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-[#1A2B49] hover:bg-gray-100 flex items-center gap-2 transition-colors cursor-pointer"
-                              >
-                                <span>Message Teacher</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : null}
+                      {/* Manage */}
+                      {onManageLesson && (
+                        <button
+                          type="button"
+                          onClick={() => onManageLesson(lesson)}
+                          className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                        >
+                          <FaClipboardList className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                          <span className="truncate">Manage</span>
+                        </button>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </article>
               );
             })}
