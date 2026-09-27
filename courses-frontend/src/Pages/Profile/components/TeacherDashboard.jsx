@@ -10,7 +10,7 @@ import { useCurrency } from "../../../currency/CurrencyContext";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { navigateToChat } from "../../../utils/chatNavigation";
 import { preloadRoute } from "../../../utils/routePreloader";
-import { TableSkeletonRows } from "../../../components/ProfileTabSkeletons";
+import { TableSkeletonRows, TableEmptyState } from "../../../components/ProfileTabSkeletons";
 
 export default function LessonsDashboard() {
   const { formatPrice } = useCurrency();
@@ -324,7 +324,7 @@ export default function LessonsDashboard() {
 
               <tbody>
                 {isLoadingUpcoming ? (
-                  <TableSkeletonRows rows={5} hasCurriculum={true} actionCount={2} />
+                  <TableSkeletonRows rows={3} hasCurriculum={true} actionCount={2} />
                 ) : teacherMainUpcomingData.length > 0 ? (
                   teacherMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
@@ -333,7 +333,7 @@ export default function LessonsDashboard() {
                       !!lesson.curriculumTitle ||
                       lesson.isCurriculum === true;
                     return (
-                      <tr key={index} className="bg-[#F5F5F5]">
+                      <tr key={index} className="bg-[#F5F5F5] animate-fadeIn">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
                         <td className="p-3 font-medium">
@@ -371,11 +371,12 @@ export default function LessonsDashboard() {
                     );
                   })
                 ) : (
-                  <tr>
-                    <td colSpan="8" className="p-3 text-center text-gray-500 bg-[#F5F5F5]">
-                      No upcoming lessons
-                    </td>
-                  </tr>
+                  <TableEmptyState
+                    colSpan={8}
+                    title="No upcoming lessons"
+                    subtitle="When a student books a lesson or curriculum, it will appear here."
+                    iconType="calendar"
+                  />
                 )}
               </tbody>
             </table>
@@ -426,12 +427,12 @@ export default function LessonsDashboard() {
 
               <tbody>
                 {isLoadingPast ? (
-                  <TableSkeletonRows rows={5} hasCurriculum={false} actionCount={2} />
+                  <TableSkeletonRows rows={3} hasCurriculum={false} actionCount={2} />
                 ) : teacherPastLessonsData && teacherPastLessonsData.length > 0 ? (
                   teacherPastLessonsData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
                     return (
-                      <tr key={index} className="bg-[#F5F5F5]">
+                      <tr key={index} className="bg-[#F5F5F5] animate-fadeIn">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
                         <td className="p-3">{lesson.lessonTitle}</td>
@@ -490,11 +491,12 @@ export default function LessonsDashboard() {
                     );
                   })
                 ) : (
-                  <tr>
-                    <td colSpan="7" className="p-3 text-center text-gray-500 bg-[#F5F5F5]">
-                      No past lessons
-                    </td>
-                  </tr>
+                  <TableEmptyState
+                    colSpan={7}
+                    title="No past lessons"
+                    subtitle="Completed lessons will appear here."
+                    iconType="calendar"
+                  />
                 )}
               </tbody>
             </table>
@@ -550,7 +552,7 @@ export default function LessonsDashboard() {
                   teacherCanceledLessonsData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
                     return (
-                      <tr key={index} className="bg-[#F5F5F5]">
+                      <tr key={index} className="bg-[#F5F5F5] animate-fadeIn">
                         <td className="p-3">{timeDisplay.date}</td>
                         <td className="p-3">{timeDisplay.time}</td>
                         <td className="p-3">{lesson.curriculumTitle || 'N/A'}</td>
@@ -577,11 +579,12 @@ export default function LessonsDashboard() {
                     );
                   })
                 ) : (
-                  <tr>
-                    <td colSpan="9" className="p-3 text-center text-gray-500 bg-[#F5F5F5]">
-                      No canceled lessons
-                    </td>
-                  </tr>
+                  <TableEmptyState
+                    colSpan={9}
+                    title="No canceled lessons"
+                    subtitle="Any canceled lessons will appear here."
+                    iconType="canceled"
+                  />
                 )}
               </tbody>
             </table>

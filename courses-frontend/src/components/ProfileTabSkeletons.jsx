@@ -59,7 +59,7 @@ export function BookingGridSkeleton({ count = 8 }) {
  * Shimmering skeleton rows for Table views (StudentDashboard, TeacherDashboard, Canceled)
  */
 export function TableSkeletonRows({
-  rows = 5,
+  rows = 3,
   hasCurriculum = true,
   actionCount = 1,
   hasCanceledBy = false,
@@ -115,5 +115,39 @@ export function TableSkeletonRows({
         </tr>
       ))}
     </>
+  );
+}
+
+/**
+ * Height-balanced, polished empty state for Table views
+ * Matches the vertical height of TableSkeletonRows (3 rows)
+ * Eliminates sudden height collapse or layout shifting when a table has 0 records.
+ */
+export function TableEmptyState({
+  colSpan = 8,
+  title = "No lessons found",
+  subtitle = "",
+  iconType = "calendar", // "calendar" | "canceled"
+}) {
+  return (
+    <tr className="animate-fadeIn">
+      <td colSpan={colSpan} className="py-12 px-4 text-center bg-[#F5F5F5]">
+        <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-gray-500">
+          <div className="w-12 h-12 rounded-full bg-gray-200/90 flex items-center justify-center mb-3 text-gray-400">
+            {iconType === "canceled" ? (
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            )}
+          </div>
+          <p className="text-base font-semibold text-gray-700">{title}</p>
+          {subtitle && <p className="text-xs text-gray-500 mt-1 max-w-xs leading-relaxed">{subtitle}</p>}
+        </div>
+      </td>
+    </tr>
   );
 }

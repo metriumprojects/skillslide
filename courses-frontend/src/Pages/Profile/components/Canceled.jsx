@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import { navigateToChat } from "../../../utils/chatNavigation";
 import { preloadRoute } from "../../../utils/routePreloader";
-import { TableSkeletonRows } from "../../../components/ProfileTabSkeletons";
+import { TableSkeletonRows, TableEmptyState } from "../../../components/ProfileTabSkeletons";
 
 export default function Canceled() {
   const { formatPrice } = useCurrency();
@@ -134,7 +134,7 @@ export default function Canceled() {
 
           <tbody>
             {isLoading ? (
-              <TableSkeletonRows rows={5} hasCurriculum={true} actionCount={2} />
+              <TableSkeletonRows rows={3} hasCurriculum={true} actionCount={2} />
             ) : lessonsList.length > 0 ? (
               lessonsList.map((lesson, index) => {
                 const dateToDisplay = lesson.cancelledAt || lesson.scheduledAt || lesson.updatedAt;
@@ -155,7 +155,7 @@ export default function Canceled() {
                 const isRefunded = lesson.isRefunded || lesson.paymentStatus === "cancelled";
 
                 return (
-                  <tr key={lesson._id || index} className="bg-[#F5F5F5]">
+                  <tr key={lesson._id || index} className="bg-[#F5F5F5] animate-fadeIn">
                     <td className="p-3">
                       <div>{timeDisplay.date}</div>
                       {lesson.scheduledAt && lesson.cancelledAt && (
@@ -196,11 +196,12 @@ export default function Canceled() {
                 );
               })
             ) : (
-              <tr>
-                <td colSpan="8" className="p-4 text-center text-gray-500 bg-[#F5F5F5]">
-                  No canceled lessons yet
-                </td>
-              </tr>
+              <TableEmptyState
+                colSpan={8}
+                title="No canceled lessons yet"
+                subtitle="Lessons or curriculum you cancel will be listed here."
+                iconType="canceled"
+              />
             )}
           </tbody>
         </table>

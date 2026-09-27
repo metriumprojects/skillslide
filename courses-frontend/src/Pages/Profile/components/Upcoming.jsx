@@ -315,9 +315,9 @@ export default function Upcoming() {
 
       {/* Bookings Tile Grid / Skeleton Loading */}
       {isLoading ? (
-        <BookingGridSkeleton count={8} />
+        <BookingGridSkeleton count={4} />
       ) : displayedBookings && displayedBookings.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-6 animate-fadeIn">
           {displayedBookings.map((course, index) => {
             const details = getBookingDetails(course);
             if (!details) return null;
@@ -451,14 +451,24 @@ export default function Upcoming() {
           })}
         </div>
       ) : (
-        <div className="w-full bg-[#F5F5F5] p-6 md:p-12 rounded-3xl text-center">
-          <p className="text-gray-500 text-base font-medium">
-            {activeSubTab === "Upcoming"
-              ? "No Upcoming Bookings yet"
-              : activeSubTab === "Past Lessons" || activeSubTab === "Past Lesson"
-              ? "No Past Lessons yet"
-              : "No Bookings yet"}
-          </p>
+        <div className="w-full bg-[#F5F5F5] py-16 px-6 rounded-3xl text-center animate-fadeIn">
+          <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+            <div className="w-12 h-12 rounded-full bg-gray-200/90 flex items-center justify-center mb-3 text-gray-400">
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-base font-semibold text-gray-700">
+              {activeSubTab === "Upcoming"
+                ? "No Upcoming Bookings yet"
+                : activeSubTab === "Past Lessons" || activeSubTab === "Past Lesson"
+                ? "No Past Lessons yet"
+                : "No Bookings yet"}
+            </p>
+            <p className="text-xs text-gray-500 mt-1 max-w-xs">
+              When you book a lesson or curriculum, it will appear here.
+            </p>
+          </div>
         </div>
       )}
     </div>

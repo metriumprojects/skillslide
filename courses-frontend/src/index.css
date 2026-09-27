@@ -107,6 +107,22 @@ button:focus-visible {
   scrollbar-width: none;
 }
 
+/* Smooth fade-in animation for table transitions and state changes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Mobile Tawk.to chat widget float on top right aligned with S logo (36px x 36px) */
 @media (max-width: 768px) {
   #tawk-bubble-container,
