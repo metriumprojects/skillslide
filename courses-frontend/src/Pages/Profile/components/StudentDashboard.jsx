@@ -11,6 +11,7 @@ import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { navigateToChat } from "../../../utils/chatNavigation";
 import { TableSkeletonRows, TableEmptyState } from "../../../components/ProfileTabSkeletons";
+import ScheduleMobileView from "./ScheduleMobileView";
 
 export default function StudentDashboard() {
   const { formatPrice } = useCurrency();
@@ -211,6 +212,14 @@ export default function StudentDashboard() {
     });
   };
 
+  const handleManageLesson = (lesson) => {
+    const targetId = lesson.bookingId || lesson._id;
+    setOpeningManageId(targetId);
+    preloadRoute("afterPaymentCurri");
+    localStorage.setItem("bookId", targetId);
+    navigate(`/after-payment-curri/${targetId}?manage=true`);
+  };
+
   // Calculate total pages for pagination
   const upcomingTotalPages = Math.ceil(upcomingTotal / upcomingLimit);
   const pastTotalPages = Math.ceil(pastTotal / pastLimit);
@@ -270,7 +279,8 @@ export default function StudentDashboard() {
             </div>
           )}
           
-          <div className="overflow-x-auto rounded-2xl mb-10">
+          {/* Desktop Table View (≥768px) */}
+          <div className="overflow-x-auto rounded-2xl mb-10 hidden md:block">
             <table className="w-full rounded-2xl overflow-hidden">
               <thead className="bg-[#E9EAEE] text-left text-sm">
                 <tr>
@@ -333,13 +343,7 @@ export default function StudentDashboard() {
                             <button 
                               type="button"
                               disabled={openingManageId === (lesson.bookingId || lesson._id)}
-                              onClick={() => {
-                                const targetId = lesson.bookingId || lesson._id;
-                                setOpeningManageId(targetId);
-                                preloadRoute("afterPaymentCurri");
-                                localStorage.setItem('bookId', targetId);
-                                navigate(`/after-payment-curri/${targetId}?manage=true`);
-                              }}
+                              onClick={() => handleManageLesson(lesson)}
                               className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-all duration-150 active:scale-95 cursor-pointer hover:bg-gray-300 flex items-center justify-center gap-1.5 disabled:opacity-75"
                             >
                               {openingManageId === (lesson.bookingId || lesson._id) ? (
@@ -366,6 +370,24 @@ export default function StudentDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Stacked Card View (<768px) */}
+          <div className="block md:hidden mb-10">
+            <ScheduleMobileView
+              lessons={userMainUpcomingData}
+              isLoading={isLoadingUpcoming}
+              activeTab="upcoming"
+              formatPrice={formatPrice}
+              getTimeDisplay={getTimeDisplay}
+              handleMessageTeacher={handleMessageTeacher}
+              handleCancel={handleCancel}
+              cancellingId={cancellingId}
+              openingManageId={openingManageId}
+              onManageLesson={handleManageLesson}
+              emptyTitle="No upcoming lessons"
+              emptySubtitle="When you book a lesson or curriculum, it will appear here."
+            />
           </div>
         </>
       )}
@@ -397,7 +419,8 @@ export default function StudentDashboard() {
             </div>
           )}
           
-          <div className="overflow-x-auto rounded-2xl mb-10">
+          {/* Desktop Table View (≥768px) */}
+          <div className="overflow-x-auto rounded-2xl mb-10 hidden md:block">
             <table className="w-full rounded-2xl overflow-hidden">
               <thead className="bg-[#E9EAEE] text-left text-sm">
                 <tr>
@@ -469,6 +492,21 @@ export default function StudentDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Stacked Card View (<768px) */}
+          <div className="block md:hidden mb-10">
+            <ScheduleMobileView
+              lessons={userPastLessonsData}
+              isLoading={isLoadingPast}
+              activeTab="past"
+              formatPrice={formatPrice}
+              getTimeDisplay={getTimeDisplay}
+              handleMessageTeacher={handleMessageTeacher}
+              handleReview={handleReview}
+              emptyTitle="No past lessons"
+              emptySubtitle="Completed or attended lessons will appear here."
+            />
           </div>
         </>
       )}
