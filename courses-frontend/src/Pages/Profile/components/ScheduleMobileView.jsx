@@ -3,6 +3,7 @@ import moment from "moment-timezone";
 import {
   FaRegClock,
   FaBookOpen,
+  FaUser,
   FaRegCommentAlt,
   FaCalendarTimes,
   FaClipboardList,
@@ -237,10 +238,13 @@ export default function ScheduleMobileView({
                     </span>
                   </div>
 
-                  {/* Teacher Name (on separate next line) */}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
-                  </p>
+                  {/* Teacher Name (with icon on separate next line) */}
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                    <FaUser className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">
+                      Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
+                    </span>
+                  </div>
 
                   {/* Action row: Three equal-width buttons (~32px, pill-shaped, no grey divider line) */}
                   {activeTab === "upcoming" ? (
@@ -257,7 +261,7 @@ export default function ScheduleMobileView({
                         <span className="truncate">Message</span>
                       </button>
 
-                      {/* Cancel/Refund (subtle red/danger tint) */}
+                      {/* Cancel (subtle red/danger tint) */}
                       <button
                         type="button"
                         disabled={cancellingId === cancelIdKey}
@@ -272,7 +276,7 @@ export default function ScheduleMobileView({
                         ) : (
                           <>
                             <FaCalendarTimes className="w-3 h-3 text-rose-500 shrink-0" />
-                            <span className="truncate">Cancel/Refund</span>
+                            <span className="truncate">Cancel</span>
                           </>
                         )}
                       </button>
