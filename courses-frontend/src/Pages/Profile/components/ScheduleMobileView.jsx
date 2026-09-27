@@ -1,15 +1,18 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import moment from "moment-timezone";
 import { HiDotsHorizontal } from "react-icons/hi";
-import { FaRegClock, FaChevronDown } from "react-icons/fa";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { MobileScheduleSkeleton } from "../../../components/ProfileTabSkeletons";
 
 /**
  * Responsive stacked card view for mobile (<768px)
- * Displays grouped schedule cards with expandable title & full details drawer,
- * primary action, and 44x44px touch-accessible overflow menu.
+ * Features:
+ * - Prominent Time & Date display front and center
+ * - LESSON vs CURRICULUM badge in the top row
+ * - Multi-line details: Lesson title, Curriculum name, and Teacher on separate lines
+ * - Grey bubble container (bg-[#F5F5F5] rounded-2xl), zero grey divider lines
+ * - White fill with text-color border buttons with 44px tap accessibility
  */
 export default function ScheduleMobileView({
   lessons = [],
@@ -26,9 +29,7 @@ export default function ScheduleMobileView({
   emptyTitle = "No lessons scheduled",
   emptySubtitle = "When you book a lesson or curriculum, it will appear here.",
 }) {
-  // Track expanded card IDs for 2-line title and details toggle
-  const [expandedCards, setExpandedCards] = useState({});
-  // Track active overflow menu ID
+  // Track active overflow menu ID (uses unique _cardUid)
   const [activeMenuId, setActiveMenuId] = useState(null);
 
   const activeMenuRef = useRef(null);
@@ -103,7 +104,7 @@ export default function ScheduleMobileView({
         groups.push(newGroup);
       }
 
-      // Unique card ID to prevent multi-card menu or expand collisions
+      // Unique card ID to prevent multi-card menu collisions across sessions
       const cardUid = `${lesson.bookingId || "bk"}_${lesson.lId || lesson._id || "ls"}_${lesson.scheduledAt || ""}_${originalIndex}`;
 
       map.get(dateKey).items.push({
@@ -114,13 +115,6 @@ export default function ScheduleMobileView({
 
     return groups;
   }, [lessons]);
-
-  const toggleExpand = (id) => {
-    setExpandedCards((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
 
   const toggleMenu = (id, e) => {
     e.stopPropagation();
@@ -177,20 +171,18 @@ export default function ScheduleMobileView({
                 lesson.type === "curriculum" ||
                 !!lesson.curriculumTitle ||
                 lesson.isCurriculum === true;
-              const isExpanded = !!expandedCards[cardId];
               const isMenuOpen = activeMenuId === cardId;
 
               // Title fallback
               const title = lesson.lessonTitle || lesson.curriculumTitle || "Scheduled Session";
 
-              // Secondary line: Curriculum type + Teacher name
-              const curriculumType = lesson.curriculumTitle
-                ? lesson.curriculumTitle
-                : isCurriculum
-                ? "Curriculum"
-                : "Individual Lesson";
+              // Teacher name
               const teacherName = lesson.name || "Unknown Teacher";
-              const secondaryLine = `${curriculumType} · Teacher ${teacherName}`;
+
+              // Prominent formatted date
+              const fullFormattedDate = lesson.scheduledAt
+                ? moment.utc(lesson.scheduledAt).local().format("dddd, MMM D, YYYY")
+                : timeDisplay.date || "Date not set";
 
               // Status badge styling with high WCAG contrast
               let statusBadge;
@@ -223,94 +215,49 @@ export default function ScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: Date + time on left, Status badge on right */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium truncate">
-                      <FaRegClock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className="truncate">
-                        {timeDisplay.date}
-                        {timeDisplay.time ? ` · ${timeDisplay.time}` : ""}
+                  {/* Top row: LESSON vs CURRICULUM on left, Status badge on right */}
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    {isCurriculum ? (
+                      <span className="bg-[#1A2B49] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
+                        Curriculum
                       </span>
-                    </div>
+                    ) : (
+                      <span className="bg-white text-[#1A2B49] border border-[#1A2B49] text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
+                        Lesson
+                      </span>
+                    )}
                     <div className="shrink-0">{statusBadge}</div>
                   </div>
 
-                  {/* Lesson title: tappable to expand/view full details */}
-                  <div
-                    onClick={() => toggleExpand(cardId)}
-                    role="button"
-                    tabIndex={0}
-                    aria-expanded={isExpanded}
-                    className="cursor-pointer group select-none text-left"
-                  >
-                    <h4
-                      className={`text-base font-bold text-[#1A2B49] leading-snug transition-all ${
-                        isExpanded ? "line-clamp-none break-words" : "line-clamp-2"
-                      }`}
-                    >
-                      {title}
-                    </h4>
-                    <div className="flex items-center gap-1 text-[11px] text-primary font-medium mt-1 group-hover:underline">
-                      <span>{isExpanded ? "Hide details" : "Tap to view full details"}</span>
-                      <FaChevronDown
-                        className={`w-2.5 h-2.5 transition-transform duration-200 ${
-                          isExpanded ? "rotate-180" : ""
-                        }`}
-                      />
+                  {/* Prominent Time & Date (Large and upfront) */}
+                  <div className="mb-3">
+                    <div className="text-xl sm:text-2xl font-black text-[#1A2B49] leading-tight tracking-tight">
+                      {timeDisplay.time || "Time not set"}
+                    </div>
+                    <div className="text-xs font-semibold text-gray-500 mt-0.5">
+                      {fullFormattedDate}
                     </div>
                   </div>
 
-                  {/* Secondary muted line below title: Curriculum type + Teacher name */}
-                  <p className="text-xs text-gray-500 mt-1.5 line-clamp-1 font-normal">
-                    {secondaryLine}
-                  </p>
+                  {/* Lesson Title (Prominent, bold) */}
+                  <h4 className="text-base font-bold text-[#1A2B49] leading-snug break-words">
+                    {title}
+                  </h4>
 
-                  {/* Expanded Full Details Drawer (Clean white bubble inside grey bubble, no grey lines) */}
-                  {isExpanded && (
-                    <div className="bg-white rounded-xl p-3.5 mt-3 space-y-2 text-xs shadow-2xs animate-fadeIn">
-                      {lesson.lessonTitle && (
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="text-gray-400 font-medium shrink-0">Lesson:</span>
-                          <span className="font-semibold text-[#1A2B49] text-right break-words">
-                            {lesson.lessonTitle}
-                          </span>
-                        </div>
-                      )}
-                      {isCurriculum && lesson.curriculumTitle && (
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="text-gray-400 font-medium shrink-0">Curriculum:</span>
-                          <span className="font-semibold text-[#1A2B49] text-right break-words">
-                            {lesson.curriculumTitle}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-gray-400 font-medium shrink-0">Teacher:</span>
-                        <span className="font-semibold text-[#1A2B49] text-right">{teacherName}</span>
-                      </div>
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-gray-400 font-medium shrink-0">Time:</span>
-                        <span className="font-semibold text-[#1A2B49] text-right">
-                          {timeDisplay.date} {timeDisplay.time ? `· ${timeDisplay.time}` : ""}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-gray-400 font-medium shrink-0">Type:</span>
-                        <span className="font-semibold text-[#1A2B49] text-right">
-                          {isCurriculum ? "Curriculum Session" : "Individual Lesson"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-gray-400 font-medium shrink-0">Amount:</span>
-                        <span className="font-bold text-[#1A2B49] text-right">
-                          {formatPrice(lesson.amount, lesson.currency || "USD")}
-                        </span>
-                      </div>
-                    </div>
+                  {/* Curriculum Title (If curriculum session, on its own line) */}
+                  {isCurriculum && lesson.curriculumTitle && (
+                    <p className="text-xs text-gray-500 font-medium mt-1 break-words">
+                      {lesson.curriculumTitle}
+                    </p>
                   )}
 
-                  {/* Bottom row: Amount on left, Actions on right (no grey line) */}
-                  <div className="mt-3.5 pt-1 flex items-center justify-between gap-3">
+                  {/* Teacher Name (On separate next line as requested) */}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
+                  </p>
+
+                  {/* Bottom row: Amount on left, Actions on right (zero grey lines) */}
+                  <div className="mt-4 pt-1 flex items-center justify-between gap-3">
                     {/* Amount */}
                     <div className="flex flex-col">
                       <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
