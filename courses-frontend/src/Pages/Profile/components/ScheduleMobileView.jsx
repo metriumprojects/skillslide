@@ -241,8 +241,8 @@ export default function ScheduleMobileView({
                   {/* Teacher Name (with icon on separate next line) */}
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
                     <FaUser className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                    <span className="truncate">
-                      Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
+                    <span className="truncate font-medium text-gray-600">
+                      {teacherName}
                     </span>
                   </div>
 
