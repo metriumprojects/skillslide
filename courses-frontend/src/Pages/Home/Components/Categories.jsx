@@ -326,7 +326,7 @@ export default function CategoriesBar({ categories: propCategories = [], selecte
                         handleLogout();
                         setShowProfileMenu?.(false);
                       }}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-[#FA4F2E] font-medium text-sm border-t border-gray-100 cursor-pointer"
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-[#1A2B49] text-sm cursor-pointer"
                     >
                       Logout
                     </button>
