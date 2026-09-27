@@ -10,6 +10,7 @@ import { useCurrency } from "../../../currency/CurrencyContext";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { navigateToChat } from "../../../utils/chatNavigation";
+import { TableSkeletonRows } from "../../../components/ProfileTabSkeletons";
 
 export default function StudentDashboard() {
   const { formatPrice } = useCurrency();
@@ -32,6 +33,7 @@ export default function StudentDashboard() {
   const [pastPage, setPastPage] = useState(1);
   const [pastLimit] = useState(10);
   const [pastTotal, setPastTotal] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Get data from Redux store
   const { 
@@ -42,6 +44,7 @@ export default function StudentDashboard() {
 
   // Fetch data on component mount with pagination
   useEffect(() => {
+    let isMounted = true;
     const now = new Date();
     const pad = (n) => (n < 10 ? '0' + n : n);
 
@@ -56,32 +59,37 @@ export default function StudentDashboard() {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     
     // Fetch upcoming lessons with pagination
-    dispatch(userMainUpcomingBookings({ 
+    const p1 = dispatch(userMainUpcomingBookings({ 
       scheduledAt, 
       timezone,
       page: upcomingPage,
       limit: upcomingLimit 
     })).then((response) => {
-      // Assuming your API response has total count
-      if (response?.payload?.total) {
+      if (isMounted && response?.payload?.total) {
         setUpcomingTotal(response.payload.total);
       }
     });
     
     // Fetch past lessons with pagination
-    dispatch(userPastLessons({ 
+    const p2 = dispatch(userPastLessons({ 
       scheduledAt, 
       timezone,
       page: pastPage,
       limit: pastLimit 
     })).then((response) => {
-      // Assuming your API response has total count
-      if (response?.payload?.total) {
+      if (isMounted && response?.payload?.total) {
         setPastTotal(response.payload.total);
       }
     });
 
+    Promise.allSettled([p1, p2]).finally(() => {
+      if (isMounted) {
+        setInitialLoading(false);
+      }
+    });
+
     return () => {
+      isMounted = false;
       setOpeningManageId(null);
     };
   }, [dispatch, upcomingPage, upcomingLimit, pastPage, pastLimit]);
@@ -117,15 +125,9 @@ export default function StudentDashboard() {
     }
   };
 
-  // Get next lesson from upcoming data (first item)
-  const nextLesson = userMainUpcomingData && userMainUpcomingData.length > 0 
-    ? [userMainUpcomingData[0]] 
-    : [];
-
-  // Get upcoming lessons excluding the first one (for upcoming table)
-  const upcomingLessons = userMainUpcomingData && userMainUpcomingData.length > 1 
-    ? userMainUpcomingData.slice(0) 
-    : [];
+  // Loading flags
+  const isLoadingUpcoming = initialLoading || Boolean(loadingStates?.userMainUpcomingBookings);
+  const isLoadingPast = initialLoading || Boolean(loadingStates?.userPastLessons);
 
   const handleCancel = (lesson) => {
     if (lesson) {
@@ -284,7 +286,9 @@ export default function StudentDashboard() {
               </thead>
 
               <tbody>
-                {userMainUpcomingData.length > 0 ? (
+                {isLoadingUpcoming ? (
+                  <TableSkeletonRows rows={5} hasCurriculum={true} actionCount={3} />
+                ) : userMainUpcomingData.length > 0 ? (
                   userMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
                     const isCurriculum =
@@ -408,7 +412,9 @@ export default function StudentDashboard() {
               </thead>
 
               <tbody>
-                {userPastLessonsData && userPastLessonsData.length > 0 ? (
+                {isLoadingPast ? (
+                  <TableSkeletonRows rows={5} hasCurriculum={true} actionCount={1} />
+                ) : userPastLessonsData && userPastLessonsData.length > 0 ? (
                   userPastLessonsData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
                     return (

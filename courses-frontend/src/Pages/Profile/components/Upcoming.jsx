@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import { getCardImageUrl, getAvatarUrl } from "../../../utils/imageUtils";
 import { preloadRoute } from "../../../utils/routePreloader";
+import { BookingGridSkeleton } from "../../../components/ProfileTabSkeletons";
 
 export default function Upcoming() {
   const dispatch = useDispatch();
@@ -17,11 +18,12 @@ export default function Upcoming() {
   const { formatPrice } = useCurrency();
   const cardPriceOptions = { currencyDisplay: "narrowSymbol" };
   const { userInfo } = useSelector((state) => state.auth);
-  const { userUpcomingdata, userBookingsdata } = useSelector((state) => state.book);
+  const { userUpcomingdata, userBookingsdata, loadingStates } = useSelector((state) => state.book);
   const { favorites } = useSelector((state) => state.favorite);
   const [localTimeZone, setLocalTimeZone] = useState("");
   const [activeSubTab, setActiveSubTab] = useState("All");
   const [openingCourseId, setOpeningCourseId] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const subTabs = ["All", "Upcoming", "Past Lessons"];
 
@@ -66,8 +68,12 @@ export default function Upcoming() {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     setLocalTimeZone(timezone);
 
-    dispatch(userUpcomingBookings({ scheduledAt, timezone, force: true }));
-    dispatch(userBookings({ page: 1, limit: 100 }));
+    Promise.allSettled([
+      dispatch(userUpcomingBookings({ scheduledAt, timezone, force: true })),
+      dispatch(userBookings({ page: 1, limit: 100 })),
+    ]).finally(() => {
+      setInitialLoading(false);
+    });
   }, [dispatch]);
 
   // Convert UTC time to local system time
@@ -285,6 +291,8 @@ export default function Upcoming() {
     return allBookings;
   }, [activeSubTab, allBookings, upcomingBookings, pastBookings]);
 
+  const isLoading = initialLoading && (!displayedBookings || displayedBookings.length === 0);
+
   return (
     <div className="w-full">
       {/* Sub-Tabs Navigation matching My Bookmarks design */}
@@ -305,8 +313,10 @@ export default function Upcoming() {
         ))}
       </div>
 
-      {/* Bookings Tile Grid */}
-      {displayedBookings && displayedBookings.length > 0 ? (
+      {/* Bookings Tile Grid / Skeleton Loading */}
+      {isLoading ? (
+        <BookingGridSkeleton count={8} />
+      ) : displayedBookings && displayedBookings.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-6">
           {displayedBookings.map((course, index) => {
             const details = getBookingDetails(course);

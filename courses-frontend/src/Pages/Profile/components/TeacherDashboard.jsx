@@ -10,6 +10,7 @@ import { useCurrency } from "../../../currency/CurrencyContext";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { navigateToChat } from "../../../utils/chatNavigation";
 import { preloadRoute } from "../../../utils/routePreloader";
+import { TableSkeletonRows } from "../../../components/ProfileTabSkeletons";
 
 export default function LessonsDashboard() {
   const { formatPrice } = useCurrency();
@@ -35,6 +36,7 @@ export default function LessonsDashboard() {
   const [canceledPage, setCanceledPage] = useState(1);
   const [canceledLimit] = useState(10);
   const [canceledTotal, setCanceledTotal] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Get data from Redux store
   const { 
@@ -48,6 +50,7 @@ export default function LessonsDashboard() {
 
   // Fetch data on component mount
   useEffect(() => {
+    let isMounted = true;
     const now = new Date();
     const pad = (n) => (n < 10 ? '0' + n : n);
 
@@ -62,43 +65,39 @@ export default function LessonsDashboard() {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     
     // Fetch upcoming lessons with pagination
-    dispatch(teacherMainUpcomingBookings({ 
+    const p1 = dispatch(teacherMainUpcomingBookings({ 
       scheduledAt, 
       timezone,
       page: upcomingPage,
       limit: upcomingLimit 
     })).then((response) => {
-      // Assuming your API response has total count
-      if (response?.payload?.total) {
+      if (isMounted && response?.payload?.total) {
         setUpcomingTotal(response.payload.total);
       }
     });
     
     // Fetch past lessons with pagination
-    dispatch(teacherPastLessons({ 
+    const p2 = dispatch(teacherPastLessons({ 
       scheduledAt, 
       timezone,
       page: pastPage,
       limit: pastLimit 
     })).then((response) => {
-      // Assuming your API response has total count
-      if (response?.payload?.total) {
+      if (isMounted && response?.payload?.total) {
         setPastTotal(response.payload.total);
       }
     });
 
-    // TODO: Add API call for canceled lessons when available
-    // dispatch(teacherCanceledLessons({ 
-    //   scheduledAt, 
-    //   timezone,
-    //   page: canceledPage,
-    //   limit: canceledLimit 
-    // })).then((response) => {
-    //   if (response?.payload?.total) {
-    //     setCanceledTotal(response.payload.total);
-    //   }
-    // });
-  }, [dispatch, upcomingPage, upcomingLimit, pastPage, pastLimit, canceledPage, canceledLimit]);
+    Promise.allSettled([p1, p2]).finally(() => {
+      if (isMounted) {
+        setInitialLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, upcomingPage, upcomingLimit, pastPage, pastLimit]);
 
 
 
@@ -117,15 +116,9 @@ export default function LessonsDashboard() {
     }
   };
 
-  // Get next lesson from upcoming data (first item)
-  const nextLesson = teacherMainUpcomingData && teacherMainUpcomingData.length > 0 
-    ? [teacherMainUpcomingData[0]] 
-    : [];
-
-  // Get upcoming lessons excluding the first one (for upcoming table)
-  const upcomingLessons = teacherMainUpcomingData && teacherMainUpcomingData.length > 1 
-    ? teacherMainUpcomingData.slice(0)
-    : [];
+  // Loading flags
+  const isLoadingUpcoming = initialLoading || Boolean(loadingStates?.teacherMainUpcomingBookings);
+  const isLoadingPast = initialLoading || Boolean(loadingStates?.teacherPastLessons);
 
   const handleCancel = (lesson) => {
     if(lesson){
@@ -330,7 +323,9 @@ export default function LessonsDashboard() {
               </thead>
 
               <tbody>
-                {teacherMainUpcomingData.length > 0 ? (
+                {isLoadingUpcoming ? (
+                  <TableSkeletonRows rows={5} hasCurriculum={true} actionCount={2} />
+                ) : teacherMainUpcomingData.length > 0 ? (
                   teacherMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
                     const isCurriculum =
@@ -430,7 +425,9 @@ export default function LessonsDashboard() {
               </thead>
 
               <tbody>
-                {teacherPastLessonsData && teacherPastLessonsData.length > 0 ? (
+                {isLoadingPast ? (
+                  <TableSkeletonRows rows={5} hasCurriculum={false} actionCount={2} />
+                ) : teacherPastLessonsData && teacherPastLessonsData.length > 0 ? (
                   teacherPastLessonsData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
                     return (

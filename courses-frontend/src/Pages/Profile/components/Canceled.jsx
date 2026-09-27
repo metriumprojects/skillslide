@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useCurrency } from "../../../currency/CurrencyContext";
 import { navigateToChat } from "../../../utils/chatNavigation";
 import { preloadRoute } from "../../../utils/routePreloader";
+import { TableSkeletonRows } from "../../../components/ProfileTabSkeletons";
 
 export default function Canceled() {
   const { formatPrice } = useCurrency();
@@ -21,13 +22,25 @@ export default function Canceled() {
   const [canceledPage, setCanceledPage] = useState(1);
   const [canceledLimit] = useState(10);
   const [canceledTotal, setCanceledTotal] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    dispatch(userCancelBookings({ page: canceledPage, limit: canceledLimit })).then((response) => {
-      if (response?.payload?.total) {
-        setCanceledTotal(response.payload.total);
-      }
-    });
+    let isMounted = true;
+    dispatch(userCancelBookings({ page: canceledPage, limit: canceledLimit }))
+      .then((response) => {
+        if (isMounted && response?.payload?.total) {
+          setCanceledTotal(response.payload.total);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setInitialLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [dispatch, canceledPage, canceledLimit]);
 
   const getTimeDisplay = (utcTimeString) => {
@@ -74,6 +87,7 @@ export default function Canceled() {
 
   const canceledTotalPages = Math.ceil(canceledTotal / canceledLimit) || 1;
   const lessonsList = Array.isArray(userCanceldata) ? userCanceldata : [];
+  const isLoading = initialLoading || Boolean(loadingStates?.userCancelBookings);
 
   return (
     <div className="w-full mt-6">
@@ -119,7 +133,9 @@ export default function Canceled() {
           </thead>
 
           <tbody>
-            {lessonsList.length > 0 ? (
+            {isLoading ? (
+              <TableSkeletonRows rows={5} hasCurriculum={true} actionCount={2} />
+            ) : lessonsList.length > 0 ? (
               lessonsList.map((lesson, index) => {
                 const dateToDisplay = lesson.cancelledAt || lesson.scheduledAt || lesson.updatedAt;
                 const timeDisplay = getTimeDisplay(dateToDisplay);
