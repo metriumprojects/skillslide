@@ -163,9 +163,9 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           key={i}
           className="bg-[#F5F5F5] rounded-2xl p-4"
         >
-          {/* Top row: Type badge + Status */}
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="h-5 w-20 bg-gray-300/80 rounded-full" />
+          {/* Top row: Type text + Status */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="h-3.5 w-16 bg-gray-300/80 rounded" />
             <div className="h-5 w-16 bg-gray-300/80 rounded-full" />
           </div>
 

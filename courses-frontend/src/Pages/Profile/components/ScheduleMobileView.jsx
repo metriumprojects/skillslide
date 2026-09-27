@@ -215,17 +215,11 @@ export default function ScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: LESSON vs CURRICULUM on left, Status badge on right */}
-                  <div className="flex items-center justify-between gap-2 mb-2.5">
-                    {isCurriculum ? (
-                      <span className="bg-[#1A2B49] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
-                        Curriculum
-                      </span>
-                    ) : (
-                      <span className="bg-white text-[#1A2B49] border border-[#1A2B49] text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
-                        Lesson
-                      </span>
-                    )}
+                  {/* Top row: LESSON vs CURRICULUM text on left, Status badge on right */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                      {isCurriculum ? "Curriculum" : "Lesson"}
+                    </span>
                     <div className="shrink-0">{statusBadge}</div>
                   </div>
 
