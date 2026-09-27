@@ -148,13 +148,12 @@ export default function ScheduleMobileView({
     <div className="space-y-5" ref={menuContainerRef}>
       {groupedLessons.map((group) => (
         <section key={group.dateKey} aria-label={group.label}>
-          {/* Date header divider */}
-          <div className="flex items-center gap-2 mb-2.5">
+          {/* Date header */}
+          <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 tracking-wide">
               <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
               <span>{group.label}</span>
             </div>
-            <div className="h-px bg-gray-200 flex-1" />
             <span className="text-[11px] font-medium text-gray-400 shrink-0">
               {group.items.length} {group.items.length === 1 ? "lesson" : "lessons"}
             </span>
@@ -213,7 +212,7 @@ export default function ScheduleMobileView({
               return (
                 <article
                   key={lessonId}
-                  className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] relative animate-fadeIn transition-all"
+                  className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
                   {/* Top row: Date + time on left, Status badge on right */}
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -257,8 +256,8 @@ export default function ScheduleMobileView({
                     {secondaryLine}
                   </p>
 
-                  {/* Bottom row separated by divider: Amount on left, Actions on right */}
-                  <div className="border-t border-gray-100 mt-3 pt-3 flex items-center justify-between gap-3">
+                  {/* Bottom row: Amount on left, Actions on right (no grey line) */}
+                  <div className="mt-3.5 pt-1 flex items-center justify-between gap-3">
                     {/* Amount */}
                     <div className="flex flex-col">
                       <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
@@ -271,12 +270,12 @@ export default function ScheduleMobileView({
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 relative">
-                      {/* Primary Action Button (min 44px tap target) */}
+                      {/* Primary Action Button (fill white with text color border, min 44px tap target) */}
                       {isPastCompletedNeedsReview ? (
                         <button
                           type="button"
                           onClick={() => handleReview && handleReview(lesson)}
-                          className="min-h-[44px] px-4 py-2 bg-[#E9EAEE] hover:bg-gray-300 text-black text-xs font-semibold rounded-full transition-colors cursor-pointer flex items-center justify-center active:scale-95"
+                          className="min-h-[44px] px-5 py-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
                         >
                           Leave a review
                         </button>
@@ -286,13 +285,13 @@ export default function ScheduleMobileView({
                           onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
                           onMouseEnter={() => preloadRoute("chat")}
                           onTouchStart={() => preloadRoute("chat")}
-                          className="min-h-[44px] px-4 py-2 bg-[#E9EAEE] hover:bg-gray-300 text-black text-xs font-semibold rounded-full transition-colors cursor-pointer flex items-center justify-center active:scale-95"
+                          className="min-h-[44px] px-5 py-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center active:scale-95 shadow-2xs"
                         >
                           Message
                         </button>
                       )}
 
-                      {/* "⋯" Overflow Menu Trigger (min 44x44px tap target) */}
+                      {/* "⋯" Overflow Menu Trigger (fill white with text color border, min 44x44px tap target) */}
                       {activeTab === "upcoming" ? (
                         <div className="relative">
                           <button
@@ -300,16 +299,16 @@ export default function ScheduleMobileView({
                             aria-label="More lesson actions"
                             aria-expanded={isMenuOpen}
                             onClick={(e) => toggleMenu(lessonId, e)}
-                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full bg-[#E9EAEE] hover:bg-gray-300 active:scale-95 text-black transition-colors cursor-pointer"
+                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs"
                           >
-                            <HiDotsHorizontal className="w-5 h-5 text-gray-700" />
+                            <HiDotsHorizontal className="w-5 h-5 text-[#1A2B49]" />
                           </button>
 
                           {/* Accessible floating dropdown menu */}
                           {isMenuOpen && (
                             <div
                               role="menu"
-                              className="absolute right-0 bottom-full mb-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-1 z-30 animate-fadeIn"
+                              className="absolute right-0 bottom-full mb-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-200 py-1.5 z-40 animate-fadeIn"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {/* Cancel curriculum / Cancel lesson */}
@@ -342,7 +341,7 @@ export default function ScheduleMobileView({
                                   setActiveMenuId(null);
                                   onManageLesson && onManageLesson(lesson);
                                 }}
-                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-gray-800 hover:bg-gray-100 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-[#1A2B49] hover:bg-gray-100 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
                               >
                                 {openingManageId === lessonId ? (
                                   <>
@@ -364,15 +363,15 @@ export default function ScheduleMobileView({
                             aria-label="More lesson actions"
                             aria-expanded={isMenuOpen}
                             onClick={(e) => toggleMenu(lessonId, e)}
-                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full bg-[#E9EAEE] hover:bg-gray-300 active:scale-95 text-black transition-colors cursor-pointer"
+                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] active:scale-95 transition-all cursor-pointer shadow-2xs"
                           >
-                            <HiDotsHorizontal className="w-5 h-5 text-gray-700" />
+                            <HiDotsHorizontal className="w-5 h-5 text-[#1A2B49]" />
                           </button>
 
                           {isMenuOpen && (
                             <div
                               role="menu"
-                              className="absolute right-0 bottom-full mb-2 w-44 bg-white rounded-2xl shadow-xl border border-gray-100 py-1 z-30 animate-fadeIn"
+                              className="absolute right-0 bottom-full mb-2 w-44 bg-white rounded-2xl shadow-xl border border-gray-200 py-1.5 z-40 animate-fadeIn"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
@@ -382,7 +381,7 @@ export default function ScheduleMobileView({
                                   setActiveMenuId(null);
                                   handleMessageTeacher && handleMessageTeacher(lesson);
                                 }}
-                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-gray-800 hover:bg-gray-100 flex items-center gap-2 transition-colors cursor-pointer"
+                                className="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium text-[#1A2B49] hover:bg-gray-100 flex items-center gap-2 transition-colors cursor-pointer"
                               >
                                 <span>Message Teacher</span>
                               </button>

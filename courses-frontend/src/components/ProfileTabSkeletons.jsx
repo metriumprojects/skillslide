@@ -161,27 +161,27 @@ export function MobileScheduleSkeleton({ count = 3 }) {
       {[...Array(count)].map((_, i) => (
         <div
           key={i}
-          className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+          className="bg-[#F5F5F5] rounded-2xl p-4"
         >
           {/* Top row: Date/time + Status */}
           <div className="flex items-center justify-between mb-2.5">
-            <div className="h-3.5 w-32 bg-gray-200 rounded" />
-            <div className="h-5 w-16 bg-gray-200 rounded-full" />
+            <div className="h-3.5 w-32 bg-gray-300/80 rounded" />
+            <div className="h-5 w-16 bg-gray-300/80 rounded-full" />
           </div>
 
           {/* Title lines */}
-          <div className="h-4 w-4/5 bg-gray-200 rounded mb-1.5" />
-          <div className="h-4 w-3/5 bg-gray-200 rounded mb-2.5" />
+          <div className="h-4 w-4/5 bg-gray-300/80 rounded mb-1.5" />
+          <div className="h-4 w-3/5 bg-gray-300/80 rounded mb-2.5" />
 
           {/* Secondary line */}
-          <div className="h-3 w-44 bg-gray-200 rounded mb-3" />
+          <div className="h-3 w-44 bg-gray-300/80 rounded mb-3" />
 
-          {/* Divider & Bottom row */}
-          <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-            <div className="h-5 w-16 bg-gray-200 rounded" />
+          {/* Bottom row (no divider line) */}
+          <div className="mt-3.5 pt-1 flex items-center justify-between">
+            <div className="h-5 w-16 bg-gray-300/80 rounded" />
             <div className="flex items-center gap-2">
-              <div className="h-10 w-20 bg-gray-200 rounded-full" />
-              <div className="h-10 w-10 bg-gray-200 rounded-full" />
+              <div className="h-10 w-20 bg-white border border-gray-300 rounded-full" />
+              <div className="h-10 w-10 bg-white border border-gray-300 rounded-full" />
             </div>
           </div>
         </div>
