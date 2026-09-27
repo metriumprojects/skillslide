@@ -172,14 +172,17 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           {/* Lesson title */}
           <div className="h-4 w-4/5 bg-gray-300/80 rounded mt-2" />
 
-          {/* Meta row: Curriculum/Teacher on left, Amount on right */}
+          {/* Meta row: Curriculum on left, Amount on right */}
           <div className="flex items-center justify-between gap-3 mt-2">
             <div className="h-3 w-40 bg-gray-300/80 rounded" />
             <div className="h-3 w-14 bg-gray-300/80 rounded" />
           </div>
 
-          {/* Action row: Below divider line, three equal-width buttons */}
-          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
+          {/* Teacher line */}
+          <div className="h-3 w-28 bg-gray-300/80 rounded mt-1" />
+
+          {/* Action row: three equal-width buttons (no divider line) */}
+          <div className="mt-3.5 flex items-center gap-2">
             <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
             <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
             <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />

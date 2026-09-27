@@ -162,9 +162,12 @@ export default function ScheduleMobileView({
               // Teacher name
               const teacherName = lesson.name || "Unknown Teacher";
 
-              // Meta row text: Curriculum type + Teacher name
-              const curriculumLabel = lesson.curriculumTitle || (isCurriculum ? "Curriculum" : "Single Lesson");
-              const metaText = `${curriculumLabel} · ${teacherName}`;
+              // Curriculum subtitle text
+              const curriculumText = lesson.curriculumTitle
+                ? `${lesson.curriculumTitle} · Curriculum`
+                : isCurriculum
+                ? "Curriculum"
+                : "Single Lesson";
 
               // Status badge styling with high WCAG contrast
               let statusBadge;
@@ -223,20 +226,25 @@ export default function ScheduleMobileView({
                     {title}
                   </h4>
 
-                  {/* Meta row: Curriculum type + Teacher name with book icon on left; Amount as small muted text on right */}
+                  {/* Meta row: Curriculum with book icon on left; Amount as small muted text on right */}
                   <div className="flex items-center justify-between gap-3 mt-1.5 text-xs text-gray-500">
                     <div className="flex items-center gap-1.5 min-w-0 truncate">
                       <FaBookOpen className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className="truncate">{metaText}</span>
+                      <span className="truncate">{curriculumText}</span>
                     </div>
                     <span className="shrink-0 text-xs font-medium text-gray-400">
                       {formatPrice(lesson.amount, lesson.currency || "USD")}
                     </span>
                   </div>
 
-                  {/* Action row: Below a divider line, three equal-width buttons (~32px, pill-shaped) */}
+                  {/* Teacher Name (on separate next line) */}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Teacher <span className="font-semibold text-[#1A2B49]">{teacherName}</span>
+                  </p>
+
+                  {/* Action row: Three equal-width buttons (~32px, pill-shaped, no grey divider line) */}
                   {activeTab === "upcoming" ? (
-                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
+                    <div className="mt-3.5 flex items-center gap-2">
                       {/* Message */}
                       <button
                         type="button"
@@ -249,7 +257,7 @@ export default function ScheduleMobileView({
                         <span className="truncate">Message</span>
                       </button>
 
-                      {/* Cancel (subtle red/danger tint) */}
+                      {/* Cancel/Refund (subtle red/danger tint) */}
                       <button
                         type="button"
                         disabled={cancellingId === cancelIdKey}
@@ -259,12 +267,12 @@ export default function ScheduleMobileView({
                         {cancellingId === cancelIdKey ? (
                           <>
                             <ButtonSpinner size={12} />
-                            <span className="truncate">Cancelling</span>
+                            <span className="truncate">Cancelling...</span>
                           </>
                         ) : (
                           <>
                             <FaCalendarTimes className="w-3 h-3 text-rose-500 shrink-0" />
-                            <span className="truncate">Cancel</span>
+                            <span className="truncate">Cancel/Refund</span>
                           </>
                         )}
                       </button>
@@ -279,7 +287,7 @@ export default function ScheduleMobileView({
                         {openingManageId === cancelIdKey ? (
                           <>
                             <span className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent shrink-0" />
-                            <span className="truncate">Opening</span>
+                            <span className="truncate">Opening...</span>
                           </>
                         ) : (
                           <>
@@ -290,8 +298,8 @@ export default function ScheduleMobileView({
                       </button>
                     </div>
                   ) : (
-                    /* Past lessons action row */
-                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
+                    /* Past lessons action row (no grey divider line) */
+                    <div className="mt-3.5 flex items-center gap-2">
                       {/* Message */}
                       <button
                         type="button"
