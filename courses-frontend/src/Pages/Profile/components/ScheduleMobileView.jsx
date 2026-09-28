@@ -207,7 +207,7 @@ export default function ScheduleMobileView({
                   </div>
 
                   {/* Large bold time (primary element) + small muted timezone on left */}
-                  <div className="flex items-baseline gap-1.5 mt-2">
+                  <div className="flex items-baseline gap-1.5 mt-4">
                     <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
                       {timeStr}
                     </span>

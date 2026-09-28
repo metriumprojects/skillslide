@@ -167,7 +167,7 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           <div className="h-5 w-16 bg-gray-300/80 rounded-full" />
 
           {/* Large Time */}
-          <div className="h-6 w-24 bg-gray-300/80 rounded mt-2" />
+          <div className="h-6 w-24 bg-gray-300/80 rounded mt-4" />
 
           {/* Lesson title */}
           <div className="h-4 w-4/5 bg-gray-300/80 rounded mt-2" />
