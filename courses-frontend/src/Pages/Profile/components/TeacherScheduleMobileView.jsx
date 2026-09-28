@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import moment from "moment-timezone";
 import {
+  FaUser,
+  FaUsers,
   FaBookOpen,
   FaRegCommentAlt,
   FaCalendarTimes,
@@ -134,7 +136,13 @@ export default function TeacherScheduleMobileView({
                 lesson.type === "curriculum" ||
                 !!lesson.curriculumTitle ||
                 lesson.isCurriculum === true;
-              const isGroup = lesson.group === true;
+              const isGroup = Boolean(
+                lesson.group === true ||
+                lesson.isGroup === true ||
+                lesson.groupLesson === true ||
+                lesson.slotGroup === true ||
+                lesson.lessonGroup === true
+              );
 
               // Extract time and timezone parts
               let timeStr = "";
@@ -173,13 +181,6 @@ export default function TeacherScheduleMobileView({
                 ? formattedPrice.replace(/^US/i, "").trim()
                 : `$${lesson.amount || 0}`;
 
-              // Lesson format as normal text (Group Lesson / Single Lesson / Curriculum)
-              const typeText = isGroup
-                ? "Group Lesson"
-                : isCurriculum
-                ? "Curriculum"
-                : "Single Lesson";
-
               // Status badge styling
               let statusBadge = null;
               if (activeTab === "upcoming") {
@@ -213,16 +214,13 @@ export default function TeacherScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: Status badge on left, Lesson format (normal text) on right */}
-                  <div className="flex items-center justify-between gap-2">
+                  {/* Top row: Status badge on left */}
+                  <div className="flex items-center justify-start">
                     {statusBadge}
-                    <span className="text-xs font-medium text-gray-500">
-                      {typeText}
-                    </span>
                   </div>
 
                   {/* Large bold time (primary element) + small muted timezone on left */}
-                  <div className="flex items-baseline gap-1.5 mt-3">
+                  <div className="flex items-baseline gap-1.5 mt-3.5">
                     <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
                       {timeStr}
                     </span>
@@ -241,13 +239,32 @@ export default function TeacherScheduleMobileView({
                     {title}
                   </h4>
 
-                  {/* Meta row: Curriculum title if applicable */}
-                  {lesson.curriculumTitle && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1.5">
-                      <FaBookOpen className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className="truncate">{lesson.curriculumTitle}</span>
-                    </div>
-                  )}
+                  {/* Price row: Dollar attached directly to amount, dark blue color */}
+                  <div className="text-xs font-medium text-[#1A2B49] mt-1.5 text-left">
+                    {displayPrice}
+                  </div>
+
+                  {/* Format row: below price on left side with icon (Group Lesson / Single Lesson / Curriculum) */}
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 text-left">
+                    {isGroup ? (
+                      <>
+                        <FaUsers className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span>Group Lesson</span>
+                      </>
+                    ) : isCurriculum ? (
+                      <>
+                        <FaBookOpen className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="truncate">
+                          {lesson.curriculumTitle ? `${lesson.curriculumTitle} · Curriculum` : "Curriculum"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <FaUser className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span>Single Lesson</span>
+                      </>
+                    )}
+                  </div>
 
                   {/* Canceled by metadata row */}
                   {activeTab === "canceled" && lesson.canceledBy && (
@@ -255,11 +272,6 @@ export default function TeacherScheduleMobileView({
                       Canceled by: {lesson.canceledBy}
                     </div>
                   )}
-
-                  {/* Price row: Dollar attached directly to amount, dark blue color */}
-                  <div className="text-xs font-medium text-[#1A2B49] mt-1 text-left">
-                    {displayPrice}
-                  </div>
 
                   {/* Action row */}
                   {activeTab === "upcoming" ? (
