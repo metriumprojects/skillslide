@@ -202,12 +202,12 @@ export default function ScheduleMobileView({
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
                   {/* Status badge: Placed above time, left-aligned */}
-                  <div className="flex items-center justify-start mb-1.5">
+                  <div className="flex items-center justify-start">
                     {statusBadge}
                   </div>
 
                   {/* Large bold time (primary element) + small muted timezone on left */}
-                  <div className="flex items-baseline gap-1.5">
+                  <div className="flex items-baseline gap-1.5 mt-2">
                     <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
                       {timeStr}
                     </span>

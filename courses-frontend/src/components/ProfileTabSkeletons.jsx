@@ -164,10 +164,10 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           className="bg-[#F5F5F5] rounded-2xl p-4"
         >
           {/* Top: Status badge */}
-          <div className="h-5 w-16 bg-gray-300/80 rounded-full mb-1.5" />
+          <div className="h-5 w-16 bg-gray-300/80 rounded-full" />
 
           {/* Large Time */}
-          <div className="h-6 w-24 bg-gray-300/80 rounded" />
+          <div className="h-6 w-24 bg-gray-300/80 rounded mt-2" />
 
           {/* Lesson title */}
           <div className="h-4 w-4/5 bg-gray-300/80 rounded mt-2" />
