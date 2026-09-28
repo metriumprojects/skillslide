@@ -217,25 +217,21 @@ export default function ScheduleMobileView({
               const teacherId = lesson.teacherId || lesson.userId || lesson.teacher?._id || lesson.teacher;
               const teacherAvatar = lesson.teacherImage || lesson.teacher?.image?.url || lesson.image?.url || lesson.image || lesson.avatar;
 
-              // Currency & clean amount (replaces raw "US$118.30" with currency icon + space + amount)
+              // Currency & price: Strip raw "US" prefix and attach currency symbol directly in dark blue
               const targetCurrency = lesson.currency || "USD";
               let formattedPrice = "";
               if (typeof formatPrice === "function") {
                 try {
-                  formattedPrice = formatPrice(lesson.amount, targetCurrency);
+                  formattedPrice = formatPrice(lesson.amount, targetCurrency, { currencyDisplay: "narrowSymbol" });
                 } catch {
-                  formattedPrice = `${lesson.amount || 0}`;
+                  formattedPrice = `$${lesson.amount || 0}`;
                 }
               } else {
-                formattedPrice = `${lesson.amount || 0}`;
+                formattedPrice = `$${lesson.amount || 0}`;
               }
-              const cleanAmount = typeof formattedPrice === "string"
-                ? formattedPrice
-                    .replace(/^US\s?\$?/i, "")
-                    .replace(/^[A-Z]{3}\s?/, "")
-                    .replace(/^[^0-9\s.,]+/, "")
-                    .trim() || formattedPrice
-                : String(lesson.amount || 0);
+              const displayPrice = typeof formattedPrice === "string"
+                ? formattedPrice.replace(/^US/i, "").trim()
+                : `$${lesson.amount || 0}`;
 
               // Curriculum subtitle text
               const curriculumText = lesson.curriculumTitle
@@ -309,18 +305,9 @@ export default function ScheduleMobileView({
                     <span className="truncate">{curriculumText}</span>
                   </div>
 
-                  {/* Price row: Currency icon on left + space + amount */}
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 text-left">
-                    <span className="w-3.5 h-3.5 flex items-center justify-center text-gray-400 shrink-0">
-                      {getCurrencyIcon(targetCurrency, {
-                        size: 13,
-                        strokeWidth: 2,
-                        className: "w-3.5 h-3.5 text-gray-400",
-                      })}
-                    </span>
-                    <span className="font-medium text-gray-600">
-                      {cleanAmount}
-                    </span>
+                  {/* Price row: Dollar attached directly to amount, dark blue color */}
+                  <div className="text-xs font-medium text-[#1A2B49] mt-1 text-left">
+                    {displayPrice}
                   </div>
 
                   {/* Teacher: Clickable with small profile circle */}

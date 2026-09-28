@@ -175,11 +175,8 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           {/* Curriculum */}
           <div className="h-3 w-40 bg-gray-300/80 rounded mt-2" />
 
-          {/* Price on next line: icon + amount */}
-          <div className="flex items-center gap-1.5 mt-1">
-            <div className="h-3.5 w-3.5 bg-gray-300/80 rounded" />
-            <div className="h-3 w-14 bg-gray-300/80 rounded" />
-          </div>
+          {/* Price on next line */}
+          <div className="h-3 w-14 bg-gray-300/80 rounded mt-1" />
 
           {/* Teacher line: small profile circle + name */}
           <div className="flex items-center gap-1.5 mt-1">
