@@ -163,11 +163,17 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           key={i}
           className="bg-[#F5F5F5] rounded-2xl p-4"
         >
-          {/* Top: Status badge */}
-          <div className="h-5 w-16 bg-gray-300/80 rounded-full" />
+          {/* Top header: Avatar circle + Teacher name line + Status badge pill */}
+          <div className="flex items-center gap-2.5">
+            <div className="h-10 w-10 bg-gray-300/80 rounded-full shrink-0" />
+            <div className="flex flex-col gap-1 min-w-0">
+              <div className="h-3.5 w-24 bg-gray-300/80 rounded" />
+              <div className="h-5 w-16 bg-gray-300/80 rounded-full" />
+            </div>
+          </div>
 
           {/* Large Time */}
-          <div className="h-6 w-24 bg-gray-300/80 rounded mt-4" />
+          <div className="h-6 w-24 bg-gray-300/80 rounded mt-3.5" />
 
           {/* Lesson title */}
           <div className="h-4 w-4/5 bg-gray-300/80 rounded mt-2" />
@@ -177,12 +183,6 @@ export function MobileScheduleSkeleton({ count = 3 }) {
 
           {/* Price on next line */}
           <div className="h-3 w-14 bg-gray-300/80 rounded mt-1" />
-
-          {/* Teacher line: small profile circle + name */}
-          <div className="flex items-center gap-1.5 mt-1">
-            <div className="h-4 w-4 bg-gray-300/80 rounded-full shrink-0" />
-            <div className="h-3 w-24 bg-gray-300/80 rounded" />
-          </div>
 
           {/* Action row: three equal-width buttons (no divider line) */}
           <div className="mt-3.5 flex items-center gap-2">

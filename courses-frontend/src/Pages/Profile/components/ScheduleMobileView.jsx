@@ -17,50 +17,65 @@ import { getCurrencyIcon } from "../../../components/CurrencySelector";
 import { getAvatarUrl } from "../../../utils/imageUtils";
 
 /**
- * Clickable Teacher profile badge with small circle avatar (or initial fallback)
+ * Clickable Teacher header with larger profile picture spanning Teacher name and Upcoming badge
  */
-function TeacherProfileBadge({ teacherId, teacherName, teacherImage }) {
+function TeacherHeader({ teacherId, teacherName, teacherImage, statusBadge }) {
   const [imgError, setImgError] = useState(false);
   const teacherInitial = (teacherName?.trim()?.charAt(0) || "T").toUpperCase();
   const avatarUrl = getAvatarUrl(teacherImage);
 
-  const content = (
-    <>
-      {avatarUrl && !imgError ? (
-        <img
-          src={avatarUrl}
-          alt={teacherName}
-          onError={() => setImgError(true)}
-          className="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-gray-200 group-hover:ring-primary/40 transition-all"
-        />
-      ) : (
-        <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[9px] font-bold uppercase leading-none group-hover:bg-primary group-hover:text-white transition-colors">
-          {teacherInitial}
-        </div>
-      )}
-      <span className="truncate font-medium text-gray-600 group-hover:text-primary transition-colors">
-        {teacherName}
-      </span>
-    </>
+  const avatarContent = avatarUrl && !imgError ? (
+    <img
+      src={avatarUrl}
+      alt={teacherName}
+      onError={() => setImgError(true)}
+      className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-gray-200 group-hover:ring-primary/40 transition-all shadow-xs"
+    />
+  ) : (
+    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-sm font-bold uppercase leading-none group-hover:bg-primary group-hover:text-white transition-colors shadow-xs">
+      {teacherInitial}
+    </div>
   );
 
-  if (teacherId) {
-    return (
-      <Link
-        to={`/user-profile/${teacherId}`}
-        onMouseEnter={() => preloadRoute("user-profile")}
-        onTouchStart={() => preloadRoute("user-profile")}
-        className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 hover:text-primary transition-colors group cursor-pointer w-fit"
-        title={`View ${teacherName}'s profile`}
-      >
-        {content}
-      </Link>
-    );
-  }
-
   return (
-    <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
-      {content}
+    <div className="flex items-center gap-2.5">
+      {/* Profile picture: covers teacher name and upcoming badge vertically */}
+      {teacherId ? (
+        <Link
+          to={`/user-profile/${teacherId}`}
+          onMouseEnter={() => preloadRoute("user-profile")}
+          onTouchStart={() => preloadRoute("user-profile")}
+          className="shrink-0 group block"
+          title={`View ${teacherName}'s profile`}
+        >
+          {avatarContent}
+        </Link>
+      ) : (
+        avatarContent
+      )}
+
+      {/* Teacher Name above Upcoming badge */}
+      <div className="flex flex-col justify-center min-w-0">
+        {teacherId ? (
+          <Link
+            to={`/user-profile/${teacherId}`}
+            onMouseEnter={() => preloadRoute("user-profile")}
+            onTouchStart={() => preloadRoute("user-profile")}
+            className="text-sm font-bold text-[#1A2B49] hover:text-primary transition-colors truncate leading-tight mb-1"
+            title={`View ${teacherName}'s profile`}
+          >
+            {teacherName}
+          </Link>
+        ) : (
+          <span className="text-sm font-bold text-[#1A2B49] truncate leading-tight mb-1">
+            {teacherName}
+          </span>
+        )}
+
+        <div className="shrink-0 flex items-center">
+          {statusBadge}
+        </div>
+      </div>
     </div>
   );
 }
@@ -271,13 +286,16 @@ export default function ScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Status badge: Placed above time, left-aligned */}
-                  <div className="flex items-center justify-start">
-                    {statusBadge}
-                  </div>
+                  {/* Top section: Teacher profile picture + Teacher name above upcoming badge */}
+                  <TeacherHeader
+                    teacherId={teacherId}
+                    teacherName={teacherName}
+                    teacherImage={teacherAvatar}
+                    statusBadge={statusBadge}
+                  />
 
                   {/* Large bold time (primary element) + small muted timezone on left */}
-                  <div className="flex items-baseline gap-1.5 mt-4">
+                  <div className="flex items-baseline gap-1.5 mt-3.5">
                     <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
                       {timeStr}
                     </span>
@@ -309,13 +327,6 @@ export default function ScheduleMobileView({
                   <div className="text-xs font-medium text-[#1A2B49] mt-1 text-left">
                     {displayPrice}
                   </div>
-
-                  {/* Teacher: Clickable with small profile circle */}
-                  <TeacherProfileBadge
-                    teacherId={teacherId}
-                    teacherName={teacherName}
-                    teacherImage={teacherAvatar}
-                  />
 
                   {/* Action row: Three equal-width buttons (~32px, pill-shaped, no grey divider line) */}
                   {activeTab === "upcoming" ? (
