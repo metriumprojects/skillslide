@@ -1072,9 +1072,8 @@ export function Calendar({
                   }}
                   className="fixed bottom-0 left-0 right-0 max-h-[92vh] bg-white rounded-t-[28px] shadow-2xl z-[70] flex flex-col xl:hidden overflow-hidden"
                 >
-                  {/* Top Drag Handle & Title Bar */}
-                  <div className="pt-2.5 pb-2 px-5 border-b border-gray-100 shrink-0">
-                    <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2 cursor-grab active:cursor-grabbing" />
+                  {/* Title Bar */}
+                  <div className="pt-4 pb-3 px-5 border-b border-gray-100 shrink-0">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-base sm:text-lg font-bold text-[#1A2B49]">Select Date & Time</h3>
