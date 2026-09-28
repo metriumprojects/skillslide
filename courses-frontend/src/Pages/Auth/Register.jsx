@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Eye, EyeOff, Calendar, Mail, User } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import MainLayout from "../../components/MainLayout";
 import LogoIcon from "../../components/LogoIcon";
 import { useDispatch } from "react-redux";
@@ -10,6 +10,7 @@ import GoogleLoginButton from "./GoogleLoginButton";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
 import CustomDatePicker from "../../components/CustomDatePicker";
 import ButtonSpinner from "../../components/ButtonSpinner";
+import { getAuthRedirect, clearAuthRedirect } from "../../utils/authRedirect";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dinwxxnzm/image/upload/v1784044801/Logo_1_jldcf8.png";
@@ -17,6 +18,7 @@ const LOGO_URL =
 export default function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const initialRole = searchParams.get("role") === "teacher" ? "seller" : "buyer";
@@ -137,9 +139,14 @@ export default function Register() {
           ).then((loginRes) => {
             if (loginRes.payload?.status) {
               dispatch(getUser());
-              navigate("/");
+              const target = getAuthRedirect(location, searchParams);
+              clearAuthRedirect();
+              navigate(target);
             } else {
-              navigate("/login");
+              const redirectParam = searchParams.get("redirect");
+              navigate(`/login${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ""}`, {
+                state: location.state,
+              });
             }
           });
         } else {
@@ -266,7 +273,11 @@ export default function Register() {
                     },
                   });
                 }}
-                onSuccess={() => navigate("/")}
+                onSuccess={() => {
+                  const target = getAuthRedirect(location, searchParams);
+                  clearAuthRedirect();
+                  navigate(target);
+                }}
               />
 
               <p className="text-left text-[16px] text-black">
@@ -423,7 +434,15 @@ export default function Register() {
 
           <p className="text-[16px] font-normal">
             Already have an account?{" "}
-            <Link to="/login" className="font-normal underline underline-offset-2">
+            <Link
+              to={`/login${
+                searchParams.get("redirect")
+                  ? `?redirect=${encodeURIComponent(searchParams.get("redirect"))}`
+                  : ""
+              }`}
+              state={location.state}
+              className="font-normal underline underline-offset-2"
+            >
               Log in
             </Link>
           </p>

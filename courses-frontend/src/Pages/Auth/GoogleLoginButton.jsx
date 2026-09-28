@@ -3,11 +3,12 @@ import { useDispatch } from "react-redux";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { GoogleloginUser } from "../../redux/reducers/AuthReducer";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { FcGoogle } from "react-icons/fc";
 import { auth, googleProvider } from "../../firebase";
+import { getAuthRedirect, clearAuthRedirect } from "../../utils/authRedirect";
 
 const GOOGLE_CLIENT_ID =
   "263362679815-0amqgqrqbk3am0l7vd4t6k96879qce80.apps.googleusercontent.com";
@@ -35,6 +36,8 @@ const GoogleLoginButton = ({
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const googleButtonRef = useRef(null);
   const isNative = Capacitor.isNativePlatform();
   const [loading, setLoading] = useState(false);
@@ -69,7 +72,9 @@ const GoogleLoginButton = ({
           if (onSuccess) {
             onSuccess(res.payload);
           } else {
-            navigate("/");
+            const target = getAuthRedirect(location, searchParams);
+            clearAuthRedirect();
+            navigate(target);
           }
         } else {
           toast.error(res?.payload?.message || "Google login failed");
@@ -77,7 +82,7 @@ const GoogleLoginButton = ({
         return res;
       });
     },
-    [dispatch, navigate, onNeedsSellerSetup, onSuccess]
+    [dispatch, navigate, location, searchParams, onNeedsSellerSetup, onSuccess]
   );
 
   const handleGoogleCredential = useCallback(

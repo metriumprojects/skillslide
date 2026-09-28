@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import moment from "moment-timezone";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock, MapPin, X } from "lucide-react";
 import { useCurrency } from "../../../currency/CurrencyContext";
+import { setAuthRedirect } from "../../../utils/authRedirect";
 
 export function Calendar({
   selectedDate,
@@ -632,7 +633,13 @@ export function Calendar({
     // Check if user is logged in first
     if (!userInfo?._id) {
       toast.info('Please log in to book.');
-      navigate('/login');
+      const returnUrl = typeof window !== "undefined" ? window.location.pathname + window.location.search : "";
+      if (returnUrl) {
+        setAuthRedirect(returnUrl);
+      }
+      navigate(returnUrl ? `/login?redirect=${encodeURIComponent(returnUrl)}` : '/login', {
+        state: { from: returnUrl },
+      });
       return;
     }
 

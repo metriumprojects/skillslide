@@ -10,6 +10,7 @@ import GoogleLoginButton from "./GoogleLoginButton";
 import CountryAutocomplete from "../Home/Components/CountryAutocomplete";
 import CustomDatePicker from "../../components/CustomDatePicker";
 import ButtonSpinner from "../../components/ButtonSpinner";
+import { getAuthRedirect, clearAuthRedirect } from "../../utils/authRedirect";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dinwxxnzm/image/upload/v1784044801/Logo_1_jldcf8.png";
@@ -67,7 +68,9 @@ export default function Login() {
     if (res.payload?.status) {
       setGoogleIdToken("");
       dispatch(getUser());
-      navigate(location.state?.from || searchParams.get("redirect") || "/");
+      const target = getAuthRedirect(location, searchParams);
+      clearAuthRedirect();
+      navigate(target);
       return;
     }
     toast.error(res.payload?.message || "Login failed");
@@ -188,7 +191,9 @@ export default function Login() {
         if (res.payload?.status && !res.payload?.needsSellerSetup) {
           setGoogleIdToken("");
           dispatch(getUser());
-          navigate("/");
+          const target = getAuthRedirect(location, searchParams);
+          clearAuthRedirect();
+          navigate(target);
           return;
         }
         toast.error(res.payload?.message || "Unable to open student profile");
@@ -212,8 +217,10 @@ export default function Login() {
 
   const handleGoogleSuccess = useCallback(() => {
     dispatch(getUser());
-    navigate(location.state?.from || "/");
-  }, [dispatch, location.state, navigate]);
+    const target = getAuthRedirect(location, searchParams);
+    clearAuthRedirect();
+    navigate(target);
+  }, [dispatch, location, searchParams, navigate]);
 
   const onSubmit = isSellerSetup
     ? handleSellerSetupNext
@@ -471,7 +478,12 @@ export default function Login() {
             <p className="text-[16px] font-normal">
               New to Skillslide?{" "}
               <Link
-                to={`/register${loginAs === "seller" ? "?role=teacher" : ""}`}
+                to={`/register${
+                  searchParams.get("redirect")
+                    ? `?redirect=${encodeURIComponent(searchParams.get("redirect"))}${loginAs === "seller" ? "&role=teacher" : ""}`
+                    : loginAs === "seller" ? "?role=teacher" : ""
+                }`}
+                state={location.state}
                 className="font-normal underline underline-offset-2"
               >
                 Create an account

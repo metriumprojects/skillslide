@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { getUser } from "./reducers/AuthReducer";
+import { setAuthRedirect } from "../utils/authRedirect";
 
 const PrivateRoute = () => {
   const dispatch = useDispatch();
@@ -28,7 +29,15 @@ const PrivateRoute = () => {
   // 1. If no token exists at all (logged out), or session verification timed out:
   // Immediately redirect to /login with state
   if (!token || timedOut) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const returnUrl = location.pathname + location.search;
+    setAuthRedirect(returnUrl);
+    return (
+      <Navigate
+        to={`/login?redirect=${encodeURIComponent(returnUrl)}`}
+        state={{ from: location }}
+        replace
+      />
+    );
   }
 
   // 2. If token exists and user is loaded: render protected route immediately
