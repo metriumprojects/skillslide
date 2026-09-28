@@ -2472,7 +2472,7 @@ export const userMainUpcomingBookings = async (req, res) => {
     })
       .populate("lesson", "title price currency")
       .populate("curriculum", "title")
-      .populate("teacher", "name _id")
+      .populate("teacher", "name _id image")
       .populate("lessonPosition.lId", "title price currency")
       .lean();
 
@@ -2502,7 +2502,9 @@ export const userMainUpcomingBookings = async (req, res) => {
           type: b.type,
           isCurriculum: false,
           name: b.teacher?.name || null,
+          teacherId: b.teacher?._id || null,
           userId: b.teacher?._id || null,
+          teacherImage: b.teacher?.image?.url || null,
         });
       }
 
@@ -2540,6 +2542,7 @@ export const userMainUpcomingBookings = async (req, res) => {
             name: b.teacher?.name || null,
             teacherId: b.teacher?._id || null,
             userId: b.teacher?._id || null,
+            teacherImage: b.teacher?.image?.url || null,
             curriculumTitle: b.curriculum?.title || "Curriculum",
           });
         }

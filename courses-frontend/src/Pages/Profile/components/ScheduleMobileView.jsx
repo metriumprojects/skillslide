@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import moment from "moment-timezone";
 import {
   FaRegClock,
@@ -12,6 +13,57 @@ import {
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { MobileScheduleSkeleton } from "../../../components/ProfileTabSkeletons";
+import { getCurrencyIcon } from "../../../components/CurrencySelector";
+import { getAvatarUrl } from "../../../utils/imageUtils";
+
+/**
+ * Clickable Teacher profile badge with small circle avatar (or initial fallback)
+ */
+function TeacherProfileBadge({ teacherId, teacherName, teacherImage }) {
+  const [imgError, setImgError] = useState(false);
+  const teacherInitial = (teacherName?.trim()?.charAt(0) || "T").toUpperCase();
+  const avatarUrl = getAvatarUrl(teacherImage);
+
+  const content = (
+    <>
+      {avatarUrl && !imgError ? (
+        <img
+          src={avatarUrl}
+          alt={teacherName}
+          onError={() => setImgError(true)}
+          className="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-gray-200 group-hover:ring-primary/40 transition-all"
+        />
+      ) : (
+        <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[9px] font-bold uppercase leading-none group-hover:bg-primary group-hover:text-white transition-colors">
+          {teacherInitial}
+        </div>
+      )}
+      <span className="truncate font-medium text-gray-600 group-hover:text-primary transition-colors">
+        {teacherName}
+      </span>
+    </>
+  );
+
+  if (teacherId) {
+    return (
+      <Link
+        to={`/user-profile/${teacherId}`}
+        onMouseEnter={() => preloadRoute("user-profile")}
+        onTouchStart={() => preloadRoute("user-profile")}
+        className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 hover:text-primary transition-colors group cursor-pointer w-fit"
+        title={`View ${teacherName}'s profile`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+      {content}
+    </div>
+  );
+}
 
 /**
  * Responsive stacked card view for mobile (<768px)
@@ -160,8 +212,30 @@ export default function ScheduleMobileView({
               // Title fallback
               const title = lesson.lessonTitle || lesson.curriculumTitle || "Scheduled Session";
 
-              // Teacher name
+              // Teacher details
               const teacherName = lesson.name || "Unknown Teacher";
+              const teacherId = lesson.teacherId || lesson.userId || lesson.teacher?._id || lesson.teacher;
+              const teacherAvatar = lesson.teacherImage || lesson.teacher?.image?.url || lesson.image?.url || lesson.image || lesson.avatar;
+
+              // Currency & clean amount (replaces raw "US$118.30" with currency icon + space + amount)
+              const targetCurrency = lesson.currency || "USD";
+              let formattedPrice = "";
+              if (typeof formatPrice === "function") {
+                try {
+                  formattedPrice = formatPrice(lesson.amount, targetCurrency);
+                } catch {
+                  formattedPrice = `${lesson.amount || 0}`;
+                }
+              } else {
+                formattedPrice = `${lesson.amount || 0}`;
+              }
+              const cleanAmount = typeof formattedPrice === "string"
+                ? formattedPrice
+                    .replace(/^US\s?\$?/i, "")
+                    .replace(/^[A-Z]{3}\s?/, "")
+                    .replace(/^[^0-9\s.,]+/, "")
+                    .trim() || formattedPrice
+                : String(lesson.amount || 0);
 
               // Curriculum subtitle text
               const curriculumText = lesson.curriculumTitle
@@ -235,18 +309,26 @@ export default function ScheduleMobileView({
                     <span className="truncate">{curriculumText}</span>
                   </div>
 
-                  {/* Price on next line, left-aligned */}
-                  <div className="text-xs font-medium text-gray-500 mt-1 text-left">
-                    {formatPrice(lesson.amount, lesson.currency || "USD")}
-                  </div>
-
-                  {/* Teacher Name (with icon on separate next line) */}
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
-                    <FaUser className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                    <span className="truncate font-medium text-gray-600">
-                      {teacherName}
+                  {/* Price row: Currency icon on left + space + amount */}
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 text-left">
+                    <span className="w-3.5 h-3.5 flex items-center justify-center text-gray-400 shrink-0">
+                      {getCurrencyIcon(targetCurrency, {
+                        size: 13,
+                        strokeWidth: 2,
+                        className: "w-3.5 h-3.5 text-gray-400",
+                      })}
+                    </span>
+                    <span className="font-medium text-gray-600">
+                      {cleanAmount}
                     </span>
                   </div>
+
+                  {/* Teacher: Clickable with small profile circle */}
+                  <TeacherProfileBadge
+                    teacherId={teacherId}
+                    teacherName={teacherName}
+                    teacherImage={teacherAvatar}
+                  />
 
                   {/* Action row: Three equal-width buttons (~32px, pill-shaped, no grey divider line) */}
                   {activeTab === "upcoming" ? (
