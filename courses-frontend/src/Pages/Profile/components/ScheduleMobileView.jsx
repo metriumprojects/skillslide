@@ -348,7 +348,7 @@ export default function ScheduleMobileView({
                         type="button"
                         disabled={cancellingId === cancelIdKey}
                         onClick={() => handleCancel && handleCancel(lesson)}
-                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
+                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-600 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
                       >
                         {cancellingId === cancelIdKey ? (
                           <>
@@ -357,7 +357,7 @@ export default function ScheduleMobileView({
                           </>
                         ) : (
                           <>
-                            <FaCalendarTimes className="w-3 h-3 text-rose-500 shrink-0" />
+                            <FaCalendarTimes className="w-3 h-3 text-rose-600 shrink-0" />
                             <span className="truncate">Cancel</span>
                           </>
                         )}
