@@ -20,6 +20,7 @@ export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState('upcoming'); // New state for tab management
   const [cancellingId, setCancellingId] = useState(null);
   const [openingManageId, setOpeningManageId] = useState(null);
+  const [openingRescheduleId, setOpeningRescheduleId] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
@@ -92,6 +93,7 @@ export default function StudentDashboard() {
     return () => {
       isMounted = false;
       setOpeningManageId(null);
+      setOpeningRescheduleId(null);
     };
   }, [dispatch, upcomingPage, upcomingLimit, pastPage, pastLimit]);
 
@@ -220,6 +222,17 @@ export default function StudentDashboard() {
     navigate(`/after-payment-curri/${targetId}?manage=true`);
   };
 
+  const handleReschedule = (lesson) => {
+    const targetId = lesson.bookingId || lesson._id;
+    setOpeningRescheduleId(targetId);
+    preloadRoute("afterPaymentCurri");
+    localStorage.setItem("bookId", targetId);
+    if (lesson.lId) localStorage.setItem("lId", lesson.lId);
+    const targetLessonId = lesson.lId || lesson.lessonId || "";
+    const lessonParam = targetLessonId ? `&lessonId=${targetLessonId}` : "";
+    navigate(`/after-payment-curri/${targetId}?manage=true&reschedule=true${lessonParam}`);
+  };
+
   // Calculate total pages for pagination
   const upcomingTotalPages = Math.ceil(upcomingTotal / upcomingLimit);
   const pastTotalPages = Math.ceil(pastTotal / pastLimit);
@@ -297,7 +310,7 @@ export default function StudentDashboard() {
 
               <tbody>
                 {isLoadingUpcoming ? (
-                  <TableSkeletonRows rows={3} hasCurriculum={true} actionCount={3} />
+                  <TableSkeletonRows rows={3} hasCurriculum={true} actionCount={4} />
                 ) : userMainUpcomingData.length > 0 ? (
                   userMainUpcomingData.map((lesson, index) => {
                     const timeDisplay = getTimeDisplay(lesson.scheduledAt);
@@ -355,6 +368,21 @@ export default function StudentDashboard() {
                                 <span>{isCurriculum ? "Manage curriculum" : "Manage lesson"}</span>
                               )}
                             </button>
+                            <button 
+                              type="button"
+                              disabled={openingRescheduleId === (lesson.bookingId || lesson._id)}
+                              onClick={() => handleReschedule(lesson)}
+                              className="bg-[#E9EAEE] text-black px-4 py-2 rounded-full transition-all duration-150 active:scale-95 cursor-pointer hover:bg-gray-300 flex items-center justify-center gap-1.5 disabled:opacity-75"
+                            >
+                              {openingRescheduleId === (lesson.bookingId || lesson._id) ? (
+                                <>
+                                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                                  <span>Opening...</span>
+                                </>
+                              ) : (
+                                <span>Reschedule</span>
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -385,6 +413,8 @@ export default function StudentDashboard() {
               cancellingId={cancellingId}
               openingManageId={openingManageId}
               onManageLesson={handleManageLesson}
+              openingRescheduleId={openingRescheduleId}
+              onRescheduleLesson={handleReschedule}
               emptyTitle="No upcoming lessons"
               emptySubtitle="When you book a lesson or curriculum, it will appear here."
             />

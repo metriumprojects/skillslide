@@ -192,6 +192,26 @@ export default function AfterPaymentCurri({ bookIdOverride }) {
     }));
   };
 
+  useEffect(() => {
+    if (searchParams.get("reschedule") === "true" && getcuridata) {
+      setIsRescheduling(true);
+      const targetLessonId = searchParams.get("lessonId");
+      if (Array.isArray(getcuriBookingdata) && getcuriBookingdata.length > 0) {
+        if (targetLessonId) {
+          const match = getcuriBookingdata.find(
+            (l) => l._id === targetLessonId || l.lId?._id === targetLessonId || l.lId === targetLessonId
+          );
+          if (match) setReschedulingLesson(match);
+        } else if (getcuriBookingdata.length === 1) {
+          setReschedulingLesson(getcuriBookingdata[0]);
+        }
+      }
+      setTimeout(() => {
+        document.getElementById("schedule-calendar-section")?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    }
+  }, [searchParams, getcuridata, getcuriBookingdata]);
+
   // Filter lessons to show only pending ones for scheduling.
   // Single lesson bookings store date/time on the booking itself (not lessonPosition).
   const isLessonBooking = getcuridata?.type === "lesson";

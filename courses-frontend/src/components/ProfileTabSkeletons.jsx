@@ -184,11 +184,14 @@ export function MobileScheduleSkeleton({ count = 3 }) {
           {/* Price on next line */}
           <div className="h-3 w-14 bg-gray-300/80 rounded mt-1" />
 
-          {/* Action row: three equal-width buttons (no divider line) */}
-          <div className="mt-3.5 flex items-center gap-2">
-            <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
-            <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
-            <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
+          {/* Action rows: 3 buttons row 1 + 1 full-width button row 2 */}
+          <div className="mt-3.5 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
+              <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
+              <div className="h-8 flex-1 bg-white border border-gray-200 rounded-full" />
+            </div>
+            <div className="h-8 w-full bg-white border border-gray-200 rounded-full" />
           </div>
         </div>
       ))}

@@ -9,6 +9,7 @@ import {
   FaCalendarTimes,
   FaClipboardList,
   FaStar,
+  FaSyncAlt,
 } from "react-icons/fa";
 import ButtonSpinner from "../../../components/ButtonSpinner";
 import { preloadRoute } from "../../../utils/routePreloader";
@@ -99,6 +100,8 @@ export default function ScheduleMobileView({
   cancellingId,
   openingManageId,
   onManageLesson,
+  openingRescheduleId,
+  onRescheduleLesson,
   handleReview,
   emptyTitle = "No lessons scheduled",
   emptySubtitle = "When you book a lesson or curriculum, it will appear here.",
@@ -328,57 +331,79 @@ export default function ScheduleMobileView({
                     {displayPrice}
                   </div>
 
-                  {/* Action row: Three equal-width buttons (~32px, pill-shaped, no grey divider line) */}
+                  {/* Action rows: Row 1 (Message, Cancel, Manage) + Row 2 (Reschedule on next line) */}
                   {activeTab === "upcoming" ? (
-                    <div className="mt-3.5 flex items-center gap-2">
-                      {/* Message */}
-                      <button
-                        type="button"
-                        onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
-                        onMouseEnter={() => preloadRoute("chat")}
-                        onTouchStart={() => preloadRoute("chat")}
-                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
-                      >
-                        <FaRegCommentAlt className="w-3 h-3 text-[#1A2B49] shrink-0" />
-                        <span className="truncate">Message</span>
-                      </button>
+                    <div className="mt-3.5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        {/* Message */}
+                        <button
+                          type="button"
+                          onClick={() => handleMessageTeacher && handleMessageTeacher(lesson)}
+                          onMouseEnter={() => preloadRoute("chat")}
+                          onTouchStart={() => preloadRoute("chat")}
+                          className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                        >
+                          <FaRegCommentAlt className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                          <span className="truncate">Message</span>
+                        </button>
 
-                      {/* Cancel (subtle red/danger tint) */}
-                      <button
-                        type="button"
-                        disabled={cancellingId === cancelIdKey}
-                        onClick={() => handleCancel && handleCancel(lesson)}
-                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-600 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
-                      >
-                        {cancellingId === cancelIdKey ? (
-                          <>
-                            <ButtonSpinner size={12} />
-                            <span className="truncate">Cancelling...</span>
-                          </>
-                        ) : (
-                          <>
-                            <FaCalendarTimes className="w-3 h-3 text-rose-600 shrink-0" />
-                            <span className="truncate">Cancel</span>
-                          </>
-                        )}
-                      </button>
+                        {/* Cancel (subtle red/danger tint) */}
+                        <button
+                          type="button"
+                          disabled={cancellingId === cancelIdKey}
+                          onClick={() => handleCancel && handleCancel(lesson)}
+                          className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-600 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
+                        >
+                          {cancellingId === cancelIdKey ? (
+                            <>
+                              <ButtonSpinner size={12} />
+                              <span className="truncate">Cancelling...</span>
+                            </>
+                          ) : (
+                            <>
+                              <FaCalendarTimes className="w-3 h-3 text-rose-600 shrink-0" />
+                              <span className="truncate">Cancel</span>
+                            </>
+                          )}
+                        </button>
 
-                      {/* Manage */}
+                        {/* Manage */}
+                        <button
+                          type="button"
+                          disabled={openingManageId === cancelIdKey}
+                          onClick={() => onManageLesson && onManageLesson(lesson)}
+                          className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
+                        >
+                          {openingManageId === cancelIdKey ? (
+                            <>
+                              <span className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent shrink-0" />
+                              <span className="truncate">Opening...</span>
+                            </>
+                          ) : (
+                            <>
+                              <FaClipboardList className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                              <span className="truncate">Manage</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* 4th: Reschedule on next line */}
                       <button
                         type="button"
-                        disabled={openingManageId === cancelIdKey}
-                        onClick={() => onManageLesson && onManageLesson(lesson)}
-                        className="flex-1 min-w-0 h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
+                        disabled={openingRescheduleId === cancelIdKey}
+                        onClick={() => onRescheduleLesson && onRescheduleLesson(lesson)}
+                        className="w-full h-8 px-2 bg-white hover:bg-gray-50 text-[#1A2B49] border border-[#1A2B49] text-xs font-medium rounded-full transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs disabled:opacity-50"
                       >
-                        {openingManageId === cancelIdKey ? (
+                        {openingRescheduleId === cancelIdKey ? (
                           <>
                             <span className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent shrink-0" />
                             <span className="truncate">Opening...</span>
                           </>
                         ) : (
                           <>
-                            <FaClipboardList className="w-3 h-3 text-[#1A2B49] shrink-0" />
-                            <span className="truncate">Manage</span>
+                            <FaSyncAlt className="w-3 h-3 text-[#1A2B49] shrink-0" />
+                            <span className="truncate">Reschedule</span>
                           </>
                         )}
                       </button>
