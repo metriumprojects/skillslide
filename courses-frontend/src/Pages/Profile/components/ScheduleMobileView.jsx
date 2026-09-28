@@ -119,12 +119,12 @@ export default function ScheduleMobileView({
       {groupedLessons.map((group) => (
         <section key={group.dateKey} aria-label={group.label}>
           {/* Section Date header */}
-          <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex flex-col items-start mb-2 px-1 gap-0.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 tracking-wide">
               <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
               <span>{group.label}</span>
             </div>
-            <span className="text-[11px] font-medium text-gray-400 shrink-0">
+            <span className="text-[11px] font-medium text-gray-400 pl-3.5 text-left">
               {group.items.length} {group.items.length === 1 ? "lesson" : "lessons"}
             </span>
           </div>
@@ -201,19 +201,21 @@ export default function ScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: Large bold time (primary element) + small muted timezone on left; Status badge on right */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
-                        {timeStr}
+                  {/* Status badge: Placed above time, left-aligned */}
+                  <div className="flex items-center justify-start mb-1.5">
+                    {statusBadge}
+                  </div>
+
+                  {/* Large bold time (primary element) + small muted timezone on left */}
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl sm:text-2xl font-black text-[#1A2B49] tracking-tight leading-none">
+                      {timeStr}
+                    </span>
+                    {tzStr && (
+                      <span className="text-xs font-semibold text-gray-400 uppercase">
+                        {tzStr}
                       </span>
-                      {tzStr && (
-                        <span className="text-xs font-semibold text-gray-400 uppercase">
-                          {tzStr}
-                        </span>
-                      )}
-                    </div>
-                    <div className="shrink-0">{statusBadge}</div>
+                    )}
                   </div>
 
                   {/* Lesson title: Bold, second-largest text, max 2 lines ellipsis, tappable for details */}
@@ -227,15 +229,15 @@ export default function ScheduleMobileView({
                     {title}
                   </h4>
 
-                  {/* Meta row: Curriculum with book icon on left; Amount as small muted text on right */}
-                  <div className="flex items-center justify-between gap-3 mt-1.5 text-xs text-gray-500">
-                    <div className="flex items-center gap-1.5 min-w-0 truncate">
-                      <FaBookOpen className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className="truncate">{curriculumText}</span>
-                    </div>
-                    <span className="shrink-0 text-xs font-medium text-gray-400">
-                      {formatPrice(lesson.amount, lesson.currency || "USD")}
-                    </span>
+                  {/* Meta row: Curriculum with book icon */}
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1.5">
+                    <FaBookOpen className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">{curriculumText}</span>
+                  </div>
+
+                  {/* Price on next line, left-aligned */}
+                  <div className="text-xs font-medium text-gray-500 mt-1 text-left">
+                    {formatPrice(lesson.amount, lesson.currency || "USD")}
                   </div>
 
                   {/* Teacher Name (with icon on separate next line) */}
