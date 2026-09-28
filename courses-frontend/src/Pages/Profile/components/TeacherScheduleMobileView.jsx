@@ -1,8 +1,6 @@
 import React, { useMemo } from "react";
 import moment from "moment-timezone";
 import {
-  FaUser,
-  FaUsers,
   FaBookOpen,
   FaRegCommentAlt,
   FaCalendarTimes,
@@ -175,30 +173,12 @@ export default function TeacherScheduleMobileView({
                 ? formattedPrice.replace(/^US/i, "").trim()
                 : `$${lesson.amount || 0}`;
 
-              // Format badge (Single Lesson / Group Lesson / Curriculum)
-              let typeBadge = null;
-              if (isGroup) {
-                typeBadge = (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
-                    <FaUsers className="w-3 h-3 text-indigo-600 shrink-0" />
-                    <span>Group Lesson</span>
-                  </span>
-                );
-              } else if (isCurriculum) {
-                typeBadge = (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/60 shadow-2xs">
-                    <FaBookOpen className="w-3 h-3 text-purple-600 shrink-0" />
-                    <span>Curriculum</span>
-                  </span>
-                );
-              } else {
-                typeBadge = (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-2xs">
-                    <FaUser className="w-3 h-3 text-blue-600 shrink-0" />
-                    <span>Single Lesson</span>
-                  </span>
-                );
-              }
+              // Lesson format as normal text (Group Lesson / Single Lesson / Curriculum)
+              const typeText = isGroup
+                ? "Group Lesson"
+                : isCurriculum
+                ? "Curriculum"
+                : "Single Lesson";
 
               // Status badge styling
               let statusBadge = null;
@@ -233,10 +213,12 @@ export default function TeacherScheduleMobileView({
                   key={cardId}
                   className="bg-[#F5F5F5] rounded-2xl p-4 relative animate-fadeIn transition-all"
                 >
-                  {/* Top row: Lesson format badge (Single / Group / Curriculum) on left, Status badge on right */}
+                  {/* Top row: Status badge on left, Lesson format (normal text) on right */}
                   <div className="flex items-center justify-between gap-2">
-                    {typeBadge}
                     {statusBadge}
+                    <span className="text-xs font-medium text-gray-500">
+                      {typeText}
+                    </span>
                   </div>
 
                   {/* Large bold time (primary element) + small muted timezone on left */}
