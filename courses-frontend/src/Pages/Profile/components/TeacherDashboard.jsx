@@ -11,6 +11,7 @@ import ButtonSpinner from "../../../components/ButtonSpinner";
 import { navigateToChat } from "../../../utils/chatNavigation";
 import { preloadRoute } from "../../../utils/routePreloader";
 import { TableSkeletonRows, TableEmptyState } from "../../../components/ProfileTabSkeletons";
+import TeacherScheduleMobileView from "./TeacherScheduleMobileView";
 
 export default function LessonsDashboard() {
   const { formatPrice } = useCurrency();
@@ -307,7 +308,7 @@ export default function LessonsDashboard() {
             </div>
           )}
           
-          <div className="overflow-x-auto rounded-2xl mb-10">
+          <div className="overflow-x-auto rounded-2xl mb-10 hidden md:block">
             <table className="w-full rounded-2xl overflow-hidden">
               <thead className="bg-[#E9EAEE] text-left text-sm">
                 <tr>
@@ -381,6 +382,22 @@ export default function LessonsDashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Stacked Card View (<768px) */}
+          <div className="block md:hidden mb-10">
+            <TeacherScheduleMobileView
+              lessons={teacherMainUpcomingData}
+              isLoading={isLoadingUpcoming}
+              activeTab="upcoming"
+              formatPrice={formatPrice}
+              getTimeDisplay={getTimeDisplay}
+              handleMessageStudent={handleMessageStudent}
+              handleCancel={handleCancel}
+              cancellingId={cancellingId}
+              emptyTitle="No upcoming lessons"
+              emptySubtitle="When a student books a lesson or curriculum, it will appear here."
+            />
+          </div>
         </>
       )}
 
@@ -411,7 +428,7 @@ export default function LessonsDashboard() {
             </div>
           )}
           
-          <div className="overflow-x-auto rounded-2xl mb-10">
+          <div className="overflow-x-auto rounded-2xl mb-10 hidden md:block">
             <table className="w-full rounded-2xl overflow-hidden">
               <thead className="bg-[#E9EAEE] text-left text-sm">
                 <tr>
@@ -501,6 +518,24 @@ export default function LessonsDashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Stacked Card View (<768px) */}
+          <div className="block md:hidden mb-10">
+            <TeacherScheduleMobileView
+              lessons={teacherPastLessonsData}
+              isLoading={isLoadingPast}
+              activeTab="past"
+              formatPrice={formatPrice}
+              getTimeDisplay={getTimeDisplay}
+              handleMessageStudent={handleMessageStudent}
+              handleCancel={handleCancel}
+              handleComplete={handleComplete}
+              cancellingId={cancellingId}
+              completingId={completingId}
+              emptyTitle="No past lessons"
+              emptySubtitle="Completed lessons will appear here."
+            />
+          </div>
         </>
       )}
 
@@ -531,7 +566,7 @@ export default function LessonsDashboard() {
             </div>
           )}
           
-          <div className="overflow-x-auto rounded-2xl mb-10">
+          <div className="overflow-x-auto rounded-2xl mb-10 hidden md:block">
             <table className="w-full rounded-2xl overflow-hidden">
               <thead className="bg-[#E9EAEE] text-left text-sm">
                 <tr>
@@ -588,6 +623,20 @@ export default function LessonsDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Stacked Card View (<768px) */}
+          <div className="block md:hidden mb-10">
+            <TeacherScheduleMobileView
+              lessons={teacherCanceledLessonsData}
+              isLoading={false}
+              activeTab="canceled"
+              formatPrice={formatPrice}
+              getTimeDisplay={getTimeDisplay}
+              handleMessageStudent={handleMessageStudent}
+              emptyTitle="No canceled lessons"
+              emptySubtitle="Any canceled lessons will appear here."
+            />
           </div>
         </>
       )}

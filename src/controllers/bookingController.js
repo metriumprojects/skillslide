@@ -2635,6 +2635,7 @@ export const teacherMainUpcomingBookings = async (req, res) => {
           isCurriculum: false,
           group: b.group === true,
           name: b.user?.name || null,
+          userId: b.user?._id || null,
           curriculumTitle: null,
         });
       }
